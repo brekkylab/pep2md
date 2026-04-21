@@ -38,6 +38,8 @@ def _sync_cmd(args: argparse.Namespace) -> int:
             pep_numbers=_parse_pep_args(args.peps),
             limit=args.limit,
             full=args.full,
+            build_index=not args.no_index,
+            use_cache=not args.no_cache,
         )
     except ValueError as exc:
         raise SystemExit(str(exc)) from exc
@@ -101,6 +103,8 @@ def build_parser() -> argparse.ArgumentParser:
     sync_p.add_argument("--peps", nargs="+", help="Specific PEP numbers (space or comma separated).")
     sync_p.add_argument("--limit", type=int, help="Build only first N PEPs by number.")
     sync_p.add_argument("--full", action="store_true", help="Force full rebuild before indexing.")
+    sync_p.add_argument("--no-index", action="store_true", help="Skip index generation.")
+    sync_p.add_argument("--no-cache", action="store_true", help="Do not read/write cache state (disables incremental cache usage).")
     sync_p.set_defaults(func=_sync_cmd)
 
     query_p = sub.add_parser("query")

@@ -186,6 +186,8 @@ def sync_incremental(
     pep_numbers: set[int] | None = None,
     limit: int | None = None,
     full: bool = False,
+    build_index: bool = True,
+    use_cache: bool = True,
 ) -> dict[str, int | str]:
     state_path = cache_dir / "state.json"
     peps_dir = output_dir / "peps"
@@ -206,7 +208,7 @@ def sync_incremental(
         strict=pep_numbers is not None,
     )
 
-    state = load_state(state_path)
+    state = load_state(state_path) if use_cache else {}
     prev_shas: dict[str, str] = state.get("pep_sha", {}) if isinstance(state.get("pep_sha", {}), dict) else {}
     prev_all = {int(k): str(v) for k, v in prev_shas.items() if str(k).isdigit()}
 
@@ -214,7 +216,7 @@ def sync_incremental(
     deleted = 0
     to_convert: list[int] = []
 
-    if full or not state:
+    if full or not state or not use_cache:
         to_convert = sorted(selected)
     else:
         for pep in sorted(selected):
@@ -257,7 +259,8 @@ def sync_incremental(
             remove_deleted_outputs(peps_dir, removed)
             deleted += len(removed)
 
-    build_indexes(peps_dir, index_dir)
+    if build_index:
+        build_indexes(peps_dir, index_dir)
 
     merged = prev_all.copy()
     for pep, remote in remote_files.items():
@@ -265,16 +268,17 @@ def sync_incremental(
     for pep in set(merged.keys()).difference(available):
         merged.pop(pep, None)
 
-    save_state(
-        state_path,
-        {
-            "source": "github-http",
-            "repo_url": repo_url,
-            "branch": branch,
-            "head_commit": head,
-            "pep_sha": {str(k): v for k, v in sorted(merged.items())},
-        },
-    )
+    if use_cache:
+        save_state(
+            state_path,
+            {
+                "source": "github-http",
+                "repo_url": repo_url,
+                "branch": branch,
+                "head_commit": head,
+                "pep_sha": {str(k): v for k, v in sorted(merged.items())},
+            },
+        )
 
     return {
         "converted": converted,

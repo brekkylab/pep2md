@@ -162,3 +162,27 @@ def test_sync_raises_for_unknown_requested_pep(tmp_path, monkeypatch):
     )
     with pytest.raises(ValueError):
         sync_incremental(repo_url=repo_url, cache_dir=cache, output_dir=output, pep_numbers={8, 333})
+
+
+def test_sync_no_index_and_no_cache(tmp_path, monkeypatch):
+    cache = tmp_path / "cache"
+    output = tmp_path / "output"
+    repo_url = "https://github.com/python/peps.git"
+
+    _set_remote(
+        monkeypatch,
+        branch="main",
+        head="h1",
+        files={8: ("peps/pep-0008.rst", "s8")},
+        texts={"peps/pep-0008.rst": "PEP: 8\nTitle: Eight\nStatus: Final\n\nx\n"},
+    )
+    out = sync_incremental(
+        repo_url=repo_url,
+        cache_dir=cache,
+        output_dir=output,
+        build_index=False,
+        use_cache=False,
+    )
+    assert int(out["converted"]) == 1
+    assert not (output / "index" / "peps.json").exists()
+    assert not (cache / "state.json").exists()
