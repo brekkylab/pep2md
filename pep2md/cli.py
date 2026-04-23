@@ -40,6 +40,7 @@ def _sync_cmd(args: argparse.Namespace) -> int:
             full=args.full,
             build_index=not args.no_index,
             use_cache=not args.no_cache,
+            suppress_pandoc_warnings=args.suppress_pandoc_warnings,
         )
     except ValueError as exc:
         raise SystemExit(str(exc)) from exc
@@ -102,9 +103,22 @@ def build_parser() -> argparse.ArgumentParser:
     sync_p.add_argument("--cache", default=str(DEFAULT_CACHE_DIR))
     sync_p.add_argument("--peps", nargs="+", help="Specific PEP numbers (space or comma separated).")
     sync_p.add_argument("--limit", type=int, help="Build only first N PEPs by number.")
-    sync_p.add_argument("--full", action="store_true", help="Force full rebuild before indexing.")
+    sync_p.add_argument(
+        "--full",
+        action="store_true",
+        help="Force full rebuild for the selected set while still reading/updating cache state.",
+    )
     sync_p.add_argument("--no-index", action="store_true", help="Skip index generation.")
-    sync_p.add_argument("--no-cache", action="store_true", help="Do not read/write cache state (disables incremental cache usage).")
+    sync_p.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="Do not read or write cache state (stateless run; no incremental cache usage).",
+    )
+    sync_p.add_argument(
+        "--suppress-pandoc-warnings",
+        action="store_true",
+        help="Run pandoc with --quiet to suppress conversion warnings.",
+    )
     sync_p.set_defaults(func=_sync_cmd)
 
     query_p = sub.add_parser("query")

@@ -118,17 +118,20 @@ def _convert_one_text(
     out_dir: Path,
     source_commit: str,
     pep_map: dict[int, str],
+    pandoc_quiet: bool = False,
 ) -> Path:
     parsed = parse_pep_rst(rst_text)
     meta = dict(parsed.metadata)
     title = meta.get("title", f"PEP {pep_num}")
     filename = pep_map.get(pep_num) or pep_filename(pep_num, title)
     out_path = out_dir / filename
-    for stale in out_dir.glob(f"PEP {pep_num} – *.md"):
-        if stale != out_path:
-            stale.unlink(missing_ok=True)
+    for pattern in _output_name_patterns(pep_num):
+        for stale in out_dir.glob(pattern):
+            if stale != out_path:
+                stale.unlink(missing_ok=True)
 
-    markdown_body = pypandoc.convert_text(parsed.body, "md", format="rst")
+    pandoc_args = ["--quiet"] if pandoc_quiet else []
+    markdown_body = pypandoc.convert_text(parsed.body, "md", format="rst", extra_args=pandoc_args)
     markdown_body = EMAIL_FENCE_RE.sub(r"\1 yaml", markdown_body)
     pep_to_file = {k: out_dir / v for k, v in pep_map.items()}
     markdown_body = rewrite_internal_links(markdown_body, out_path, pep_to_file)
@@ -196,6 +199,7 @@ def sync_incremental(
     full: bool = False,
     build_index: bool = True,
     use_cache: bool = True,
+    suppress_pandoc_warnings: bool = False,
 ) -> dict[str, int | str]:
     state_path = cache_dir / "state.json"
     peps_dir = output_dir / "peps"
@@ -254,6 +258,7 @@ def sync_incremental(
                     peps_dir,
                     head,
                     pep_map,
+                    suppress_pandoc_warnings,
                 )
                 for pep in to_convert
             ]
