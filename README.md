@@ -1,5 +1,11 @@
 # pep2md
 
+> [!TIP]
+> The published converted results are in the
+> [`peps` branch](https://github.com/brekkylab/pep2md/tree/peps), and
+> [GitHub Actions](https://github.com/brekkylab/pep2md/actions/workflows/sync-peps.yml)
+> refreshes them daily.
+
 Tool for mirroring the `python/peps` repository into Markdown files.
 
 ## Features
