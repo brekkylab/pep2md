@@ -1,0 +1,110 @@
+name: Sync PEP Markdown Mirror
+
+on:
+  workflow_dispatch:
+    inputs:
+      full_sync:
+        description: "Run full sync (pep2md sync --full)"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+      publish_branch:
+        description: "Branch to publish generated outputs"
+        required: false
+        default: "peps"
+  schedule:
+    # Runs daily at 00:00 UTC (09:00 KST)
+    - cron: "0 0 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pep-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      OUTPUT_BRANCH: ${{ github.event.inputs.publish_branch || 'peps' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Restore previous sync state from output branch
+        run: |
+          mkdir -p cache
+          if git ls-remote --exit-code --heads origin "$OUTPUT_BRANCH" >/dev/null 2>&1; then
+            git fetch origin "$OUTPUT_BRANCH"
+            if git cat-file -e "origin/$OUTPUT_BRANCH:.pep2md/state.json" 2>/dev/null; then
+              git show "origin/$OUTPUT_BRANCH:.pep2md/state.json" > cache/state.json
+              echo "Restored cache/state.json from $OUTPUT_BRANCH"
+            else
+              echo "No .pep2md/state.json found on $OUTPUT_BRANCH; running without restored state."
+            fi
+          else
+            echo "Branch $OUTPUT_BRANCH does not exist yet; first publish run will create it."
+          fi
+
+      - name: Sync PEP markdown output
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.full_sync }}" = "true" ]; then
+            echo "Running full sync..."
+            uv run pep2md sync --full --no-index --suppress-pandoc-warnings
+          else
+            echo "Running incremental sync..."
+            uv run pep2md sync --no-index --suppress-pandoc-warnings
+          fi
+
+      - name: Publish generated outputs to dedicated branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          STAGE_DIR="$(mktemp -d)"
+          mkdir -p "$STAGE_DIR/peps" "$STAGE_DIR/.pep2md"
+          cp -R output/peps/. "$STAGE_DIR/peps/"
+          cp cache/state.json "$STAGE_DIR/.pep2md/state.json"
+
+          if git show-ref --verify --quiet "refs/remotes/origin/$OUTPUT_BRANCH"; then
+            git switch --detach "origin/$OUTPUT_BRANCH"
+            git switch -C "$OUTPUT_BRANCH"
+          else
+            git switch --orphan "$OUTPUT_BRANCH"
+            git rm -rf . >/dev/null 2>&1 || true
+          fi
+
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          mkdir -p peps .pep2md
+          cp -R "$STAGE_DIR/peps/." peps/
+          cp "$STAGE_DIR/.pep2md/state.json" .pep2md/state.json
+
+          git add -f peps .pep2md/state.json
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git commit -m "sync PEP markdown mirror ($(date -u +'%Y-%m-%d'))"
+          git push origin "$OUTPUT_BRANCH"
