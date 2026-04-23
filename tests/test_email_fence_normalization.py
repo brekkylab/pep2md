@@ -7,7 +7,7 @@ from pep2md.builder import _convert_one_text
 
 def test_email_fence_is_normalized_to_yaml(tmp_path):
     out_dir = tmp_path / "peps"
-    pep_map = {12: "PEP 12 – Template.md"}
+    pep_map = {12: "PEP 0012 – Template.md"}
     rst_text = "PEP: 12\nTitle: Template\nStatus: Draft\n\nBody\n====\n\nx\n"
 
     # Inject markdown directly by monkeypatching convert_text in module namespace.

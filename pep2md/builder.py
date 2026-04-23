@@ -23,6 +23,11 @@ OUTPUT_PEP_RE = re.compile(r"^PEP (\d+) – .+\.md$")
 EMAIL_FENCE_RE = re.compile(r"^(```+)\s*email\s*$", re.MULTILINE)
 
 
+def _output_name_patterns(pep_num: int) -> tuple[str, str]:
+    # Keep backward compatibility with previously generated non-padded filenames.
+    return (f"PEP {pep_num} – *.md", f"PEP {pep_num:04d} – *.md")
+
+
 def _select_pep_numbers(
     available: Iterable[int],
     pep_numbers: set[int] | None = None,
@@ -45,8 +50,9 @@ def _select_pep_numbers(
 
 def remove_deleted_outputs(out_dir: Path, deleted_pep_nums: set[int]) -> None:
     for pep_num in deleted_pep_nums:
-        for path in out_dir.glob(f"PEP {pep_num} – *.md"):
-            path.unlink(missing_ok=True)
+        for pattern in _output_name_patterns(pep_num):
+            for path in out_dir.glob(pattern):
+                path.unlink(missing_ok=True)
 
 
 def prune_non_selected_outputs(out_dir: Path, selected: set[int]) -> None:
@@ -62,7 +68,9 @@ def prune_non_selected_outputs(out_dir: Path, selected: set[int]) -> None:
 
 
 def has_output_for_pep(out_dir: Path, pep_num: int) -> bool:
-    return any(out_dir.glob(f"PEP {pep_num} – *.md"))
+    return any(out_dir.glob(_output_name_patterns(pep_num)[0])) or any(
+        out_dir.glob(_output_name_patterns(pep_num)[1])
+    )
 
 
 def validate_dependencies() -> None:

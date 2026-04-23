@@ -4,7 +4,7 @@ Tool for mirroring the `python/peps` repository into Markdown files.
 
 ## Features
 
-- Filename format: `PEP {Num} – {Title}.md`
+- Filename format: `PEP {Num:04d} – {Title}.md` (4-digit zero padding)
 - YAML frontmatter: original PEP metadata + normalized fields
 - Index generation: `output/index/peps.json`, `output/index/status_final.json`
 - Status query: `pep2md query --status Final`

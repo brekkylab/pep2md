@@ -14,4 +14,4 @@ def sanitize_title(title: str) -> str:
 
 
 def pep_filename(pep_num: int, title: str) -> str:
-    return f"PEP {pep_num} – {sanitize_title(title)}.md"
+    return f"PEP {pep_num:04d} – {sanitize_title(title)}.md"

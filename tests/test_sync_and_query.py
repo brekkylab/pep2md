@@ -89,7 +89,7 @@ def test_sync_incremental_and_query(tmp_path, monkeypatch):
         metadata_filters={"author": "alice"},
     )
     assert [r["pep"] for r in rows_combined] == [8]
-    pep8 = output / "peps" / "PEP 8 – Eight.md"
+    pep8 = output / "peps" / "PEP 0008 – Eight.md"
     content = pep8.read_text(encoding="utf-8")
     end = content.find("\n---\n", 4)
     front = yaml.safe_load(content[4:end])
@@ -114,7 +114,7 @@ def test_sync_incremental_and_query(tmp_path, monkeypatch):
 
     md_files = sorted((output / "peps").glob("PEP *.md"))
     assert len(md_files) == 1
-    assert md_files[0].name == "PEP 1 – One Updated.md"
+    assert md_files[0].name == "PEP 0001 – One Updated.md"
 
 
 def test_sync_with_pep_selection_and_limit(tmp_path, monkeypatch):
@@ -140,12 +140,12 @@ def test_sync_with_pep_selection_and_limit(tmp_path, monkeypatch):
     out1 = sync_incremental(repo_url=repo_url, cache_dir=cache, output_dir=output, pep_numbers={8, 20})
     assert int(out1["converted"]) == 2
     names = sorted(path.name for path in (output / "peps").glob("PEP *.md"))
-    assert names == ["PEP 20 – Twenty.md", "PEP 8 – Eight.md"]
+    assert names == ["PEP 0008 – Eight.md", "PEP 0020 – Twenty.md"]
 
     out2 = sync_incremental(repo_url=repo_url, cache_dir=cache, output_dir=output, limit=1)
     assert int(out2["converted"]) == 1
     names2 = sorted(path.name for path in (output / "peps").glob("PEP *.md"))
-    assert names2 == ["PEP 1 – One.md", "PEP 20 – Twenty.md", "PEP 8 – Eight.md"]
+    assert names2 == ["PEP 0001 – One.md", "PEP 0008 – Eight.md", "PEP 0020 – Twenty.md"]
 
 
 def test_sync_raises_for_unknown_requested_pep(tmp_path, monkeypatch):

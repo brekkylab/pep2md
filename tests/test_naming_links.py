@@ -5,15 +5,15 @@ from pep2md.naming import pep_filename
 
 
 def test_pep_filename():
-    assert pep_filename(8, "Style Guide for Python Code") == "PEP 8 – Style Guide for Python Code.md"
-    assert pep_filename(1, 'Bad:/Name*?"<>|') == "PEP 1 – Bad-Name-.md"
+    assert pep_filename(8, "Style Guide for Python Code") == "PEP 0008 – Style Guide for Python Code.md"
+    assert pep_filename(1, 'Bad:/Name*?"<>|') == "PEP 0001 – Bad-Name-.md"
 
 
 def test_rewrite_internal_links():
-    current = Path("/tmp/output/peps/PEP 1 – One.md")
+    current = Path("/tmp/output/peps/PEP 0001 – One.md")
     mapping = {
-        8: Path("/tmp/output/peps/PEP 8 – Style Guide for Python Code.md"),
-        20: Path("/tmp/output/peps/PEP 20 – Zen.md"),
+        8: Path("/tmp/output/peps/PEP 0008 – Style Guide for Python Code.md"),
+        20: Path("/tmp/output/peps/PEP 0020 – Zen.md"),
     }
     md = (
         "[A](pep-0008)\n"
@@ -22,7 +22,7 @@ def test_rewrite_internal_links():
         "<pep-0020>\n"
     )
     out = rewrite_internal_links(md, current_file=current, pep_to_file=mapping)
-    assert "(PEP 8 – Style Guide for Python Code.md)" in out
-    assert "(PEP 20 – Zen.md)" in out
-    assert "[ref]: PEP 8 – Style Guide for Python Code.md" in out
-    assert "<PEP 20 – Zen.md>" in out
+    assert "(PEP 0008 – Style Guide for Python Code.md)" in out
+    assert "(PEP 0020 – Zen.md)" in out
+    assert "[ref]: PEP 0008 – Style Guide for Python Code.md" in out
+    assert "<PEP 0020 – Zen.md>" in out
