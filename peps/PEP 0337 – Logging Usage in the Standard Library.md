@@ -1,0 +1,149 @@
+---
+pep: 337
+title: Logging Usage in the Standard Library
+author:
+- Michael P. Dubner <dubnerm@mindless.com>
+status: Deferred
+type: Standards Track
+created: 02-Oct-2004
+python_version: '2.5'
+post_history:
+- 10-Nov-2004
+python_status: Deferred
+url: https://peps.python.org/pep-0337/
+source_path: https://github.com/python/peps/blob/main/peps/pep-0337.rst
+source_commit: 528ab44afbc38daee4ae5c361f1bc79f600155b0
+generated_at: '2026-04-23T06:17:28+00:00'
+---
+
+# Abstract
+
+This PEP defines a standard for using the logging system
+(`282`{.interpreted-text role="pep"}) in the standard library.
+
+Implementing this PEP will simplify development of daemon applications.
+As a downside this PEP requires slight modifications (however in a
+back-portable way) to a large number of standard modules.
+
+After implementing this PEP one can use following filtering scheme:
+
+    logging.getLogger('py.BaseHTTPServer').setLevel(logging.FATAL)
+
+# PEP Deferral
+
+Further exploration of the concepts covered in this PEP has been
+deferred for lack of a current champion interested in promoting the
+goals of the PEP and collecting and incorporating feedback, and with
+sufficient available time to do so effectively.
+
+# Rationale
+
+There are a couple of situations when output to stdout or stderr is
+impractical:
+
+- Daemon applications where the framework doesn\'t allow the redirection
+  of standard output to some file, but assumes use of some other form of
+  logging. Examples are syslog under \*nix\'es and EventLog under
+  WinNT+.
+- GUI applications which want to output every new log entry in separate
+  pop-up window (i.e. fading OSD).
+
+Also sometimes applications want to filter output entries based on their
+source or severity. This requirement can\'t be implemented using simple
+redirection.
+
+Finally sometimes output needs to be marked with event timestamps, which
+can be accomplished with ease using the logging system.
+
+# Proposal
+
+Every module usable for daemon and GUI applications should be rewritten
+to use the logging system instead of `print` or `sys.stdout.write`.
+
+There should be code like this included in the beginning of every
+modified module:
+
+    import logging
+
+    _log = logging.getLogger('py.<module-name>')
+
+A prefix of `py.`[^1] must be used by all modules included in the
+standard library distributed along with Python, and only by such modules
+(unverifiable). The use of `_log` is intentional as we don\'t want to
+auto-export it. For modules that use log only in one class a logger can
+be created inside the class definition as follows:
+
+    class XXX:
+
+        __log = logging.getLogger('py.<module-name>')
+
+Then this class can create access methods to log to this private logger.
+
+So `print` and `sys.std{out|err}.write` statements should be replaced
+with `_log.{debug|info}`, and `traceback.print_exception` with
+`_log.exception` or sometimes `_log.debug('...', exc_info=1)`.
+
+# Module List
+
+Here is a (possibly incomplete) list of modules to be reworked:
+
+- asyncore (dispatcher.log, dispatcher.log_info)
+- BaseHTTPServer (BaseHTTPRequestHandler.log_request,
+  BaseHTTPRequestHandler.log_error, BaseHTTPRequestHandler.log_message)
+- cgi (possibly - is cgi.log used by somebody?)
+- ftplib (if FTP.debugging)
+- gopherlib (get_directory)
+- httplib (HTTPResponse, HTTPConnection)
+- ihooks ([Verbose]{#verbose})
+- imaplib (IMAP4.\_mesg)
+- mhlib (MH.error)
+- nntplib (NNTP)
+- pipes (Template.makepipeline)
+- pkgutil (extend_path)
+- platform ([syscmd_ver]{#syscmd_ver})
+- poplib (if POP3.\_debugging)
+- profile (if Profile.verbose)
+- robotparser ([debug]{#debug})
+- smtplib (if SGMLParser.verbose)
+- shlex (if shlex.debug)
+- smtpd (SMTPChannel/PureProxy where print \>\> DEBUGSTREAM)
+- smtplib (if SMTP.debuglevel)
+- SocketServer (BaseServer.handle_error)
+- telnetlib (if Telnet.debuglevel)
+- threading? ([Verbose]{#verbose}.\_note, Thread.\_\_bootstrap)
+- timeit (Timer.print_exc)
+- trace
+- uu (decode)
+
+Additionally there are a couple of modules with commented debug output
+or modules where debug output should be added. For example:
+
+- urllib
+
+Finally possibly some modules should be extended to provide more debug
+information.
+
+# Doubtful Modules
+
+Listed here are modules that the community will propose for addition to
+the module list and modules that the community say should be removed
+from the module list.
+
+- tabnanny (check)
+
+# Guidelines for Logging Usage
+
+Also we can provide some recommendation to authors of library modules so
+they all follow the same format of naming loggers. I propose that
+non-standard library modules should use loggers named after their full
+names, so a module \"spam\" in sub-package \"junk\" of package \"dummy\"
+will be named \"dummy.junk.spam\" and, of course, the `__init__` module
+of the same sub-package will have the logger name \"dummy.junk\".
+
+# References
+
+# Copyright
+
+This document has been placed in the public domain.
+
+[^1]: <https://mail.python.org/pipermail/python-dev/2004-October/049282.html>

@@ -1,0 +1,91 @@
+---
+pep: 294
+title: Type Names in the types Module
+author:
+- Oren Tirosh <oren at hishome.net>
+status: Rejected
+type: Standards Track
+created: 19-Jun-2002
+python_version: '2.5'
+post_history: []
+python_status: Rejected
+url: https://peps.python.org/pep-0294/
+source_path: https://github.com/python/peps/blob/main/peps/pep-0294.rst
+source_commit: 528ab44afbc38daee4ae5c361f1bc79f600155b0
+generated_at: '2026-04-23T06:17:26+00:00'
+---
+
+# Abstract
+
+This PEP proposes that symbols matching the type name should be added to
+the types module for all basic Python types in the types module:
+
+    types.IntegerType -> types.int
+    types.FunctionType -> types.function
+    types.TracebackType -> types.traceback
+     ...
+
+The long capitalized names currently in the types module will be
+deprecated.
+
+With this change the types module can serve as a replacement for the new
+module. The new module shall be deprecated and listed in
+`4`{.interpreted-text role="pep"}.
+
+# Pronouncement
+
+A centralized repository of type names was a mistake. Neither the
+\"types\" nor \"new\" modules should be carried forward to Python 3.0.
+
+In the meantime, it does not make sense to make the proposed updates to
+the modules. This would cause disruption without any compensating
+benefit.
+
+Instead, the problem that some internal types (frames, functions, etc.)
+don\'t live anywhere outside those modules may be addressed by either
+adding them to `__builtin__` or sys. This will provide a smoother
+transition to Python 3.0.
+
+# Rationale
+
+Using two sets of names for the same objects is redundant and confusing.
+
+In Python versions prior to 2.2 the symbols matching many type names
+were taken by the factory functions for those types. Now all basic types
+have been unified with their factory functions and therefore the type
+names are available to be consistently used to refer to the type object.
+
+Most types are accessible as either builtins or in the new module but
+some types such as traceback and generator are only accessible through
+the types module under names which do not match the type name. This PEP
+provides a uniform way to access all basic types under a single set of
+names.
+
+# Specification
+
+The types module shall pass the following test:
+
+    import types
+    for t in vars(types).values():
+        if type(t) is type:
+    assert getattr(types, t.__name__) is t
+
+The types \'class\', \'instance method\' and \'dict-proxy\' have already
+been renamed to the valid Python identifiers \'classobj\',
+\'instancemethod\' and \'dictproxy\', making this possible.
+
+# Backward compatibility
+
+Because of their widespread use it is not planned to actually remove the
+long names from the types module in some future version. However, the
+long names should be changed in documentation and library sources to
+discourage their use in new code.
+
+# Reference Implementation
+
+A reference implementation is available in [issue
+#569328](https://bugs.python.org/issue569328).
+
+# Copyright
+
+This document has been placed in the public domain.

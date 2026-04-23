@@ -1,0 +1,247 @@
+---
+pep: 833
+title: Freezing the HTML simple repository API
+author:
+- William Woodruff <william@yossarian.net>
+sponsor: Donald Stufft <donald@stufft.io>
+pep_delegate: Donald Stufft <donald@stufft.io>
+discussions_to: https://discuss.python.org/t/pep-833-freezing-the-html-simple-repository-api/107051
+status: Draft
+type: Standards Track
+topic: Packaging
+created: 21-Apr-2026
+post_history:
+- '`13-Apr-2026 <https://discuss.python.org/t/106959>`__'
+- '`21-Apr-2026 <https://discuss.python.org/t/107051>`__'
+python_status: Draft
+url: https://peps.python.org/pep-0833/
+source_path: https://github.com/python/peps/blob/main/peps/pep-0833.rst
+source_commit: 528ab44afbc38daee4ae5c361f1bc79f600155b0
+generated_at: '2026-04-23T06:17:50+00:00'
+---
+
+# Abstract
+
+This PEP proposes freezing the
+`standard HTML representation <packaging:simple-repository-html-serialization>`{.interpreted-text
+role="ref"} of the simple repository API, as originally specified in
+`503`{.interpreted-text role="pep"} and updated over subsequent PEPs.
+
+In this context of this PEP, \"freezing\" means that the HTML
+representation is considered complete from the perspective of the
+standards process, and **SHOULD NOT** be updated by future PEPs. Future
+PEPs **SHOULD** instead target the
+`standard JSON representation <packaging:simple-repository-api-json>`{.interpreted-text
+role="ref"}, as originally specified in `691`{.interpreted-text
+role="pep"}.
+
+Similarly, this PEP\'s freezing of the HTML representation does **not**
+stipulate that installers should remove support for the HTML
+representation, or that indices (like PyPI) will or should stop
+providing an HTML representation.
+
+# Rationale and Motivation
+
+The use of an HTML representation for Python package indices predates
+efforts to standardize Python packaging. Consequently, the HTML
+representation standardized with `503`{.interpreted-text role="pep"}
+represents a *formalization* of existing practices (particularly those
+of PyPI), rather than a *design*.
+
+The HTML representation of a Python package index has served the Python
+packaging ecosystem admirably: it has acted as the baseline
+representation that all indices and installers support, and has allowed
+PyPI to incrementally modernize its index presentation while maintaining
+backwards compatibility with installers and mirrors.
+`629`{.interpreted-text role="pep"}, `714`{.interpreted-text
+role="pep"}, `740`{.interpreted-text role="pep"},
+`792`{.interpreted-text role="pep"}, and many others demonstrate the
+viability of this approach.
+
+At the same time, the HTML representation has several limitations that
+have become increasingly apparent and salient as Python packaging as a
+whole has modernized:
+
+- The HTML representation is *rigid*, for backwards compatibility
+  reasons. This rigidity makes it difficult to represent new pieces of
+  metadata, and PEPs that attempt to do so typically need to shoehorn
+  their changes into `<meta>` tags or `data-` attributes to avoid
+  interfering with assumptions that existing consumers make about the
+  structure of the HTML.
+
+  This shoehorning process also requires PEPs that modify the HTML index
+  to invent syntax for encoding structured data. For example,
+  `792`{.interpreted-text role="pep"} adds meta tags named
+  `pypi:project-status` and `pypi:project-status-reason`, effectively
+  flattening an object representation that appears naturally in the JSON
+  representation.
+
+  Similarly, the HTML representation\'s rigidity makes it an
+  optimization barrier: `658`{.interpreted-text role="pep"} allows
+  indices to serve distribution metadata via the simple repository API,
+  but the absence of a straightforward and backwards-compatible way to
+  encode that metadata within the HTML representation means that
+  installers must incur an additional HTTP round-trip to fetch
+  relatively small amounts of information. `740`{.interpreted-text
+  role="pep"} adopts a similar approach, with similar overhead
+  repercussions.
+
+  In practice, some index PEPs have chosen not to modify the HTML
+  representation at all, and instead focus solely on the JSON
+  representation. `700`{.interpreted-text role="pep"} for example
+  introduces both per-distribution metadata *and* a top-level `versions`
+  key to the JSON representation, but does not modify the HTML
+  representation. The original rationale for this was that HTML
+  consumers would be unlikely to need the new metadata,
+
+- Relatedly, third-party consumption of the HTML representation is often
+  *brittle*: even syntactically valid, non-semantic changes to PyPI\'s
+  HTML representation are [known to cause
+  breakage](https://github.com/pypi/warehouse/issues/18275) due to
+  unsound assumptions about the exact structure of the HTML, including
+  its whitespace.
+
+  Consumption of the JSON representation, by contrast, is more robust to
+  non-semantic changes thanks to the prevalence of robust JSON parsing
+  libraries. Robust handling of HTML is naturally possible, but
+  consumers are often *tempted* to avoid the perceived complexity and
+  generality of HTML parsing in favor of brittle approaches involving
+  regular expressions and similar ad-hoc parsing techniques.
+
+- In practice, *adoption* of incremental improvements to the HTML
+  representation is limited: PyPI itself typically adopts new features,
+  but third-party indices (particularly those sold as corporate
+  offerings) frequently provide only the absolute minimum representation
+  originally defined in `503`{.interpreted-text role="pep"}.
+
+  As a result, *even when* the HTML representation is improved, many
+  consumers do not benefit from those improvements.
+
+Put together, these limitations mean that the HTML representation is (1)
+often difficult to extend in a robust way, (2) *de facto* frozen with
+respect to how many consumers interact with Python packaging, even when
+standards processes work to modernize it.
+
+The purpose of this PEP is to formalize this status quo.
+
+# Specification
+
+The HTML representation of the simple repository API is frozen for the
+purposes of Python packaging standards processes. Future Python
+packaging PEPs **SHOULD NOT** modify the HTML representation of the
+simple repository API, and **MUST** instead modify the JSON
+representation.
+
+This PEP does not alter the status of the HTML representation on PyPI
+and does not prescribe any behavioral changes for installers.
+
+One functional consequence of this freeze is that future changes to the
+simple repository API will be
+`versioned <packaging:simple-repository-api-versioning>`{.interpreted-text
+role="ref"} as they are currently, but that only the JSON representation
+will receive changes to its versioning marker. For example, if a future
+PEP introduces version 1.5 of the simple repository API, the HTML
+representation will retain the following versioning marker:
+
+``` html
+<meta name="pypi:repository-version" content="1.4">
+```
+
+# Future Considerations
+
+This PEP does not stipulate any changes to how indices and installers
+should handle the HTML representation.
+
+As of April 2026, the prospect of *fully* removing support for the HTML
+representation from either indices or installers is unrealistic: it is
+simply too critical to the ecosystem, and efforts to remove it would be
+extremely and unreasonably disruptive.
+
+However, it is not *inconceivable* that the HTML representation could be
+fully removed (or relegated to legacy/default-disabled flows) in the
+future. This PEP does not preclude such a future, but does not propose
+it either.
+
+The Python packaging community has made several valuable observations
+around behaviors that make outright removal of the HTML representation
+difficult or infeasible, including:
+
+- By virtue of being the default, the HTML representation is extremely
+  easy to adopt internally: it doesn\'t require any (explicit) content
+  negotiation, and can often be served trivially by a CDN or a minimal
+  HTTP server (like `python -m http.server`).
+
+  The JSON representation does not technically require content
+  negotiation either, but in practice clients that consume it expect to
+  perform explicit content negotiation due to the assumption that the
+  same URL provides both representations. Consequently, any future
+  efforts to remove the HTML representation will likely require a
+  simpler adoption story for the JSON representation.
+
+- The HTML representation is currently easier for installers like pip to
+  parse incrementally, as the Python standard library includes
+  `html.parser` for incremental HTML parsing. This helps mitigate the
+  memory overhead of large HTML index responses, e.g. detail responses
+  for packages that have hundreds or thousands of distributions.
+
+  By contrast, Python\'s standard library currently lacks an incremental
+  JSON parser. Incremental JSON parsing is not impractical (and is
+  strictly less complex than incremental HTML parsing), but the absence
+  of a standard library solution presents an adoption barrier. Future
+  efforts to remove the HTML representation will likely require a robust
+  standard library (or acceptably vendorable third-party) solution for
+  incremental JSON parsing within pip.
+
+# Security Implications
+
+This PEP does not identify any positive or negative security
+implications associated with freezing the HTML representation of the
+simple repository API.
+
+# How to Teach This
+
+Because this PEP only freezes the HTML representation of the simple
+repository API for the purposes of Python packaging standards processes,
+the end user implications of this PEP are limited.
+
+However, for third-party indices that wish to modernize their index
+representations, this PEP proposes the following if accepted:
+
+- The authors of this PEP will coordinate with the maintainers of PyPI
+  on appropriate public-facing documentation and communication,
+  including an announcement on the [PyPI blog](https://blog.pypi.org) if
+  deemed appropriate.
+- The authors of this PEP will make appropriate changes to the
+  `living standard <packaging:simple-repository-api>`{.interpreted-text
+  role="ref"} for the simple repository API, including admonitions and
+  callouts where appropriate to indicate that the HTML representation
+  will not receive future updates.
+
+# Rejected Ideas
+
+## Doing nothing
+
+Doing nothing is always an option. Per above, this would be a
+continuation of the status quo, wherein the HTML representation is
+updated on paper (and on PyPI), but is frozen in practice in third-party
+settings.
+
+The authors of this PEP believe that being explicit about the status of
+the HTML representation is valuable, and would benefit future standards
+efforts by diverting design effort away from shoehorning new features
+into the HTML representation.
+
+## Aggressively removing the HTML representation
+
+Encouraging indices and installers to aggressively remove support for
+the HTML representation is another option. However, as noted above, this
+is unrealistic in the near term, and would be disruptive to the
+ecosystem.
+
+The authors of this PEP believe that freezing is a more gradual and
+pragmatic approach that better reflects the ecosystem\'s reality.
+
+# Copyright
+
+This document is placed in the public domain or under the
+CC0-1.0-Universal license, whichever is more permissive.

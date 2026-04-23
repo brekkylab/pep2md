@@ -1,0 +1,267 @@
+---
+pep: 755
+title: Implicit namespace policy for PyPI
+author:
+- Ofek Lev <ofekmeister@gmail.com>
+sponsor: Barry Warsaw <barry@python.org>
+pep_delegate: Dustin Ingram <di@python.org>
+discussions_to: https://discuss.python.org/t/63191
+status: Draft
+type: Process
+topic: Packaging
+created: 05-Sep-2024
+post_history:
+- '`07-Sep-2024 <https://discuss.python.org/t/63191>`__'
+python_status: Draft
+url: https://peps.python.org/pep-0755/
+source_path: https://github.com/python/peps/blob/main/peps/pep-0755.rst
+source_commit: 528ab44afbc38daee4ae5c361f1bc79f600155b0
+generated_at: '2026-04-23T06:17:47+00:00'
+---
+
+# Abstract
+
+This PEP codifies an implementation of `752`{.interpreted-text
+role="pep"} for PyPI[^1].
+
+# Motivation
+
+Many projects and communities would benefit from the ability to reserve
+namespaces. Since PyPI exists to serve the Python community, it is
+critical to gather feedback to ensure that everyone\'s needs are met.
+
+A dedicated PEP is required because the operational and policy nuances
+are up to each package repository to decide.
+
+# Rationale
+
+PyPI has been understaffed, receiving the first [dedicated
+specialist](https://pyfound.blogspot.com/2024/07/announcing-our-new-pypi-support.html)
+in July 2024. Due to lack of resources, user support has been lacking
+for [package name claims](https://discuss.python.org/t/27436/19),
+[organization requests](https://discuss.python.org/t/33764/15), [storage
+limit increases](https://discuss.python.org/t/54035), and even [account
+recovery](https://discuss.python.org/t/43422/122).
+
+The [default policy](#approval-criteria) of giving paid organizations
+more leniency when reserving namespaces provides the following benefits:
+
+- PyPI would have a constant source of funding for support specialists,
+  infrastructure maintenance, bug fixes and new features.
+- Although each application would require independent review, less human
+  feedback would be required because the process to approve a paid
+  organization already bestows a certain amount of trust.
+
+# Terminology
+
+Paid/Corporate Organization
+
+:   [Corporate
+    organizations](https://docs.pypi.org/organization-accounts/pricing-and-payments/#corporate-organizations)
+    are `organizations <752#organizations>`{.interpreted-text
+    role="pep"} that pay for special functionality on PyPI. This PEP
+    refers to them as paid in most circumstances for brevity and to ease
+    understanding for non-native speakers.
+
+Root Grant
+
+:   A grant as defined by
+    `PEP 752 terminology <752#terminology>`{.interpreted-text
+    role="pep"}.
+
+Child Grant
+
+:   A grant created from a root grant with the associated namespace
+    being a child namespace as defined by
+    `PEP 752 terminology <752#terminology>`{.interpreted-text
+    role="pep"}.
+
+# Implementation
+
+## Grant Applications
+
+### Submission
+
+Only organization (non-user) accounts have access to the grant
+application form.
+
+Applications for paid organizations receive priority in the reviewing
+queue. This is both to offer a meaningful benefit to paid organizations
+and to ensure that funding is available for PyPI\'s operational costs,
+including more reviewers.
+
+### Approval Criteria
+
+1.  The namespace must not be something common like `tool` or `apps`.
+2.  The namespace should be greater than three characters.
+3.  The namespace should properly and clearly identify the reservation
+    owner.
+4.  The organization should be actively using the namespace.
+5.  There should be evidence that *not* reserving the namespace may
+    cause ambiguity, confusion, or other harm to the community.
+
+Organizations that are not paid organizations will represent one of the
+following:
+
+- Large, popular open-source projects with many packages
+- Universities that actively publish packages
+- Government organizations that actively publish packages
+- NPOs/NGOs that actively publish packages like [Our World in
+  Data](https://github.com/owid)
+
+Generally speaking, reviewers should be more tolerant of paid
+organizations that apply for grants for which they are not yet using.
+
+For example, while it\'s reasonable to grant a namespace to a startup or
+an existing company with a new product line, it\'s not as reasonable to
+grant a namespace to a community project that doesn\'t have many users.
+
+### Rejections
+
+Rejected applications will receive clear rationale for the decision
+based on the approval criteria. Applications rejected due to the
+namespace being too common will be persisted internally for future
+reviewers to reference and new applications attempting to reserve a
+namespace that was previously rejected for that reason will display a
+warning.
+
+### Acceptance
+
+When an application is accepted for a namespace that is used by projects
+outside of the organization, an email will be sent to the owners of the
+projects notifying them of the new grant. The email will contain a link
+to the [namespace\'s page](#namespace-page).
+
+## Grant Types
+
+There are two types of grants.
+
+### Root Grant
+
+An organization gets a root grant for every approved application. This
+grant may produce any number of [child grants](#child-grant).
+
+### Child Grant
+
+A child grant may be created by the owner of a [root grant](#root-grant)
+at any time without approval. The namespace associated with such grants
+must be a child namespace of the root grant\'s namespace.
+
+Child grants cannot have their own child grants.
+
+## Grant Ownership
+
+The owner of a grant may allow any number of other organizations to use
+the grant. The grants behave as if they were owned by the organization,
+i.e. even the owner cannot upload packages to the namespace. The owner
+may revoke this permission at any time.
+
+The owner may transfer ownership to another organization at any time
+without approval from PyPI admins. If the organization is a paid
+organization, the target for transfer must also be a paid organization.
+Settings for permitted organizations are transferred as well.
+
+## User Interface
+
+### Namespace Page
+
+The namespace of every active grant will have its own page that has
+information such as its `open <752#open-namespaces>`{.interpreted-text
+role="pep"} status, the current owners, the time at which ownership was
+granted and the total number of projects that match the namespace.
+
+### Project Page
+
+Every project\'s page
+([example](https://pypi.org/project/google-cloud-compute/1.19.2/)) that
+matches an active namespace grant will indicate what the prefix is
+(NuGet currently does not do this) and will stand out as a pill or
+label. This value will match the `prefix` key in the
+`namespace detail API <752#namespace-detail>`{.interpreted-text
+role="pep"}.
+
+Clicking on the namespace will take the user to [its
+page](#namespace-page).
+
+### Visual Indicators
+
+For projects that match an active namespace grant, users will be able to
+quickly ascertain which of the following scenarios apply:
+
+1.  Projects that are tied to a [grant owner](#grant-ownership) will not
+    have a visual indicator and users should solely rely on the
+    always-present prefix.
+2.  Projects that are not tied to a [grant owner](#grant-ownership) and
+    the matching grant is `open <752#open-namespaces>`{.interpreted-text
+    role="pep"} will have a unique indicator that does not convey
+    mistrust or danger. A good choice might be the
+    [users](https://fontawesome.com/icons/users) icon from Font Awesome
+    or the
+    [groups](https://fonts.google.com/icons?selected=Material+Symbols+Outlined:groups)
+    icon from Google Fonts.
+3.  Projects that are not tied to a [grant owner](#grant-ownership) and
+    the matching grant is restricted will have a unique visual
+    indicator. This situation arises when the project existed before the
+    grant was created. The indicator will convey inauthenticity or lack
+    of trust. A good choice might be a warning sign (⚠).
+
+## Open Namespaces
+
+When a [child grant](#child-grant) is created, its
+`open <752#open-namespaces>`{.interpreted-text role="pep"} status will
+be inherited from the [root grant](#root-grant). Owners of child grants
+may make them open at any time. If a grant is open, it cannot be made
+restricted unless the owner of the grant is the owner of every project
+that matches the namespace.
+
+## Grant Removal
+
+If a grant is shared with other organizations, the owner organization
+must initiate a transfer as a prerequisite for organization deletion.
+
+If a grant is not shared, the owner may unclaim the namespace in either
+of the following circumstances:
+
+- The organization manually removes themselves as the owner.
+- The organization is deleted.
+
+When a reserved namespace becomes unclaimed, the [UI](#user-interface)
+will reflect this such that matching projects will no longer have any
+indicators on their page nor will the namespace have a dedicated page.
+
+# How to Teach This
+
+For organizations, we will document how to reserve namespaces, what the
+benefits are and pricing.
+
+We will document `541`{.interpreted-text role="pep"} on the same pages
+so that organizations are aware of the main mechanism to report improper
+uses of existing packages matching their grants.
+
+# Rejected Ideas
+
+## Page for Viewing All Active Grants
+
+There is no page to view all active namespace grants because this has
+the potential to leak private information such as upcoming products.
+
+## Visual Indicator for Owned Projects
+
+There is no indicator for projects that are tied to a [grant
+owner](#grant-ownership) primarily to reduce clutter, especially since
+this is the most common scenario.
+
+If there was an indicator, it would not be a check mark or similar as
+NuGet chose because it may mistakingly convey that there are associated
+security guarantees inherent to the use of the package. Additionally,
+some social media platforms use a check mark for verified users which
+may cause confusion.
+
+# References
+
+# Copyright
+
+This document is placed in the public domain or under the
+CC0-1.0-Universal license, whichever is more permissive.
+
+[^1]: The Python Package Index (<https://pypi.org>)

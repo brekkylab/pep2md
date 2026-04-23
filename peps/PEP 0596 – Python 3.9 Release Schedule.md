@@ -1,0 +1,130 @@
+---
+pep: 596
+title: Python 3.9 Release Schedule
+author:
+- Łukasz Langa <lukasz@python.org>
+discussions_to: https://discuss.python.org/t/pep-596-python-3-9-release-schedule-doubling-the-release-cadence/1828
+status: Final
+type: Informational
+topic: Release
+created: 04-Jun-2019
+python_version: '3.9'
+python_status: Final
+url: https://peps.python.org/pep-0596/
+source_path: https://github.com/python/peps/blob/main/peps/pep-0596.rst
+source_commit: 528ab44afbc38daee4ae5c361f1bc79f600155b0
+generated_at: '2026-04-23T06:17:39+00:00'
+---
+
+# Abstract
+
+This document describes the development and release schedule for Python
+3.9. The schedule primarily concerns itself with PEP-sized items.
+
+# Release Manager and Crew
+
+- 3.9 Release Manager: Łukasz Langa
+- Windows installers: Steve Dower
+- Mac installers: Ned Deily
+- Documentation: Julien Palard
+
+# Release Schedule
+
+## 3.9.0 schedule
+
+Note: the dates below use a 17-month development period that results in
+a 12-month release cadence between feature versions, as defined by
+`602`{.interpreted-text role="pep"}.
+
+Actual:
+
+- 3.9 development begins: Tuesday, 2019-06-04
+- 3.9.0 alpha 1: Tuesday, 2019-11-19
+- 3.9.0 alpha 2: Wednesday, 2019-12-18
+- 3.9.0 alpha 3: Saturday, 2020-01-25
+- 3.9.0 alpha 4: Wednesday, 2020-02-26
+- 3.9.0 alpha 5: Monday, 2020-03-23
+- 3.9.0 alpha 6: Tuesday, 2020-04-28
+- 3.9.0 beta 1: Monday, 2020-05-18 (No new features beyond this point.)
+- 3.9.0 beta 3: Tuesday, 2020-06-09 (beta 2 was recalled.)
+- 3.9.0 beta 4: Friday, 2020-07-03
+- 3.9.0 beta 5: Monday, 2020-07-20
+- 3.9.0 candidate 1: Tuesday, 2020-08-11
+- 3.9.0 candidate 2: Thursday, 2020-09-17
+- 3.9.0 final: Monday, 2020-10-05
+
+## Bugfix releases
+
+Actual:
+
+- 3.9.1 candidate 1: Tuesday, 2020-11-24
+- 3.9.1 final: Monday, 2020-12-07
+- 3.9.2 candidate 1: Tuesday, 2021-02-16
+- 3.9.2 final: Friday, 2021-02-19
+- 3.9.3 final: Friday, 2021-04-02 (security hotfix; recalled due to
+  bpo-43710)
+- 3.9.4 final: Sunday, 2021-04-04 (ABI compatibility hotfix)
+- 3.9.5 final: Monday, 2021-05-03
+- 3.9.6 final: Monday, 2021-06-28
+- 3.9.7 final: Monday, 2021-08-30
+- 3.9.8 final: Friday, 2021-11-05 (recalled due to bpo-45235)
+- 3.9.9 final: Monday, 2021-11-15
+- 3.9.10 final: Friday, 2022-01-14
+- 3.9.11 final: Wednesday, 2022-03-16
+- 3.9.12 final: Wednesday, 2022-03-23
+- 3.9.13 final: Tuesday, 2022-05-17 (Final regular bugfix release with
+  binary installers)
+
+## Source-only security fix releases
+
+Provided irregularly on an \"as-needed\" basis until October 2025.
+
+- 3.9.14 final: Tuesday, 2022-09-06
+- 3.9.15 final: Tuesday, 2022-10-11
+- 3.9.16 final: Tuesday, 2022-12-06
+- 3.9.17 final: Tuesday, 2023-06-06
+- 3.9.18 final: Thursday, 2023-08-24
+- 3.9.19 final: Tuesday, 2024-03-19
+- 3.9.20 final: Friday, 2024-09-06
+- 3.9.21 final: Tuesday, 2024-12-03
+- 3.9.22 final: Tuesday, 2025-04-08
+- 3.9.23 final: Tuesday, 2025-06-03
+- 3.9.24 final: Thursday, 2025-10-09
+- 3.9.25 final: Friday, 2025-10-31
+
+## 3.9 Lifespan
+
+3.9 received bugfix updates approximately every 2 months for
+approximately 18 months. Some time after the release of 3.10.0 final,
+the ninth and final 3.9 bugfix update was released. After that, security
+updates (source only) were released until October 31st 2025, that is 5
+years after the release of 3.9 final.
+
+As of 2025-10-31, 3.9 has reached the [end-of-life
+phase](https://devguide.python.org/devcycle/#end-of-life-branches) of
+its release cycle. 3.9.25 was the final security release. The codebase
+for 3.9 is now frozen and no further updates will be provided nor issues
+of any kind will be accepted on the bug tracker.
+
+# Features for 3.9
+
+Implemented PEPs for 3.9:
+
+- `573`{.interpreted-text role="pep"}, Module State Access from C
+  Extension Methods
+- `584`{.interpreted-text role="pep"}, Add Union Operators To dict
+- `585`{.interpreted-text role="pep"}, Type Hinting Generics In Standard
+  Collections
+- `593`{.interpreted-text role="pep"}, Flexible function and variable
+  annotations
+- `614`{.interpreted-text role="pep"}, Relaxing Grammar Restrictions On
+  Decorators
+- `615`{.interpreted-text role="pep"}, Support for the IANA Time Zone
+  Database in the Standard Library
+- `616`{.interpreted-text role="pep"}, String methods to remove prefixes
+  and suffixes
+- `617`{.interpreted-text role="pep"}, New PEG parser for CPython
+
+# Copyright
+
+This document has been placed in the public domain.

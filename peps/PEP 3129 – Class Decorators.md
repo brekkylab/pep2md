@@ -1,0 +1,108 @@
+---
+pep: 3129
+title: Class Decorators
+author:
+- Collin Winter <collinwinter@google.com>
+status: Final
+type: Standards Track
+created: 01-May-2007
+python_version: '3.0'
+post_history:
+- 07-May-2007
+python_status: Final
+url: https://peps.python.org/pep-3129/
+source_path: https://github.com/python/peps/blob/main/peps/pep-3129.rst
+source_commit: 528ab44afbc38daee4ae5c361f1bc79f600155b0
+generated_at: '2026-04-23T06:17:51+00:00'
+---
+
+# Abstract
+
+This PEP proposes class decorators, an extension to the function and
+method decorators introduced in `318`{.interpreted-text role="pep"}.
+
+# Rationale
+
+When function decorators were originally debated for inclusion in Python
+2.4, class decorators were seen as
+`obscure and unnecessary <318#motivation>`{.interpreted-text role="pep"}
+thanks to metaclasses. After several years\' experience with the Python
+2.4.x series of releases and an increasing familiarity with function
+decorators and their uses, the BDFL and the community re-evaluated class
+decorators and recommended their inclusion in Python 3.0[^1].
+
+The motivating use-case was to make certain constructs more easily
+expressed and less reliant on implementation details of the CPython
+interpreter. While it is possible to express class decorator-like
+functionality using metaclasses, the results are generally unpleasant
+and the implementation highly fragile[^2]. In addition, metaclasses are
+inherited, whereas class decorators are not, making metaclasses
+unsuitable for some, single class-specific uses of class decorators. The
+fact that large-scale Python projects like Zope were going through these
+wild contortions to achieve something like class decorators won over the
+BDFL.
+
+# Semantics
+
+The semantics and design goals of class decorators are the same as for
+function decorators (`318#current-syntax`{.interpreted-text role="pep"},
+`318#design-goals`{.interpreted-text role="pep"}); the only difference
+is that you\'re decorating a class instead of a function. The following
+two snippets are semantically identical:
+
+    class A:
+      pass
+    A = foo(bar(A))
+
+
+    @foo
+    @bar
+    class A:
+      pass
+
+For a detailed examination of decorators, please refer to
+`318`{.interpreted-text role="pep"}.
+
+# Implementation
+
+Adapting Python\'s grammar to support class decorators requires
+modifying two rules and adding a new rule:
+
+    funcdef: [decorators] 'def' NAME parameters ['->' test] ':' suite
+
+    compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt |
+                   with_stmt | funcdef | classdef
+
+need to be changed to :
+
+    decorated: decorators (classdef | funcdef)
+
+    funcdef: 'def' NAME parameters ['->' test] ':' suite
+
+    compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt |
+                   with_stmt | funcdef | classdef | decorated
+
+Adding `decorated` is necessary to avoid an ambiguity in the grammar.
+
+The Python AST and bytecode must be modified accordingly.
+
+A reference implementation[^3] has been provided by Jack Diederich.
+
+# Acceptance
+
+There was virtually no discussion following the posting of this PEP,
+meaning that everyone agreed it should be accepted.
+
+The patch was committed to Subversion as revision 55430.
+
+# References
+
+# Copyright
+
+This document has been placed in the public domain.
+
+[^1]: <https://mail.python.org/pipermail/python-dev/2006-March/062942.html>
+
+[^2]: <https://mail.python.org/pipermail/python-dev/2006-March/062888.html>
+
+[^3]: <https://bugs.python.org/issue1671208>

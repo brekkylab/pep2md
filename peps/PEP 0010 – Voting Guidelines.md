@@ -1,0 +1,63 @@
+---
+pep: 10
+title: Voting Guidelines
+author:
+- Barry Warsaw <barry@python.org>
+status: Active
+type: Process
+created: 07-Mar-2002
+post_history:
+- 07-Mar-2002
+python_status: Active
+url: https://peps.python.org/pep-0010/
+source_path: https://github.com/python/peps/blob/main/peps/pep-0010.rst
+source_commit: 528ab44afbc38daee4ae5c361f1bc79f600155b0
+generated_at: '2026-04-23T06:17:23+00:00'
+---
+
+# Abstract
+
+This PEP outlines the python-dev voting guidelines. These guidelines
+serve to provide feedback or gauge the \"wind direction\" on a
+particular proposal, idea, or feature. They don\'t have a binding force.
+
+# Rationale
+
+When a new idea, feature, patch, etc. is floated in the Python
+community, either through a PEP or on the mailing lists (most likely on
+python-dev[^1]), it is sometimes helpful to gauge the community\'s
+general sentiment. Sometimes people just want to register their opinion
+of an idea. Sometimes the BDFL wants to take a straw poll. Whatever the
+reason, these guidelines have been adopted so as to provide a common
+language for developers.
+
+While opinions are (sometimes) useful, but they are never binding.
+Opinions that are accompanied by rationales are always valued higher
+than bare scores (this is especially true with -1 votes).
+
+# Voting Scores
+
+The scoring guidelines are loosely derived from the Apache voting
+procedure[^2], with of course our own spin on things. There are 4
+possible vote scores:
+
+- `+1` I like it
+- `+0` I don\'t care, but go ahead
+- `-0` I don\'t care, so why bother?
+- `-1` I hate it
+
+You may occasionally see wild flashes of enthusiasm (either for or
+against) with vote scores like +2, +1000, or -1000. These aren\'t really
+valued much beyond the above scores, but it\'s nice to see people get
+excited about such geeky stuff.
+
+# References
+
+# Copyright
+
+This document has been placed in the public domain.
+
+[^1]: Python Developer\'s Guide, (<http://www.python.org/dev/>)
+
+[^2]: Apache Project Guidelines and Voting Rules
+    (<http://httpd.apache.org/dev/guidelines.html>)

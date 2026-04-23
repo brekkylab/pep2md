@@ -1,0 +1,218 @@
+---
+pep: 499
+title: '``python -m foo`` should also bind ``''foo''`` in ``sys.modules``'
+author:
+- Cameron Simpson <cs@cskk.id.au>
+- Chris Angelico <rosuav@gmail.com>
+- Joseph Jevnik <joejev@gmail.com>
+bdfl_delegate: Alyssa Coghlan
+status: Deferred
+type: Standards Track
+created: 07-Aug-2015
+python_version: '3.10'
+python_status: Deferred
+url: https://peps.python.org/pep-0499/
+source_path: https://github.com/python/peps/blob/main/peps/pep-0499.rst
+source_commit: 528ab44afbc38daee4ae5c361f1bc79f600155b0
+generated_at: '2026-04-23T06:17:35+00:00'
+---
+
+# PEP Deferral
+
+The implementation of this PEP isn\'t currently expected to be ready for
+the Python 3.9 feature freeze in April 2020, so it has been deferred 12
+months to Python 3.10.
+
+# Abstract
+
+When a module is used as a main program on the Python command line, such
+as by:
+
+> python -m module.name \...
+
+it is easy to accidentally end up with two independent instances of the
+module if that module is again imported within the program. This PEP
+proposes a way to fix this problem.
+
+When a module is invoked via Python\'s -m option the module is bound to
+`sys.modules['__main__']` and its `.__name__` attribute is set to
+`'__main__'`. This enables the standard \"main program\" boilerplate
+code at the bottom of many modules, such as:
+
+    if __name__ == '__main__':
+        sys.exit(main(sys.argv))
+
+However, when the above command line invocation is used it is a natural
+inference to presume that the module is actually imported under its
+official name `module.name`, and therefore that if the program again
+imports that name then it will obtain the same module instance.
+
+That actuality is that the module was imported only as `'__main__'`.
+Another import will obtain a distinct module instance, which can lead to
+confusing bugs, all stemming from having two instances of module global
+objects: one in each module.
+
+Examples include:
+
+module level data structures
+
+:   Some modules provide features such as caches or registries as module
+    level global variables, typically private. A second instance of a
+    module creates a second data structure. If that structure is a cache
+    such as in the `re` module then two caches exist leading to wasteful
+    memory use. If that structure is a shared registry such as a mapping
+    of values to handlers then it is possible to register a handler to
+    one registry and to try to use it via the other registry, where it
+    is unknown.
+
+sentinels
+
+:   The standard test for a sentinel value provided by a module is the
+    identity comparison using `is`, as this avoids unreliable \"looks
+    like\" comparisons such as equality which can both mismatch two
+    values as \"equal\" (for example being zeroish) or raise a
+    `TypeError` when the objects are incompatible. When there are two
+    instances of a module there are two sentinel instances and only one
+    will be recognised via `is`.
+
+classes
+
+:   With two modules there are duplicate class definitions of any
+    classes provided. All operations which depend on recognising these
+    classes and subclasses of these are prone to failure depending where
+    the reference class (from one of the modules) is obtained and where
+    the comparison class or instance is obtained. This impacts
+    `isinstance`, `issubclass` and also `try`/`except` constructs.
+
+# Proposal
+
+It is suggested that to fix this situation all that is needed is a
+simple change to the way the `-m` option is implemented: in addition to
+binding the module object to `sys.modules['__main__']`, it is also bound
+to `sys.modules['module.name']`.
+
+Alyssa (Nick) Coghlan has suggested that this is as simple as modifying
+the `runpy` module\'s `_run_module_as_main` function as follows:
+
+    main_globals = sys.modules["__main__"].__dict__
+
+to instead be:
+
+    main_module = sys.modules["__main__"]
+    sys.modules[mod_spec.name] = main_module
+    main_globals = main_module.__dict__
+
+Joseph Jevnik has pointed out that modules which are packages already do
+something very similar to this proposal: the \_\_init\_\_.py file is
+bound to the module\'s canonical name and the \_\_main\_\_.py file is
+bound to \"\_\_main\_\_\". As such, the double import issue does not
+occur. Therefore, this PEP proposes to affect only simple non-package
+modules.
+
+# Considerations and Prerequisites
+
+## Pickling Modules
+
+Alyssa has mentioned [issue 19702](http://bugs.python.org/issue19702)
+which proposes (quoted from the issue):
+
+- runpy will ensure that when \_\_main\_\_ is executed via the import
+  system, it will also be aliased in sys.modules as \_\_spec\_\_.name
+- if \_\_main\_\_.\_\_spec\_\_ is set, pickle will use \_\_spec\_\_.name
+  rather than \_\_name\_\_ to pickle classes, functions and methods
+  defined in \_\_main\_\_
+- multiprocessing is updated appropriately to skip creating
+  \_\_mp_main\_\_ in child processes when \_\_main\_\_.\_\_spec\_\_ is
+  set in the parent process
+
+The first point above covers this PEP\'s specific proposal.
+
+## A Normal Module\'s `__name__` Is No Longer Canonical
+
+Chris Angelico points out that it becomes possible to import a module
+whose `__name__` is not what you gave to \"import\", since
+\"\_\_main\_\_\" is now present at \"module.name\", so a subsequent
+`import module.name` finds it already present. Therefore, `__name__` is
+no longer the canonical name for some normal imports.
+
+Some counter arguments follow:
+
+- As of `451`{.interpreted-text role="pep"} a module\'s canonical name
+  is stored at `__spec__.name`.
+- Very little code should actually care about `__name__` being the
+  canonical name and any that does should arguably be updated to consult
+  `__spec__.name` with fallback to `__name__` for older Pythons, should
+  that be relevant. This is true even if this PEP is not approved.
+- Should this PEP be approved, it becomes possible to introspect a
+  module by its canonical name and ask \"was this the main program?\" by
+  inferring from `__name__`. This was not previously possible.
+
+The glaring counter example is the standard \"am I the main program?\"
+boilerplate, where `__name__` is expected to be \"\_\_main\_\_\". This
+PEP explicitly preserves that semantic.
+
+# Reference Implementation
+
+[BPO 36375](https://bugs.python.org/issue36375) is the issue tracker
+entry for the PEP\'s reference implementation, with the current draft PR
+being available [on
+GitHub](https://github.com/python/cpython/pull/12490).
+
+# Open Questions
+
+This proposal does raise some backwards compatibility concerns, and
+these will need to be well understood, and either a deprecation process
+designed, or clear porting guidelines provided.
+
+## Pickle compatibility
+
+If no changes are made to the pickle module, then pickles that were
+previously being written with the correct module name (due to a dual
+import) may start being written with `__main__` as their module name
+instead, and hence fail to be loaded correctly by other projects.
+
+Scenarios to be checked:
+
+- `python script.py` writing, `python -m script` reading
+- `python -m script` writing, `python script.py` reading
+- `python -m script` writing, `python some_other_app.py` reading
+- `old_python -m script` writing, `new_python -m script` reading
+- `new_python -m script` writing, `old_python -m script` reading
+
+## Projects that special-case `__main__`
+
+In order to get the regression test suite to pass, the current reference
+implementation had to patch `pdb` to avoid destroying its own global
+namespace.
+
+This suggests there may be a broader compatibility issue where some
+scripts are relying on direct execution and import giving different
+namespaces (just as package execution keeps the two separate by
+executing the `__main__` submodule in the `__main__` namespace, while
+the package name references the `__init__` file as usual.
+
+# Background
+
+[I tripped over this
+issue](https://mail.python.org/pipermail/python-list/2015-August/845302.html)
+while debugging a main program via a module which tried to monkey patch
+a named module, that being the main program module. Naturally, the
+monkey patching was ineffective as it imported the main module by name
+and thus patched the second module instance, not the running module
+instance.
+
+However, the problem has been around as long as the `-m` command line
+option and is encountered regularly, if infrequently, by others.
+
+In addition to [issue 19702](http://bugs.python.org/issue19702), the
+discrepancy around `__main__` is alluded to in `451`{.interpreted-text
+role="pep"} and a similar proposal (predating `451`{.interpreted-text
+role="pep"}) is described in `395`{.interpreted-text role="pep"} under
+`Fixing dual imports of the main module <395#fixing-dual-imports-of-the-main-module>`{.interpreted-text
+role="pep"}.
+
+# References
+
+# Copyright
+
+This document has been placed in the public domain.

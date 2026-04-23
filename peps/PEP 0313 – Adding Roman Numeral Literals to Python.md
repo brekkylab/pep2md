@@ -1,0 +1,98 @@
+---
+pep: 313
+title: Adding Roman Numeral Literals to Python
+author:
+- Mike Meyer <mwm@mired.org>
+status: Rejected
+type: Standards Track
+created: 01-Apr-2003
+python_version: '2.4'
+post_history: []
+python_status: Rejected
+url: https://peps.python.org/pep-0313/
+source_path: https://github.com/python/peps/blob/main/peps/pep-0313.rst
+source_commit: 528ab44afbc38daee4ae5c361f1bc79f600155b0
+generated_at: '2026-04-23T06:17:27+00:00'
+---
+
+# Abstract
+
+This PEP (also known as PEP CCCXIII) proposes adding Roman numerals as a
+literal type. It also proposes the new built-in function \"roman\",
+which converts an object to an integer, then converts the integer to a
+string that is the Roman numeral literal equivalent to the integer.
+
+# BDFL Pronouncement
+
+This PEP is rejected. While the majority of Python users deemed this to
+be a nice-to-have feature, the community was unable to reach a consensus
+on whether nine should be represented as IX, the modern form, or VIIII,
+the classic form. Likewise, no agreement was reached on whether MXM or
+MCMXC would be considered a well-formed representation of 1990. A vocal
+minority of users has also requested support for lower-cased numerals
+for use in (i) powerpoint slides, (ii) academic work, and (iii) Perl
+documentation.
+
+# Rationale
+
+Roman numerals are used in a number of areas, and adding them to Python
+as literals would make computations in those areas easier. For instance,
+Super Bowls are counted with Roman numerals, and many older movies have
+copyright dates in Roman numerals. Further, LISP provides a Roman
+numerals literal package, so adding Roman numerals to Python will help
+ease the LISP-envy sometimes seen in comp.lang.python. Besides, the
+author thinks this is the easiest way to get his name on a PEP.
+
+# Syntax for Roman literals
+
+Roman numeral literals will consist of the characters M, D, C, L, X, V
+and I, and only those characters. They must be in upper case, and
+represent an integer with the following rules:
+
+1.  Except as noted below, they must appear in the order M, D, C, L, X,
+    V then I. Each occurrence of each character adds 1000, 500, 100, 50,
+    10, 5 and 1 to the value of the literal, respectively.
+2.  Only one D, V or L may appear in any given literal.
+3.  At most three each of Is, Xs and Cs may appear consecutively in any
+    given literal.
+4.  A single I may appear immediately to the left of the single V,
+    followed by no Is, and adds 4 to the value of the literal.
+5.  A single I may likewise appear before the last X, followed by no Is
+    or Vs, and adds 9 to the value.
+6.  X is to L and C as I is to V and X, except the values are 40 and 90,
+    respectively.
+7.  C is to D and M as I is to V and X, except the values are 400 and
+    900, respectively.
+
+Any literal composed entirely of M, D, C, L, X, V and I characters that
+does not follow this format will raise a syntax error, because explicit
+is better than implicit.
+
+# Built-In \"roman\" Function
+
+The new built-in function \"roman\" will aide the translation from
+integers to Roman numeral literals. It will accept a single object as an
+argument, and return a string containing the literal of the same value.
+If the argument is not an integer or a rational (see
+`239`{.interpreted-text role="pep"}) it will passed through the existing
+built-in \"int\" to obtain the value. This may cause a loss of
+information if the object was a float. If the object is a rational, then
+the result will be formatted as a rational literal (see
+`240`{.interpreted-text role="pep"}) with the integers in the string
+being Roman numeral literals.
+
+# Compatibility Issues
+
+No new keywords are introduced by this proposal. Programs that use
+variable names that are all upper case and contain only the characters
+M, D, C, L, X, V and I will be affected by the new literals. These
+programs will now have syntax errors when those variables are assigned,
+and either syntax errors or subtle bugs when those variables are
+referenced in expressions. Since such variable names violate
+`8`{.interpreted-text role="pep"}, the code is already broken, it just
+wasn\'t generating exceptions. This proposal corrects that oversight in
+the language.
+
+# Copyright
+
+This document has been placed in the public domain.

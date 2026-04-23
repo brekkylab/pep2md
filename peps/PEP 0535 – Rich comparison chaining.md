@@ -1,0 +1,193 @@
+---
+pep: 535
+title: Rich comparison chaining
+author:
+- Alyssa Coghlan <ncoghlan@gmail.com>
+status: Deferred
+type: Standards Track
+requires:
+- '532'
+created: 12-Nov-2016
+python_version: '3.8'
+python_status: Deferred
+url: https://peps.python.org/pep-0535/
+source_path: https://github.com/python/peps/blob/main/peps/pep-0535.rst
+source_commit: 528ab44afbc38daee4ae5c361f1bc79f600155b0
+generated_at: '2026-04-23T06:17:36+00:00'
+---
+
+# PEP Deferral
+
+Further consideration of this PEP has been deferred until Python 3.8 at
+the earliest.
+
+# Abstract
+
+Inspired by `335`{.interpreted-text role="pep"}, and building on the
+circuit breaking protocol described in `532`{.interpreted-text
+role="pep"}, this PEP proposes a change to the definition of chained
+comparisons, where the comparison chaining will be updated to use the
+left-associative circuit breaking operator (`else`) rather than the
+logical disjunction operator (`and`) if the left hand comparison returns
+a circuit breaker as its result.
+
+While there are some practical complexities arising from the current
+handling of single-valued arrays in NumPy, this change should be
+sufficient to allow elementwise chained comparison operations for
+matrices, where the result is a matrix of boolean values, rather than
+raising `ValueError` or tautologically returning `True` (indicating a
+non-empty matrix).
+
+# Relationship with other PEPs
+
+This PEP has been extracted from earlier iterations of
+`532`{.interpreted-text role="pep"}, as a follow-on use case for the
+circuit breaking protocol, rather than an essential part of its
+introduction.
+
+The specific proposal in this PEP to handle the element-wise comparison
+use case by changing the semantic definition of comparison chaining is
+drawn directly from Guido\'s rejection of `335`{.interpreted-text
+role="pep"}.
+
+# Specification
+
+A chained comparison like `0 < x < 10` written as:
+
+    LEFT_BOUND LEFT_OP EXPR RIGHT_OP RIGHT_BOUND
+
+is currently roughly semantically equivalent to:
+
+    _expr = EXPR
+    _lhs_result = LEFT_BOUND LEFT_OP _expr
+    _expr_result = _lhs_result and (_expr RIGHT_OP RIGHT_BOUND)
+
+Using the circuit breaking concepts introduced in
+`532`{.interpreted-text role="pep"}, this PEP proposes that comparison
+chaining be changed to explicitly check if the left comparison returns a
+circuit breaker, and if so, use `else` rather than `and` to implement
+the comparison chaining:
+
+    _expr = EXPR
+    _lhs_result = LEFT_BOUND LEFT_OP _expr
+    if hasattr(type(_lhs_result), "__else__"):
+        _expr_result = _lhs_result else (_expr RIGHT_OP RIGHT_BOUND)
+    else:
+        _expr_result = _lhs_result and (_expr RIGHT_OP RIGHT_BOUND)
+
+This allows types like NumPy arrays to control the behaviour of chained
+comparisons by returning suitably defined circuit breakers from
+comparison operations.
+
+The expansion of this logic to an arbitrary number of chained comparison
+operations would be the same as the existing expansion for `and`.
+
+# Rationale
+
+In ultimately rejecting `335`{.interpreted-text role="pep"}, Guido van
+Rossum noted[^1]:
+
+> The NumPy folks brought up a somewhat separate issue: for them, the
+> most common use case is chained comparisons (e.g. A \< B \< C).
+
+To understand this observation, we first need to look at how comparisons
+work with NumPy arrays:
+
+    >>> import numpy as np
+    >>> increasing = np.arange(5)
+    >>> increasing
+    array([0, 1, 2, 3, 4])
+    >>> decreasing = np.arange(4, -1, -1)
+    >>> decreasing
+    array([4, 3, 2, 1, 0])
+    >>> increasing < decreasing
+    array([ True,  True, False, False, False], dtype=bool)
+
+Here we see that NumPy array comparisons are element-wise by default,
+comparing each element in the left hand array to the corresponding
+element in the right hand array, and producing a matrix of boolean
+results.
+
+If either side of the comparison is a scalar value, then it is broadcast
+across the array and compared to each individual element:
+
+    >>> 0 < increasing
+    array([False,  True,  True,  True,  True], dtype=bool)
+    >>> increasing < 4
+    array([ True,  True,  True,  True, False], dtype=bool)
+
+However, this broadcasting idiom breaks down if we attempt to use
+chained comparisons:
+
+    >>> 0 < increasing < 4
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+    ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+
+The problem is that internally, Python implicitly expands this chained
+comparison into the form:
+
+    >>> 0 < increasing and increasing < 4
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+    ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+
+And NumPy only permits implicit coercion to a boolean value for
+single-element arrays where `a.any()` and `a.all()` can be assured of
+having the same result:
+
+    >>> np.array([False]) and np.array([False])
+    array([False], dtype=bool)
+    >>> np.array([False]) and np.array([True])
+    array([False], dtype=bool)
+    >>> np.array([True]) and np.array([False])
+    array([False], dtype=bool)
+    >>> np.array([True]) and np.array([True])
+    array([ True], dtype=bool)
+
+The proposal in this PEP would allow this situation to be changed by
+updating the definition of element-wise comparison operations in NumPy
+to return a dedicated subclass that implements the new circuit breaking
+protocol and also changes the result array\'s interpretation in a
+boolean context to always return `False` and hence never trigger the
+short-circuiting behaviour:
+
+    class ComparisonResultArray(np.ndarray):
+        def __bool__(self):
+            # Element-wise comparison chaining never short-circuits
+            return False
+        def _raise_NotImplementedError(self):
+            msg = ("Comparison array truth values are ambiguous outside "
+                   "chained comparisons. Use a.any() or a.all()")
+            raise NotImplementedError(msg)
+        def __not__(self):
+            self._raise_NotImplementedError()
+        def __then__(self, result):
+            self._raise_NotImplementedError()
+        def __else__(self, result):
+            return np.logical_and(self, other.view(ComparisonResultArray))
+
+With this change, the chained comparison example above would be able to
+return:
+
+    >>> 0 < increasing < 4
+    ComparisonResultArray([ False,  True,  True,  True, False], dtype=bool)
+
+# Implementation
+
+Actual implementation has been deferred pending in-principle interest in
+the idea of making the changes proposed in `532`{.interpreted-text
+role="pep"}.
+
+\...TBD\...
+
+# References
+
+# Copyright
+
+This document has been placed in the public domain under the terms of
+the CC0 1.0 license:
+<https://creativecommons.org/publicdomain/zero/1.0/>
+
+[^1]: PEP 335 rejection notification
+    (<https://mail.python.org/pipermail/python-dev/2012-March/117510.html>)

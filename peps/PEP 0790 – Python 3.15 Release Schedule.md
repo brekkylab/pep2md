@@ -1,0 +1,76 @@
+---
+pep: 790
+title: Python 3.15 Release Schedule
+author:
+- Hugo van Kemenade
+status: Active
+type: Informational
+topic: Release
+created: 26-Apr-2025
+python_version: '3.15'
+python_status: Active
+url: https://peps.python.org/pep-0790/
+source_path: https://github.com/python/peps/blob/main/peps/pep-0790.rst
+source_commit: 528ab44afbc38daee4ae5c361f1bc79f600155b0
+generated_at: '2026-04-23T06:17:48+00:00'
+---
+
+# Abstract
+
+This document describes the development and release schedule for Python
+3.15.
+
+# Release manager and crew
+
+- 3.15 release manager: Hugo van Kemenade
+- Windows installers: Steve Dower
+- Mac installers: Ned Deily
+- Documentation: Julien Palard
+
+# Release schedule
+
+## 3.15.0 schedule
+
+The dates below use a 17-month development period that results in a
+12-month release cadence between feature versions, as defined by
+`602`{.interpreted-text role="pep"}.
+
+Actual:
+
+- 3.15 development begins: Wednesday, 2025-05-07
+- 3.15.0 alpha 1: Tuesday, 2025-10-14
+- 3.15.0 alpha 2: Wednesday, 2025-11-19
+- 3.15.0 alpha 3: Tuesday, 2025-12-16
+- 3.15.0 alpha 4: Tuesday, 2026-01-13
+- 3.15.0 alpha 5: Wednesday, 2026-01-14
+- 3.15.0 alpha 6: Wednesday, 2026-02-11
+- 3.15.0 alpha 7: Tuesday, 2026-03-10
+- 3.15.0 alpha 8: Tuesday, 2026-04-07
+
+Expected:
+
+- 3.15.0 beta 1: Tuesday, 2026-05-05 (No new features beyond this
+  point.)
+- 3.15.0 beta 2: Tuesday, 2026-06-02
+- 3.15.0 beta 3: Tuesday, 2026-06-23
+- 3.15.0 beta 4: Saturday, 2026-07-18
+- 3.15.0 candidate 1: Tuesday, 2026-08-04
+- 3.15.0 candidate 2: Tuesday, 2026-09-01
+- 3.15.0 final: Thursday, 2026-10-01
+
+Subsequent bugfix releases every two months.
+
+## 3.15 lifespan
+
+- Python 3.15 will receive bugfix updates approximately every second
+  month for two years.
+- Around the time of the release of 3.17.0 final, the final 3.15 bugfix
+  update will be released.
+- After that, it is expected that security updates (source only) will be
+  released for the next three years, until five years after the release
+  of 3.15.0 final, so until approximately October 2031.
+
+# Copyright
+
+This document is placed in the public domain or under the
+CC0-1.0-Universal license, whichever is more permissive.

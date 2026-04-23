@@ -1,0 +1,658 @@
+---
+pep: 739
+title: '``build-details.json`` 1.0 — a static description file for Python build details'
+author:
+- Filipe Laíns <lains@python.org>
+pep_delegate: Paul Moore <p.f.moore@gmail.com>
+discussions_to: https://discuss.python.org/t/pep-739-static-description-file-for-build-details-of-python-installations/44572
+status: Accepted
+type: Standards Track
+topic: Packaging
+created: 19-Dec-2023
+python_version: '3.14'
+resolution: https://discuss.python.org/t/44572/90
+python_status: Accepted
+url: https://peps.python.org/pep-0739/
+source_path: https://github.com/python/peps/blob/main/peps/pep-0739.rst
+source_commit: 528ab44afbc38daee4ae5c361f1bc79f600155b0
+generated_at: '2026-04-23T06:17:46+00:00'
+---
+
+# Abstract
+
+This PEP introduces `build-details.json`, a static description file
+containing build details of Python installations.
+
+It includes the definition of version 1.0 of the file format, and
+defines the standard location for this file.
+
+# Rationale
+
+When introspecting a Python installation, running code is often
+undesirable or impossible. Having a static description file makes
+various build details of the Python installation available without
+having to run the interpreter.
+
+This is helpful for use-cases such as cross-compilation, Python
+launchers, etc.
+
+# Scope
+
+`build-details.json` is an installation-wide file, meaning that it
+**MUST** only contain information that is constant across all
+environments of the Python installation.
+
+Information specific to a Python environment, such as the
+`site-packages` path, is outside the scope for this file, and the PEP
+authors expect that a static environment description file will be
+introduced via a future PEP.
+
+# Specification
+
+Starting from Python 3.14, a file named `build-details.json` following
+the format specified in this PEP, or a future version, **MUST** be
+installed in the platform-independent standard library directory
+(`stdlib`, eg. `/usr/lib/python3.14/build-details.json`), **UNLESS**
+unfeasible due to technical limitations.
+
+:::: attention
+::: title
+Attention
+:::
+
+In addition to the standard location specified by this PEP, the
+`build-details.json` file **MAY** also be installed into **additional**
+locations, and under a different name. Notwithstanding, the file
+**SHOULD** still be available at the standard location.
+
+In actuality, the PEP authors expect future PEPs to define additional
+install locations with better discoverability.
+::::
+
+# Format
+
+The format specification is defined by the JSON Schema definition
+provided below, which is rendered in an human-readable format here.
+
+::: {#spec-start}
+  ----------------- ---------------------------------------------------------------------------------------------
+  `$schema`         <https://json-schema.org/draft/2020-12/schema>
+
+  `$id`             <https://github.com/python/peps/blob/main/peps/pep-0739/python-build-info-v1.0.schema.json>
+
+  Title             build-details.json --- a static description file with build details of Python installations
+
+  Type              `object`
+
+  Additional        **Not allowed**
+  properties        
+  ----------------- ---------------------------------------------------------------------------------------------
+:::
+
+## `schema_version`
+
++-----------------+-----------------------------------------------------+
+| Type            | `string` (constant --- `1.0`)                       |
++-----------------+-----------------------------------------------------+
+| Description     | Schema version.                                     |
+|                 |                                                     |
+|                 | This is a string following the format               |
+|                 | `<MAJOR>.<MINOR>`, where `<MAJOR>` and `<MINOR>`    |
+|                 | are unpadded numbers and represent the **major**    |
+|                 | and **minor** components of the version. Versions   |
+|                 | may be arithmetically compared by interpreting the  |
+|                 | version string as a decimal number.                 |
+|                 |                                                     |
+|                 | For this specification version, this value is       |
+|                 | constant and **MUST** be `1.0`.                     |
+|                 |                                                     |
+|                 | Future versions of this schema **MUST** use a       |
+|                 | higher version number. Future versions of this      |
+|                 | schema **MUST NOT** use the same **major** version  |
+|                 | component as other schema version unless its        |
+|                 | specification is deemed backwards-compatible with   |
+|                 | them --- it can\'t change, or extend, any parts of  |
+|                 | the current specification in such a way as the      |
+|                 | semantics of the interpreted data differ, or that   |
+|                 | data valid under the new specification is invalid   |
+|                 | under the older specification, with the exception   |
+|                 | of additional properties (errors caused by          |
+|                 | `additionalProperties`).                            |
++-----------------+-----------------------------------------------------+
+| Required        | **True**                                            |
++-----------------+-----------------------------------------------------+
+
+## `base_prefix`
+
++-----------------+-----------------------------------------------------+
+| Type            | `string`                                            |
++-----------------+-----------------------------------------------------+
+| Description     | Base prefix of the Python installation.             |
+|                 |                                                     |
+|                 | Either an absolute path, or a path relative to      |
+|                 | directory where this file is contained.             |
++-----------------+-----------------------------------------------------+
+| Examples        | `/usr`, `../..`, etc.                               |
++-----------------+-----------------------------------------------------+
+| Required        | **True**                                            |
++-----------------+-----------------------------------------------------+
+
+## `base_interpreter`
+
++-----------------+-----------------------------------------------------+
+| Type            | `string`                                            |
++-----------------+-----------------------------------------------------+
+| Description     | The path to the Python interpreter of the base      |
+|                 | installation.                                       |
+|                 |                                                     |
+|                 | Either an absolute path, or a path relative to      |
+|                 | `base_prefix`.                                      |
+|                 |                                                     |
+|                 | This field **MUST** be present if the installation  |
+|                 | provides an interpreter executable.                 |
++-----------------+-----------------------------------------------------+
+| Examples        | - `/usr/bin/python`                                 |
+|                 | - `bin/python`                                      |
+|                 | - etc.                                              |
++-----------------+-----------------------------------------------------+
+| Required        | **False**                                           |
++-----------------+-----------------------------------------------------+
+
+## `platform`
+
++-----------------+-----------------------------------------------------+
+| Type            | `string`                                            |
++-----------------+-----------------------------------------------------+
+| Description     | System platform string.                             |
+|                 |                                                     |
+|                 | This field **SHOULD** be equivalent to              |
+|                 | `sysconfig.get_platform()`.                         |
++-----------------+-----------------------------------------------------+
+| Examples        | - `linux-x86_64`                                    |
+|                 | - etc.                                              |
++-----------------+-----------------------------------------------------+
+| Required        | **True**                                            |
++-----------------+-----------------------------------------------------+
+
+## `language`
+
+  ----------------- -----------------------------------------------------
+  Type              `object`
+
+  Description       Object containing details related to the Python
+                    language specification.
+
+  Required          **True**
+
+  Additional        **Not allowed**
+  properties        
+  ----------------- -----------------------------------------------------
+
+### `language.version`
+
++-----------------+-----------------------------------------------------+
+| Type            | `string`                                            |
++-----------------+-----------------------------------------------------+
+| Description     | String representation the Python language version   |
+|                 | --- a version string consisting only of the *major* |
+|                 | and *minor* components.                             |
+|                 |                                                     |
+|                 | This field **SHOULD** be equivalent to              |
+|                 | `sysconfig.get_python_version()`.                   |
++-----------------+-----------------------------------------------------+
+| Examples        | `3.14`, etc.                                        |
++-----------------+-----------------------------------------------------+
+| Required        | **True**                                            |
++-----------------+-----------------------------------------------------+
+
+### `language.version_info`
+
++-----------------+---------------------------------------------------------------------------------+
+| Type            | `object`                                                                        |
++-----------------+---------------------------------------------------------------------------------+
+| Description     | Object in the format of `sys.version_info`{.interpreted-text role="py:data"}.   |
+|                 |                                                                                 |
+|                 | This section **SHOULD** be equivalent to `sys.version_info`{.interpreted-text   |
+|                 | role="py:data"}.                                                                |
++-----------------+---------------------------------------------------------------------------------+
+| Examples        | - `{'major': 3, 'minor': 14, 'micro': 1, 'releaselevel': 'final', 'serial': 0}` |
+|                 | - etc.                                                                          |
++-----------------+---------------------------------------------------------------------------------+
+| Required        | **False**                                                                       |
++-----------------+---------------------------------------------------------------------------------+
+| Additional      | **Not allowed**                                                                 |
+| properties      |                                                                                 |
++-----------------+---------------------------------------------------------------------------------+
+
+#### `language.version_info.major`
+
+  ----------------- -----------------------------------------------------
+  Type              `number`
+
+  Required          **True**
+  ----------------- -----------------------------------------------------
+
+#### `language.version_info.minor`
+
+  ----------------- -----------------------------------------------------
+  Type              `number`
+
+  Required          **True**
+  ----------------- -----------------------------------------------------
+
+#### `language.version_info.micro`
+
+  ----------------- -----------------------------------------------------
+  Type              `number`
+
+  Required          **True**
+  ----------------- -----------------------------------------------------
+
+#### `language.version_info.releaselevel`
+
+  ----------------- -----------------------------------------------------
+  Type              `string` (enum --- `alpha`, `beta`, `candidate`,
+                    `final`)
+
+  Required          **True**
+  ----------------- -----------------------------------------------------
+
+#### `language.version_info.serial`
+
+  ----------------- -----------------------------------------------------
+  Type              `number`
+
+  Required          **True**
+  ----------------- -----------------------------------------------------
+
+## `implementation`
+
++-----------------+-----------------------------------------------------+
+| Type            | `object`                                            |
++-----------------+-----------------------------------------------------+
+| Description     | Object containing details related to the Python     |
+|                 | implementation.                                     |
+|                 |                                                     |
+|                 | This section **SHOULD** be equivalent to            |
+|                 | `sys.implementation`{.interpreted-text              |
+|                 | role="py:data"}. It follows the specification       |
+|                 | defined in `421`{.interpreted-text role="pep"},     |
+|                 | meaning that in addition to the required keys,      |
+|                 | implementation-specific keys can also exist, but    |
+|                 | must be prefixed with an underscore.                |
++-----------------+-----------------------------------------------------+
+| Required        | **True**                                            |
++-----------------+-----------------------------------------------------+
+| Additional      | **Allowed**                                         |
+| properties      |                                                     |
++-----------------+-----------------------------------------------------+
+
+### `implementation.name`
+
+  ----------------- -----------------------------------------------------
+  Type              `string`
+
+  Description       Lower-case name of the Python implementation.
+
+  Examples          `cpython`, `pypy`, etc.
+
+  Required          **True**
+  ----------------- -----------------------------------------------------
+
+### `implementation.version`
+
++-----------------+---------------------------------------------------------------------------------+
+| Type            | `object`                                                                        |
++-----------------+---------------------------------------------------------------------------------+
+| Description     | Object in the format of `sys.version_info`{.interpreted-text role="py:data"},   |
+|                 | containing the implementation version.                                          |
++-----------------+---------------------------------------------------------------------------------+
+| Examples        | - `{'major': 3, 'minor': 14, 'micro': 1, 'releaselevel': 'final', 'serial': 0}` |
+|                 | - `{'major': 7, 'minor': 3, 'micro': 16, 'releaselevel': 'final', 'serial': 0}` |
+|                 | - etc.                                                                          |
++-----------------+---------------------------------------------------------------------------------+
+| Required        | **True**                                                                        |
++-----------------+---------------------------------------------------------------------------------+
+| Additional      | **Not allowed**                                                                 |
+| properties      |                                                                                 |
++-----------------+---------------------------------------------------------------------------------+
+
+#### `implementation.version.major`
+
+  ----------------- -----------------------------------------------------
+  Type              `number`
+
+  Required          **True**
+  ----------------- -----------------------------------------------------
+
+#### `implementation.version.minor`
+
+  ----------------- -----------------------------------------------------
+  Type              `number`
+
+  Required          **True**
+  ----------------- -----------------------------------------------------
+
+#### `implementation.version.micro`
+
+  ----------------- -----------------------------------------------------
+  Type              `number`
+
+  Required          **True**
+  ----------------- -----------------------------------------------------
+
+#### `implementation.version.releaselevel`
+
+  ----------------- -----------------------------------------------------
+  Type              `string` (enum --- `alpha`, `beta`, `candidate`,
+                    `final`)
+
+  Required          **True**
+  ----------------- -----------------------------------------------------
+
+#### `implementation.version.serial`
+
+  ----------------- -----------------------------------------------------
+  Type              `number`
+
+  Required          **True**
+  ----------------- -----------------------------------------------------
+
+## `abi`
+
+  ----------------- -----------------------------------------------------
+  Type              `object`
+
+  Description       Object containing details related to ABI.
+
+  Required          **False**
+
+  Additional        **Not allowed**
+  properties        
+  ----------------- -----------------------------------------------------
+
+### `abi.flags`
+
++-----------------+-----------------------------------------------------+
+| Type            | `array`                                             |
++-----------------+-----------------------------------------------------+
+| Description     | Build configuration flags, used to calculate the    |
+|                 | extension suffix.                                   |
+|                 |                                                     |
+|                 | The flags **MUST** be defined in the order they     |
+|                 | appear on the extension suffix.                     |
++-----------------+-----------------------------------------------------+
+| Examples        | `['t', 'd']`, etc.                                  |
++-----------------+-----------------------------------------------------+
+| Required        | **True**                                            |
++-----------------+-----------------------------------------------------+
+
+### `abi.extension_suffix`
+
++-----------------+-----------------------------------------------------+
+| Type            | `string`                                            |
++-----------------+-----------------------------------------------------+
+| Description     | Suffix used for extensions built against the        |
+|                 | current implementation version.                     |
+|                 |                                                     |
+|                 | This field **MUST** be present if the Python        |
+|                 | implementation supports extensions, otherwise this  |
+|                 | entry will be missing.                              |
++-----------------+-----------------------------------------------------+
+| Examples        | - `.cpython-314-x86_64-linux-gnu.so`                |
+|                 | - etc.                                              |
++-----------------+-----------------------------------------------------+
+| Required        | **False**                                           |
++-----------------+-----------------------------------------------------+
+
+### `abi.stable_abi_suffix`
+
++-----------------+---------------------------------------------------------------+
+| Type            | `string`                                                      |
++-----------------+---------------------------------------------------------------+
+| Description     | Suffix used for extensions built against the [stable          |
+|                 | ABI](https://docs.python.org/3/c-api/stable.html#stable-abi). |
+|                 |                                                               |
+|                 | This field **MUST** be present if the Python implementation   |
+|                 | has a stable ABI extension suffix, otherwise this entry will  |
+|                 | be missing.                                                   |
++-----------------+---------------------------------------------------------------+
+| Examples        | `.abi3.so`, etc.                                              |
++-----------------+---------------------------------------------------------------+
+| Required        | **False**                                                     |
++-----------------+---------------------------------------------------------------+
+
+## `suffixes`
+
++-----------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Type            | `object`                                                                                                                                                                         |
++-----------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Description     | Valid module suffixes grouped by type.                                                                                                                                           |
+|                 |                                                                                                                                                                                  |
+|                 | This section **MUST** be present if the Python installation supports importing external files, and it **SHOULD** be equivalent to the `importlib.machinery.*_SUFFIXES`           |
+|                 | attributes.                                                                                                                                                                      |
+|                 |                                                                                                                                                                                  |
+|                 | Additionally, if a Python implementation provides extension kinds other than the ones listed on `importlib.machinery` module, they **MAY** add a sub-section for them.           |
++-----------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Examples        | - `{'source': ['.py'], 'bytecode': ['.pyc'], 'optimized_bytecode': ['.pyc'], 'debug_bytecode': ['.pyc'], 'extensions': ['.cpython-313-x86_64-linux-gnu.so', '.abi3.so', '.so']}` |
+|                 | - etc.                                                                                                                                                                           |
++-----------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Required        | **False**                                                                                                                                                                        |
++-----------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Additional      | **Allowed**                                                                                                                                                                      |
+| properties      |                                                                                                                                                                                  |
++-----------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+## `libpython`
+
++-----------------+-----------------------------------------------------+
+| Type            | `object`                                            |
++-----------------+-----------------------------------------------------+
+| Description     | Object containing details related to the            |
+|                 | `libpython` library.                                |
+|                 |                                                     |
+|                 | This section **MUST** by present if Python          |
+|                 | installation provides a `libpython` library,        |
+|                 | otherwise this section will be missing.             |
++-----------------+-----------------------------------------------------+
+| Required        | **False**                                           |
++-----------------+-----------------------------------------------------+
+| Additional      | **Not allowed**                                     |
+| properties      |                                                     |
++-----------------+-----------------------------------------------------+
+
+### `libpython.dynamic`
+
++-----------------+-----------------------------------------------------+
+| Type            | `string`                                            |
++-----------------+-----------------------------------------------------+
+| Description     | The path to the dynamic `libpython` library.        |
+|                 |                                                     |
+|                 | Either an absolute path, or a path relative to      |
+|                 | `base_prefix`.                                      |
+|                 |                                                     |
+|                 | This field **MUST** be present if the Python        |
+|                 | installation provides a dynamic `libpython`         |
+|                 | library, otherwise this entry will be missing.      |
++-----------------+-----------------------------------------------------+
+| Examples        | - `/usr/lib/libpython3.14.so.1.0`                   |
+|                 | - `lib/libpython3.14.so.1.0`                        |
+|                 | - etc.                                              |
++-----------------+-----------------------------------------------------+
+| Required        | **False**                                           |
++-----------------+-----------------------------------------------------+
+
+### `libpython.dynamic_stableabi`
+
++-----------------+-----------------------------------------------------+
+| Type            | `string`                                            |
++-----------------+-----------------------------------------------------+
+| Description     | The path to the dynamic `libpython` library for the |
+|                 | stable ABI.                                         |
+|                 |                                                     |
+|                 | Either an absolute path, or a path relative to      |
+|                 | `base_prefix`.                                      |
+|                 |                                                     |
+|                 | This field **MUST** be present if the Python        |
+|                 | installation provides a dynamic `libpython` library |
+|                 | targetting the Stable ABI, otherwise this entry     |
+|                 | will be missing.                                    |
+|                 |                                                     |
+|                 | If this key is present `dynamic` **MUST** also be   |
+|                 | set.                                                |
++-----------------+-----------------------------------------------------+
+| Examples        | - `/usr/lib/libpython3.so`                          |
+|                 | - `lib/libpython3.so`                               |
+|                 | - etc.                                              |
++-----------------+-----------------------------------------------------+
+| Required        | **False**                                           |
++-----------------+-----------------------------------------------------+
+
+### `libpython.static`
+
++-----------------+----------------------------------------------------------------------+
+| Type            | `string`                                                             |
++-----------------+----------------------------------------------------------------------+
+| Description     | The path to the static `libpython` library.                          |
+|                 |                                                                      |
+|                 | Either an absolute path, or a path relative to `base_prefix`.        |
+|                 |                                                                      |
+|                 | This field **MUST** be present if the Python installation provides a |
+|                 | static `libpython` library, otherwise this entry will be missing.    |
++-----------------+----------------------------------------------------------------------+
+| Examples        | - `/usr/lib/python3.14/config-3.14-x86_64-linux-gnu/libpython3.14.a` |
+|                 | - `lib/python3.14/config-3.14-x86_64-linux-gnu/libpython3.14.a`      |
+|                 | - etc.                                                               |
++-----------------+----------------------------------------------------------------------+
+| Required        | **False**                                                            |
++-----------------+----------------------------------------------------------------------+
+
+### `libpython.link_extensions`
+
++-----------------+-----------------------------------------------------+
+| Type            | `boolean`                                           |
++-----------------+-----------------------------------------------------+
+| Description     | Should extensions built against a dynamic           |
+|                 | `libpython` link to it?                             |
+|                 |                                                     |
+|                 | This field **MUST** be present if the Python        |
+|                 | installation provides a dynamic `libpython`         |
+|                 | library, otherwise this entry will be missing.      |
++-----------------+-----------------------------------------------------+
+| Required        | **False**                                           |
++-----------------+-----------------------------------------------------+
+
+## `c_api`
+
++-----------------+-----------------------------------------------------+
+| Type            | `object`                                            |
++-----------------+-----------------------------------------------------+
+| Description     | Object containing details related to the Python C   |
+|                 | API.                                                |
+|                 |                                                     |
+|                 | This section **MUST** be present if the Python      |
+|                 | implementation provides a C API, otherwise this     |
+|                 | section will be missing.                            |
++-----------------+-----------------------------------------------------+
+| Required        | **False**                                           |
++-----------------+-----------------------------------------------------+
+| Additional      | **Not allowed**                                     |
+| properties      |                                                     |
++-----------------+-----------------------------------------------------+
+
+### `c_api.headers`
+
++-----------------+-----------------------------------------------------+
+| Type            | `string`                                            |
++-----------------+-----------------------------------------------------+
+| Description     | The path to the C API headers.                      |
+|                 |                                                     |
+|                 | Either an absolute path, or a path relative to      |
+|                 | `base_prefix`.                                      |
++-----------------+-----------------------------------------------------+
+| Examples        | - `/usr/include/python3.14`                         |
+|                 | - `include/python3.14`                              |
+|                 | - etc.                                              |
++-----------------+-----------------------------------------------------+
+| Required        | **True**                                            |
++-----------------+-----------------------------------------------------+
+
+### `c_api.pkgconfig_path`
+
++-----------------+-----------------------------------------------------+
+| Type            | `string`                                            |
++-----------------+-----------------------------------------------------+
+| Description     | The path to the pkg-config definition files.        |
+|                 |                                                     |
+|                 | Either an absolute path, or a path relative to      |
+|                 | `base_prefix`.                                      |
+|                 |                                                     |
+|                 | This field **MUST** be present if the Python        |
+|                 | implementation provides pkg-config definition       |
+|                 | files, otherwise this section will be missing.      |
++-----------------+-----------------------------------------------------+
+| Examples        | - `/usr/lib/pkgconfig`                              |
+|                 | - `lib/pkgconfig`                                   |
+|                 | - etc.                                              |
++-----------------+-----------------------------------------------------+
+| Required        | **False**                                           |
++-----------------+-----------------------------------------------------+
+
+## `arbitrary_data`
+
++-----------------+-----------------------------------------------------+
+| Type            | `object`                                            |
++-----------------+-----------------------------------------------------+
+| Description     | Object containing extra arbitrary data.             |
+|                 |                                                     |
+|                 | This is meant to be used as an escape-hatch, to     |
+|                 | include any relevant data that is not covered by    |
+|                 | this specification. Implementations may choose what |
+|                 | data to provide in this section.                    |
++-----------------+-----------------------------------------------------+
+| Required        | **False**                                           |
++-----------------+-----------------------------------------------------+
+| Additional      | **Allowed**                                         |
+| properties      |                                                     |
++-----------------+-----------------------------------------------------+
+
+# Example {#spec-end}
+
+::: {.literalinclude language="json" linenos=""}
+pep-0739/example.json
+:::
+
+# JSON Schema
+
+::: {.literalinclude language="json" linenos=""}
+pep-0739/python-build-info-v1.0.schema.json
+:::
+
+# Rejected Ideas
+
+## Including environment-specific data
+
+One of the main requests in the discussion of this PEP was the inclusion
+of other kind of information, such as the `site-packages` path. It is
+the opinion of the PEP authors that information regarding the Python
+environment should be provided by a separate file.
+
+Including environment-specific data in the config file means that it
+would be environment-specific, so virtual environments would need their
+own config file. This is problematic because virtual environments
+survive updates of the base Python installation, creating the possibily
+for the static config file to be outdated, and making its data
+unreliable, which defeats its purpose.
+
+The proposed solution, partially implemented in this PEP, is to have a
+`build-details.json` file, referent to the base Python installation, and
+a `environment.json` file, referent to the specific environment.
+
+With `build-details.json` being part of the Python distribution, when
+the base Python installation gets updated, `build-details.json` does
+too, ensuring the static description files are never outdated.
+
+# Copyright
+
+This document is placed in the public domain or under the
+CC0-1.0-Universal license, whichever is more permissive.

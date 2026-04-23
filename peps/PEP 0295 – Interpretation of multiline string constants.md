@@ -1,0 +1,110 @@
+---
+pep: 295
+title: Interpretation of multiline string constants
+author:
+- Stepan Koltsov <yozh@mx1.ru>
+status: Rejected
+type: Standards Track
+created: 22-Jul-2002
+python_version: '3.0'
+post_history: []
+python_status: Rejected
+url: https://peps.python.org/pep-0295/
+source_path: https://github.com/python/peps/blob/main/peps/pep-0295.rst
+source_commit: 528ab44afbc38daee4ae5c361f1bc79f600155b0
+generated_at: '2026-04-23T06:17:26+00:00'
+---
+
+# Abstract
+
+This PEP describes an interpretation of multiline string constants for
+Python. It suggests stripping spaces after newlines and stripping a
+newline if it is first character after an opening quotation.
+
+# Rationale
+
+This PEP proposes an interpretation of multiline string constants in
+Python. Currently, the value of string constant is all the text between
+quotations, maybe with escape sequences substituted, e.g.:
+
+    def f():
+        """
+        la-la-la
+        limona, banana
+        """
+
+    def g():
+        return "This is \
+        string"
+
+    print repr(f.__doc__)
+    print repr(g())
+
+prints:
+
+    '\n\tla-la-la\n\tlimona, banana\n\t'
+    'This is \tstring'
+
+This PEP suggest two things:
+
+- ignore the first character after opening quotation, if it is newline
+- ignore in string constants all spaces and tabs up to first
+  non-whitespace character, but no more than current indentation.
+
+After applying this, previous program will print:
+
+    'la-la-la\nlimona, banana\n'
+    'This is string'
+
+To get this result, previous programs could be rewritten for current
+Python as (note, this gives the same result with new strings meaning):
+
+    def f():
+        """\
+    la-la-la
+    limona, banana
+    """
+
+    def g():
+      "This is \
+    string"
+
+Or stripping can be done with library routines at runtime (as pydoc
+does), but this decreases program readability.
+
+# Implementation
+
+I\'ll say nothing about CPython, Jython or Python.NET.
+
+In original Python, there is no info about the current indentation (in
+spaces) at compile time, so space and tab stripping should be done at
+parse time. Currently no flags can be passed to the parser in program
+text (like `from __future__ import xxx`). I suggest enabling or
+disabling of this feature at Python compile time depending of CPP flag
+`Py_PARSE_MULTILINE_STRINGS`.
+
+# Alternatives
+
+New interpretation of string constants can be implemented with flags
+\'i\' and \'o\' to string constants, like:
+
+    i"""
+    SELECT * FROM car
+    WHERE model = 'i525'
+    """ is in new style,
+
+    o"""SELECT * FROM employee
+    WHERE birth < 1982
+    """ is in old style, and
+
+    """
+    SELECT employee.name, car.name, car.price FROM employee, car
+    WHERE employee.salary * 36 > car.price
+    """ is in new style after Python-x.y.z and in old style otherwise.
+
+Also this feature can be disabled if string is raw, i.e. if flag \'r\'
+specified.
+
+# Copyright
+
+This document has been placed in the Public Domain.
