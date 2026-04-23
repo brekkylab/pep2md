@@ -77,6 +77,8 @@ jobs:
       - name: Publish generated outputs to dedicated branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          FULL_SYNC_INPUT: ${{ github.event.inputs.full_sync }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -106,5 +108,13 @@ jobs:
             exit 0
           fi
 
-          git commit -m "sync PEP markdown mirror ($(date -u +'%Y-%m-%d'))"
+          COMMIT_MSG="sync PEP markdown mirror ($(date -u +'%Y-%m-%d'))"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            COMMIT_MSG="$COMMIT_MSG [manual]"
+          fi
+          if [ "$FULL_SYNC_INPUT" = "true" ]; then
+            COMMIT_MSG="$COMMIT_MSG [full]"
+          fi
+
+          git commit -m "$COMMIT_MSG"
           git push origin "$OUTPUT_BRANCH"
