@@ -10,8 +10,8 @@ python_version: '3.6'
 python_status: Rejected
 url: https://peps.python.org/pep-0490/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0490.rst
-source_commit: 528ab44afbc38daee4ae5c361f1bc79f600155b0
-generated_at: '2026-04-23T06:17:34+00:00'
+source_commit: 694086c010df64f20e72df84fae0ba20bfe86bff
+generated_at: '2026-04-24T03:27:54+00:00'
 ---
 
 # Abstract

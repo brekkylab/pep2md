@@ -21,8 +21,8 @@ resolution: '`30-Mar-2026 <https://discuss.python.org/t/106181/26>`__'
 python_status: Accepted
 url: https://peps.python.org/pep-0803/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0803.rst
-source_commit: 528ab44afbc38daee4ae5c361f1bc79f600155b0
-generated_at: '2026-04-23T06:17:49+00:00'
+source_commit: 694086c010df64f20e72df84fae0ba20bfe86bff
+generated_at: '2026-04-24T03:28:09+00:00'
 ---
 
 # Abstract

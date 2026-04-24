@@ -13,8 +13,8 @@ resolution: https://mail.python.org/pipermail/python-dev/2012-March/117507.html
 python_status: Final
 url: https://peps.python.org/pep-0417/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0417.rst
-source_commit: 528ab44afbc38daee4ae5c361f1bc79f600155b0
-generated_at: '2026-04-23T06:17:30+00:00'
+source_commit: 694086c010df64f20e72df84fae0ba20bfe86bff
+generated_at: '2026-04-24T03:27:51+00:00'
 ---
 
 # Abstract

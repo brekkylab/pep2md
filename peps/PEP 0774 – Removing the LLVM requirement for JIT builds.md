@@ -14,8 +14,8 @@ resolution: '`14-Mar-2025 <https://discuss.python.org/t/78548/34>`__'
 python_status: Deferred
 url: https://peps.python.org/pep-0774/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0774.rst
-source_commit: 528ab44afbc38daee4ae5c361f1bc79f600155b0
-generated_at: '2026-04-23T06:17:48+00:00'
+source_commit: 694086c010df64f20e72df84fae0ba20bfe86bff
+generated_at: '2026-04-24T03:28:08+00:00'
 ---
 
 # Abstract

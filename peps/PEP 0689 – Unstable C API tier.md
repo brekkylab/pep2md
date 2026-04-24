@@ -18,8 +18,8 @@ resolution: https://discuss.python.org/t/pep-689-unstable-c-api-tier/20452/13
 python_status: Final
 url: https://peps.python.org/pep-0689/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0689.rst
-source_commit: 528ab44afbc38daee4ae5c361f1bc79f600155b0
-generated_at: '2026-04-23T06:17:43+00:00'
+source_commit: 694086c010df64f20e72df84fae0ba20bfe86bff
+generated_at: '2026-04-24T03:28:04+00:00'
 ---
 
 ::: canonical-doc

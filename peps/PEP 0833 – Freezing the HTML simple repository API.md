@@ -16,8 +16,8 @@ post_history:
 python_status: Draft
 url: https://peps.python.org/pep-0833/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0833.rst
-source_commit: 528ab44afbc38daee4ae5c361f1bc79f600155b0
-generated_at: '2026-04-23T06:17:50+00:00'
+source_commit: 694086c010df64f20e72df84fae0ba20bfe86bff
+generated_at: '2026-04-24T03:28:10+00:00'
 ---
 
 # Abstract
@@ -128,9 +128,9 @@ The purpose of this PEP is to formalize this status quo.
 
 The HTML representation of the simple repository API is frozen for the
 purposes of Python packaging standards processes. Future Python
-packaging PEPs **SHOULD NOT** modify the HTML representation of the
-simple repository API, and **MUST** instead modify the JSON
-representation.
+packaging PEPs **MUST** target the JSON representation as the primary
+form of the simple repository API. They **SHOULD NOT** make changes to
+the HTML representation.
 
 This PEP does not alter the status of the HTML representation on PyPI
 and does not prescribe any behavioral changes for installers.
@@ -215,7 +215,8 @@ representations, this PEP proposes the following if accepted:
   `living standard <packaging:simple-repository-api>`{.interpreted-text
   role="ref"} for the simple repository API, including admonitions and
   callouts where appropriate to indicate that the HTML representation
-  will not receive future updates.
+  will not receive future updates and that consumers who wish to benefit
+  from future updates should prefer the JSON representation instead.
 
 # Rejected Ideas
 
