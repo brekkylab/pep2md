@@ -17,8 +17,8 @@ resolution: '`31-Jan-2025 <https://discuss.python.org/t/pep-759-external-wheel-h
 python_status: Withdrawn
 url: https://peps.python.org/pep-0759/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0759.rst
-source_commit: 694086c010df64f20e72df84fae0ba20bfe86bff
-generated_at: '2026-04-24T03:28:07+00:00'
+source_commit: b167bc87fdcb0d316ed4b4af1e32d30cba9e07f7
+generated_at: '2026-04-25T02:55:46+00:00'
 ---
 
 # Abstract

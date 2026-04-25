@@ -5,18 +5,19 @@ author:
 - Tal Einat <tal@python.org>
 - Jelle Zijlstra <jelle.zijlstra@gmail.com>
 discussions_to: https://discuss.python.org/t/pep-661-sentinel-values/9126
-status: Draft
+status: Accepted
 type: Standards Track
 created: 06-Jun-2021
 python_version: '3.15'
 post_history:
 - '`20-May-2021 <https://discuss.python.org/t/sentinel-values-in-the-stdlib/8810>`__'
 - '`06-Jun-2021 <https://discuss.python.org/t/pep-661-sentinel-values/9126>`__'
-python_status: Draft
+resolution: '`23-Apr-2026 <https://discuss.python.org/t/pep-661-sentinel-values/9126/337>`__'
+python_status: Accepted
 url: https://peps.python.org/pep-0661/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0661.rst
-source_commit: 694086c010df64f20e72df84fae0ba20bfe86bff
-generated_at: '2026-04-24T03:28:02+00:00'
+source_commit: b167bc87fdcb0d316ed4b4af1e32d30cba9e07f7
+generated_at: '2026-04-25T02:55:41+00:00'
 ---
 
 # Abstract
@@ -272,8 +273,10 @@ this part of the proposal.
 Sentinels can also be useful in C extensions. We propose two new C API
 functions:
 
-    * ``PyObject *PySentinel_New(const char *name, const char *module_name)`` creates a new sentinel object.
-    * ``bool PySentinel_Check(PyObject *obj)`` checks if an object is a sentinel.
+- `PyObject *PySentinel_New(const char *name, const char *module_name)`
+  creates a new sentinel object.
+- `bool PySentinel_Check(PyObject *obj)` checks if an object is a
+  sentinel.
 
 C code can use the `==` operator to check if an object is a specific
 sentinel.

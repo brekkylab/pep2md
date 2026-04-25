@@ -10,11 +10,12 @@ created: 19-Jan-2026
 python_version: '3.15'
 post_history:
 - '`15-Apr-2026 <https://discuss.python.org/t/106998>`__'
+- '`23-Apr-2026 <https://discuss.python.org/t/106998/52>`__'
 python_status: Draft
 url: https://peps.python.org/pep-0832/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0832.rst
-source_commit: 694086c010df64f20e72df84fae0ba20bfe86bff
-generated_at: '2026-04-24T03:28:10+00:00'
+source_commit: b167bc87fdcb0d316ed4b4af1e32d30cba9e07f7
+generated_at: '2026-04-25T02:55:50+00:00'
 ---
 
 # Abstract
@@ -390,7 +391,7 @@ The extra data in the file could record other virtual environments that
 the project has. Optionally, the path could be separated from a labelled
 name by a `\t`. The default virtual environment would be allowed to be
 listed in the labelled section if an explicit label was desired. Another
-option would to record such data in a JSON trailer in the file.
+option would to record such data in a JSON/JSONL trailer in the file.
 
 # Acknowledgements
 
@@ -402,19 +403,19 @@ on the initial draft of this PEP.
 
 # Change History
 
-- 
-
-  23-Apr-2026: Add PyCharm and library-skills support; have redirect files
-
-  :   read up to the first newline; clarify there is no opinion to
-      having multiple virtual environments; explicitly use the code
-      editor example for the motivation; have `venv.executable()` be
-      configurable for the virtual environment name; clarify symlinks
-      are not to be treated in any special way; move the Rationale after
-      the Specification and simplify the latter by moving details to the
-      former; loosened things involving \"MAY\", \"SHOULD\", and \"NOT\"
-      so tools are not required to do anything beyond how they interpret
-      a redirect file.
+- 23-Apr-2026
+  - Add PyCharm and library-skills support
+  - Have redirect files read up to the first newline
+  - Clarify there is no opinion to having multiple virtual environments
+  - Explicitly use the code editor example for the motivation
+  - Have `venv.executable()` be configurable for the virtual environment
+    name
+  - Clarify symlinks are not to be treated in any special way
+  - Move the Rationale after the Specification and simplify the latter
+    by moving details to the former
+  - Loosened things involving \"MAY\", \"SHOULD\", and \"NOT\" so tools
+    are not required to do anything beyond how they interpret a redirect
+    file
 
 # Copyright
 

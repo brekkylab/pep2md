@@ -18,8 +18,8 @@ resolution: https://discuss.python.org/t/pep-601-forbid-return-break-continue-br
 python_status: Rejected
 url: https://peps.python.org/pep-0601/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0601.rst
-source_commit: 694086c010df64f20e72df84fae0ba20bfe86bff
-generated_at: '2026-04-24T03:27:59+00:00'
+source_commit: b167bc87fdcb0d316ed4b4af1e32d30cba9e07f7
+generated_at: '2026-04-25T02:55:38+00:00'
 ---
 
 # Rejection Note

@@ -17,8 +17,8 @@ created: 08-Oct-2014
 python_status: Draft
 url: https://peps.python.org/pep-0480/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0480.rst
-source_commit: 694086c010df64f20e72df84fae0ba20bfe86bff
-generated_at: '2026-04-24T03:27:54+00:00'
+source_commit: b167bc87fdcb0d316ed4b4af1e32d30cba9e07f7
+generated_at: '2026-04-25T02:55:33+00:00'
 ---
 
 # Abstract
