@@ -30,7 +30,7 @@ def build_indexes(peps_dir: Path, index_dir: Path) -> tuple[Path, Path]:
             "python_status": meta.get("python_status", meta.get("status", "")),
             "path": str(md_path),
             "source_commit": meta.get("source_commit", ""),
-            "updated_at": meta.get("generated_at", ""),
+            "updated_at": meta.get("generated_at", meta.get("source_commit", "")),
         }
         row.update(meta)
         rows.append(row)

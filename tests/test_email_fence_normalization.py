@@ -20,8 +20,8 @@ def test_email_fence_is_normalized_to_yaml(tmp_path):
             pep_num=12,
             rst_text=rst_text,
             source_path="https://github.com/python/peps/blob/main/peps/pep-0012.rst",
+            source_revision="blob-sha-12",
             out_dir=out_dir,
-            source_commit="abc",
             pep_map=pep_map,
         )
     finally:

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import datetime as dt
 import json
 import os
 import re
@@ -115,8 +114,8 @@ def _convert_one_text(
     pep_num: int,
     rst_text: str,
     source_path: str,
+    source_revision: str,
     out_dir: Path,
-    source_commit: str,
     pep_map: dict[int, str],
     pandoc_quiet: bool = False,
 ) -> Path:
@@ -136,7 +135,6 @@ def _convert_one_text(
     pep_to_file = {k: out_dir / v for k, v in pep_map.items()}
     markdown_body = rewrite_internal_links(markdown_body, out_path, pep_to_file)
 
-    generated_at = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
     normalized = {
         "pep": pep_num,
         "title": title,
@@ -144,8 +142,7 @@ def _convert_one_text(
         "python_status": meta.get("status", ""),
         "url": f"https://peps.python.org/pep-{pep_num:04d}/",
         "source_path": source_path,
-        "source_commit": source_commit,
-        "generated_at": generated_at,
+        "source_commit": source_revision,
     }
     frontmatter = {**_normalize_frontmatter_meta(meta), **normalized}
 
@@ -255,8 +252,8 @@ def sync_incremental(
                     pep,
                     texts[pep],
                     source.blob_url(branch, remote_files[pep].path),
+                    remote_files[pep].sha,
                     peps_dir,
-                    head,
                     pep_map,
                     suppress_pandoc_warnings,
                 )

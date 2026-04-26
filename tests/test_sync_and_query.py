@@ -98,6 +98,8 @@ def test_sync_incremental_and_query(tmp_path, monkeypatch):
     assert front["post_history"] == ["2001-03-01", "2001-03-02", "2001-03-03"]
     assert front["url"] == "https://peps.python.org/pep-0008/"
     assert front["source_path"] == "https://github.com/python/peps/blob/main/peps/pep-0008.rst"
+    assert front["source_commit"] == "s8"
+    assert "generated_at" not in front
 
     _set_remote(
         monkeypatch,
