@@ -10,8 +10,7 @@ python_version: '3.5'
 python_status: Withdrawn
 url: https://peps.python.org/pep-0460/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0460.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:20+00:00'
+source_commit: eaa9712e90d50394c61472774b53f67c95731db5
 ---
 
 # Abstract

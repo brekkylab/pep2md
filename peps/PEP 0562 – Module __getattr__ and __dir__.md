@@ -13,8 +13,7 @@ resolution: https://mail.python.org/pipermail/python-dev/2017-December/151033.ht
 python_status: Final
 url: https://peps.python.org/pep-0562/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0562.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:23+00:00'
+source_commit: 6a72245da11f8286a835ff68c1a09da8313fa5be
 ---
 
 ::: canonical-doc

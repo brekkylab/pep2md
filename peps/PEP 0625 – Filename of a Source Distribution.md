@@ -16,8 +16,7 @@ resolution: https://discuss.python.org/t/pep-625-file-name-of-a-source-distribut
 python_status: Final
 url: https://peps.python.org/pep-0625/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0625.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:26+00:00'
+source_commit: 4b1d509915df1d40c9cf284bbf64c23c8d5643a0
 ---
 
 ::: canonical-pypa-spec

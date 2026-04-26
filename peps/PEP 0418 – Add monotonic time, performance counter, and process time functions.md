@@ -13,8 +13,7 @@ python_version: '3.3'
 python_status: Final
 url: https://peps.python.org/pep-0418/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0418.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:18+00:00'
+source_commit: 8b18a1693f3065b96c0aceeab916b60f24f0c85d
 ---
 
 # Abstract

@@ -11,8 +11,7 @@ python_version: '3.6'
 python_status: Final
 url: https://peps.python.org/pep-0494/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0494.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:21+00:00'
+source_commit: 90f998ae094eaa147da4267ecd324d0fd651b735
 ---
 
 # Abstract

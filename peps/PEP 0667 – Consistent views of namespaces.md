@@ -16,8 +16,7 @@ resolution: '`25-Apr-2024 <https://discuss.python.org/t/46631/25>`__'
 python_status: Final
 url: https://peps.python.org/pep-0667/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0667.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:28+00:00'
+source_commit: 1cd82b48022abeabebfed265b044655e80fc09e3
 ---
 
 ::: canonical-doc

@@ -10,8 +10,7 @@ python_version: '3.3'
 python_status: Deferred
 url: https://peps.python.org/pep-0400/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0400.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:17+00:00'
+source_commit: e37f3854de6c234e08e3c0d016e60dcf85a2fb30
 ---
 
 # Abstract

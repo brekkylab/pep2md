@@ -12,8 +12,7 @@ post_history:
 python_status: April Fool!
 url: https://peps.python.org/pep-0401/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0401.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:17+00:00'
+source_commit: 4073a588e187489073bf0dd8cc400e3d4d008769
 ---
 
 # Abstract

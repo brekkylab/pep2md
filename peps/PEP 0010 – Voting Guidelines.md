@@ -11,8 +11,7 @@ post_history:
 python_status: Active
 url: https://peps.python.org/pep-0010/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0010.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:12+00:00'
+source_commit: 8f25d25e8f6d1cf675a3ac94f24347c9873a34ee
 ---
 
 # Abstract

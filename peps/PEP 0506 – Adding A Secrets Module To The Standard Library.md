@@ -11,8 +11,7 @@ post_history: []
 python_status: Final
 url: https://peps.python.org/pep-0506/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0506.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:22+00:00'
+source_commit: cdf8c8f8c14721f5e5bc0ac5c50b21d2e22a3d5a
 ---
 
 # Abstract

@@ -15,8 +15,7 @@ resolution: https://mail.python.org/pipermail/distutils-sig/2013-April/020597.ht
 python_status: Rejected
 url: https://peps.python.org/pep-0390/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0390.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:17+00:00'
+source_commit: 77620bb0fdfca1cc632c63ab900d2fd0e0d0954d
 ---
 
 # Abstract

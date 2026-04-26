@@ -15,8 +15,7 @@ resolution: '`21-Aug-2025 <https://discuss.python.org/t/pep-799-a-dedicated-prof
 python_status: Accepted
 url: https://peps.python.org/pep-0799/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0799.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:33+00:00'
+source_commit: b941420f147b8ae7f561454b625d736b1b64332a
 ---
 
 # Abstract

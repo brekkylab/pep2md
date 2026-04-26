@@ -19,8 +19,7 @@ resolution: '`17-Jul-2024 <https://discuss.python.org/t/pep-740-index-support-fo
 python_status: Final
 url: https://peps.python.org/pep-0740/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0740.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:30+00:00'
+source_commit: ce054ddd9f7ac00dadb612f99a6d08ef916fdbd2
 ---
 
 ::: canonical-pypa-spec

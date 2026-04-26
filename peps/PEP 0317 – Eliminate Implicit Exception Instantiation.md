@@ -12,8 +12,7 @@ post_history:
 python_status: Rejected
 url: https://peps.python.org/pep-0317/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0317.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:15+00:00'
+source_commit: 025a2d3c1c96d4da18365da8f2305b32d18de7c8
 ---
 
 # Abstract

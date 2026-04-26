@@ -12,8 +12,7 @@ post_history:
 python_status: Final
 url: https://peps.python.org/pep-0412/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0412.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:18+00:00'
+source_commit: 09d6481a8ac0c852759ff4538ccda935de224ce6
 ---
 
 # Abstract

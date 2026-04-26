@@ -11,8 +11,7 @@ created: 16-Apr-2015
 python_status: Deferred
 url: https://peps.python.org/pep-0491/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0491.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:21+00:00'
+source_commit: abe553c660be3ac36cb4684396f4289d0e523aa9
 ---
 
 # Abstract

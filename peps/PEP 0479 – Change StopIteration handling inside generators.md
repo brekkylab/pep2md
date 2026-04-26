@@ -15,8 +15,7 @@ post_history:
 python_status: Final
 url: https://peps.python.org/pep-0479/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0479.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:21+00:00'
+source_commit: 7770f785d37e136ac1267e13bd8e7bd37cec930f
 ---
 
 # Abstract

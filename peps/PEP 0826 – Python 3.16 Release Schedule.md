@@ -11,8 +11,7 @@ python_version: '3.16'
 python_status: Active
 url: https://peps.python.org/pep-0826/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0826.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:33+00:00'
+source_commit: 62030c17c7af4bbd1e67a8a67a5e93d7948d6398
 ---
 
 # Abstract

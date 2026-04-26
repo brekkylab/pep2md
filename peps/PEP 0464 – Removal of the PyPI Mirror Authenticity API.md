@@ -16,8 +16,7 @@ resolution: https://mail.python.org/pipermail/distutils-sig/2014-March/024027.ht
 python_status: Final
 url: https://peps.python.org/pep-0464/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0464.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:20+00:00'
+source_commit: 9559d3a69507e9c960425c8b61e90cbc02065a4f
 ---
 
 # Abstract

@@ -11,8 +11,7 @@ created: 01-Nov-2018
 python_status: Accepted
 url: https://peps.python.org/pep-8016/
 source_path: https://github.com/python/peps/blob/main/peps/pep-8016.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:36+00:00'
+source_commit: f18e42d686a70a461a27e921016ef3dfbe682c68
 ---
 
 # Note

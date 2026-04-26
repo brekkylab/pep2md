@@ -11,8 +11,7 @@ python_version: '3.12'
 python_status: Draft
 url: https://peps.python.org/pep-0720/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0720.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:30+00:00'
+source_commit: e9c2dd1a378fae7574ba0fbe2e1d78c2e953e991
 ---
 
 # Abstract

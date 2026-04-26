@@ -18,8 +18,7 @@ post_history:
 python_status: Final
 url: https://peps.python.org/pep-0305/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0305.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:15+00:00'
+source_commit: a911704e6cae7e7673f8f9e5e55eb034f1059164
 ---
 
 # Abstract

@@ -15,8 +15,7 @@ post_history:
 python_status: Draft
 url: https://peps.python.org/pep-0746/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0746.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:31+00:00'
+source_commit: bd7313492fcc1c9a9d7cf6d717691d377fe707b5
 ---
 
 # Abstract

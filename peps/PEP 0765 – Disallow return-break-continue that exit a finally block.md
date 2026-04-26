@@ -17,8 +17,7 @@ resolution: https://discuss.python.org/t/71348/111
 python_status: Final
 url: https://peps.python.org/pep-0765/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0765.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:31+00:00'
+source_commit: 883942f9bc2d2fda29508be697d0f94e6356fd34
 ---
 
 ::: canonical-doc

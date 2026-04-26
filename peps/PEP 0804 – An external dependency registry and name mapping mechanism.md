@@ -19,8 +19,7 @@ post_history:
 python_status: Draft
 url: https://peps.python.org/pep-0804/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0804.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:33+00:00'
+source_commit: 239567c86d3f7c41c26c1abeb3239d46aff76d43
 ---
 
 # Abstract

@@ -15,8 +15,7 @@ resolution: '`05-Jun-2025 <https://discuss.python.org/t/41147/36>`__'
 python_status: Final
 url: https://peps.python.org/pep-0734/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0734.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:30+00:00'
+source_commit: ee87c28ff5b0e1789cd0b308be367157adce2437
 ---
 
 ::: canonical-doc

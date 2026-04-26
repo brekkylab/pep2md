@@ -15,8 +15,7 @@ resolution: https://discuss.python.org/t/14737/9
 python_status: Final
 url: https://peps.python.org/pep-0686/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0686.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:28+00:00'
+source_commit: 903dbadd20e460c34bd8471eb3ded7605721192e
 ---
 
 # Abstract

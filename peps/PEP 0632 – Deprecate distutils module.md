@@ -15,8 +15,7 @@ resolution: https://mail.python.org/archives/list/python-dev@python.org/thread/T
 python_status: Final
 url: https://peps.python.org/pep-0632/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0632.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:26+00:00'
+source_commit: 8f0d7ca718d39c37497435a29071e62b324b617b
 ---
 
 # Abstract

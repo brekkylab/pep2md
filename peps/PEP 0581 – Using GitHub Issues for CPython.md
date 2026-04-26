@@ -14,8 +14,7 @@ resolution: https://mail.python.org/pipermail/python-dev/2019-May/157399.html
 python_status: Final
 url: https://peps.python.org/pep-0581/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0581.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:24+00:00'
+source_commit: 7405d52296904a746eab09240ce96e46ea79c686
 ---
 
 # Abstract

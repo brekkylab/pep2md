@@ -15,8 +15,7 @@ resolution: https://discuss.python.org/t/pep-732-the-python-documentation-editor
 python_status: Active
 url: https://peps.python.org/pep-0732/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0732.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:30+00:00'
+source_commit: b64ae519721ed1c1a58906e552cc1a9e4a647a9a
 ---
 
 # Abstract

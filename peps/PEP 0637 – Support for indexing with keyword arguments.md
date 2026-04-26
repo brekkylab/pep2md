@@ -15,8 +15,7 @@ resolution: https://mail.python.org/archives/list/python-dev@python.org/thread/6
 python_status: Rejected
 url: https://peps.python.org/pep-0637/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0637.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:26+00:00'
+source_commit: b862ae2113d2c34c2c751c54aaf42fbf2c193b7d
 ---
 
 :::: note

@@ -18,8 +18,7 @@ resolution: https://discuss.python.org/t/pep-691-json-based-simple-api-for-pytho
 python_status: Accepted
 url: https://peps.python.org/pep-0691/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0691.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:29+00:00'
+source_commit: 6852ab63ac493b19b2a55ade2c79d8d5d8ad3cf4
 ---
 
 ::: canonical-pypa-spec

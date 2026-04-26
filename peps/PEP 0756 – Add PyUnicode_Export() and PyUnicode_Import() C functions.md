@@ -15,8 +15,7 @@ resolution: '`29-Oct-2024 <https://discuss.python.org/t/63891/62>`__'
 python_status: Withdrawn
 url: https://peps.python.org/pep-0756/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0756.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:31+00:00'
+source_commit: 6e8bd73aaa2369477a164c4d5bf100beb41a405b
 ---
 
 # Abstract

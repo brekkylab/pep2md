@@ -10,8 +10,7 @@ created: 24-Aug-2018
 python_status: Final
 url: https://peps.python.org/pep-8000/
 source_path: https://github.com/python/peps/blob/main/peps/pep-8000.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:36+00:00'
+source_commit: 4c413531c2cd79a70ac764bd40749e3e543bbb2e
 ---
 
 # Abstract

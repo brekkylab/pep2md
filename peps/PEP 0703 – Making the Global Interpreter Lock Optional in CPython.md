@@ -16,8 +16,7 @@ resolution: '`24-Oct-2023 <https://discuss.python.org/t/pep-703-making-the-globa
 python_status: Accepted
 url: https://peps.python.org/pep-0703/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0703.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:29+00:00'
+source_commit: a7c7eb4efd15d2f9c2e06624efe71639d5d0d183
 ---
 
 :::: note

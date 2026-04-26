@@ -13,8 +13,7 @@ superseded_by: '101'
 python_status: Superseded
 url: https://peps.python.org/pep-0102/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0102.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:12+00:00'
+source_commit: d1e686546653197a5f167c3627a465a9142d98de
 ---
 
 # Replacement Note

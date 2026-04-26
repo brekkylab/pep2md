@@ -11,8 +11,7 @@ created: 24-Aug-2018
 python_status: Rejected
 url: https://peps.python.org/pep-8011/
 source_path: https://github.com/python/peps/blob/main/peps/pep-8011.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:36+00:00'
+source_commit: 4d9ab10cd970a13ac8f73dba69b85961c1c58b4d
 ---
 
 # Abstract

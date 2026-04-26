@@ -13,8 +13,7 @@ resolution: https://mail.python.org/pipermail/python-dev/2013-November/130424.ht
 python_status: Final
 url: https://peps.python.org/pep-0428/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0428.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:18+00:00'
+source_commit: 449c533a9debe257bbb4cc4d3d1db1fc8f585a53
 ---
 
 # Abstract

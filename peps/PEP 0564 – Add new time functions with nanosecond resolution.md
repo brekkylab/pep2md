@@ -11,8 +11,7 @@ resolution: https://mail.python.org/pipermail/python-dev/2017-October/150046.htm
 python_status: Final
 url: https://peps.python.org/pep-0564/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0564.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:24+00:00'
+source_commit: f2f55195898613dad634ff96abb1f41b44505dea
 ---
 
 # Abstract

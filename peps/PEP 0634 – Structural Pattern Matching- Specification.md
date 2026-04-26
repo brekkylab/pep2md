@@ -18,8 +18,7 @@ resolution: https://mail.python.org/archives/list/python-committers@python.org/m
 python_status: Final
 url: https://peps.python.org/pep-0634/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0634.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:26+00:00'
+source_commit: 8b35cce35fea1eb8a7ad7f31db35c208361cf4d5
 ---
 
 ::: canonical-doc

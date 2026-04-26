@@ -14,8 +14,7 @@ python_version: '3.13'
 python_status: Final
 url: https://peps.python.org/pep-0762/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0762.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:31+00:00'
+source_commit: a4d1aa77d2b30ec448323c3911213d65ed91f092
 ---
 
 # Abstract

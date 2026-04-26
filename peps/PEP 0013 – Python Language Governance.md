@@ -10,8 +10,7 @@ created: 16-Dec-2018
 python_status: Active
 url: https://peps.python.org/pep-0013/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0013.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:12+00:00'
+source_commit: 54361685ea1af431bb2770926a9f6976db8d90f8
 ---
 
 # Abstract

@@ -14,8 +14,7 @@ resolution: https://discuss.python.org/t/44572/90
 python_status: Accepted
 url: https://peps.python.org/pep-0739/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0739.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:30+00:00'
+source_commit: 2bf5039bcec7c6769761d4168544675869716c21
 ---
 
 # Abstract

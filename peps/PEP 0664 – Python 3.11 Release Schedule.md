@@ -11,8 +11,7 @@ python_version: '3.11'
 python_status: Active
 url: https://peps.python.org/pep-0664/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0664.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:27+00:00'
+source_commit: 0d42676ed623572ce385fd51b6b47208642baf47
 ---
 
 # Abstract

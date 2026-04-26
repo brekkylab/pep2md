@@ -16,8 +16,7 @@ resolution: https://discuss.python.org/t/how-to-specify-dependencies-pep-508-str
 python_status: Superseded
 url: https://peps.python.org/pep-0631/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0631.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:26+00:00'
+source_commit: de4ca2fac6cf472091120e7131f31edf3779c711
 ---
 
 # Abstract

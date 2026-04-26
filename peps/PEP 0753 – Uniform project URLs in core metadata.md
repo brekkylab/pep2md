@@ -18,8 +18,7 @@ resolution: '`10-Oct-2024 <https://discuss.python.org/t/62792/30>`__'
 python_status: Accepted
 url: https://peps.python.org/pep-0753/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0753.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:31+00:00'
+source_commit: 2bb39241397455b1e59074677ddb32d4d4c3df4c
 ---
 
 ::: canonical-pypa-spec

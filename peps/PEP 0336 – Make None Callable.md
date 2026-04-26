@@ -10,8 +10,7 @@ post_history: []
 python_status: Rejected
 url: https://peps.python.org/pep-0336/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0336.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:15+00:00'
+source_commit: 573c807e0c1da4c98301edf2a0217c175c4c119f
 ---
 
 # Abstract

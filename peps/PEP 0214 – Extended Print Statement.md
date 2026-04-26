@@ -12,8 +12,7 @@ post_history:
 python_status: Final
 url: https://peps.python.org/pep-0214/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0214.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:12+00:00'
+source_commit: 5bea38f3d882dc6590efedf98a4f53c42182bfdc
 ---
 
 # Introduction

@@ -18,8 +18,7 @@ post_history:
 python_status: Final
 url: https://peps.python.org/pep-0604/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0604.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:25+00:00'
+source_commit: 1757cfda2176a7c3ef1ab7e0bed5c1c45b2dd337
 ---
 
 ::: canonical-doc

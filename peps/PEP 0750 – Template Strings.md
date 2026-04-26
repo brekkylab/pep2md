@@ -22,8 +22,7 @@ resolution: '`10-Apr-2025 <https://discuss.python.org/t/71594/130>`__'
 python_status: Final
 url: https://peps.python.org/pep-0750/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0750.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:31+00:00'
+source_commit: 9ed4edc7fc7b91d725324aee2fd9320277f5e94c
 ---
 
 ::: canonical-doc

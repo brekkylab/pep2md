@@ -15,8 +15,7 @@ resolution: https://mail.python.org/pipermail/distutils-sig/2015-September/02689
 python_status: Final
 url: https://peps.python.org/pep-0503/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0503.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:21+00:00'
+source_commit: d7fb1ec1c79f577fdfdeb0c6460e60780aff318e
 ---
 
 ::: canonical-pypa-spec

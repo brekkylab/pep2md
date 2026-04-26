@@ -11,8 +11,7 @@ python_version: '2.7'
 python_status: Final
 url: https://peps.python.org/pep-0373/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0373.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:17+00:00'
+source_commit: 929dacd3b2738590ad2b4db52ea9830d8ca4e397
 ---
 
 # Abstract

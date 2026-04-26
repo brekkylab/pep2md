@@ -19,8 +19,7 @@ resolution: https://discuss.python.org/t/53020/106
 python_status: Final
 url: https://peps.python.org/pep-0639/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0639.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:26+00:00'
+source_commit: dcca001378b7636fb09f2cb94b97515a1b4d7b3d
 ---
 
 ::: canonical-pypa-spec

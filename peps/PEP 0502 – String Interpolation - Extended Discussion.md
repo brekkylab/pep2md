@@ -10,8 +10,7 @@ python_version: '3.6'
 python_status: Rejected
 url: https://peps.python.org/pep-0502/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0502.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:21+00:00'
+source_commit: d11e0adf819a87304c65fc958951770e38e7e198
 ---
 
 # Abstract

@@ -18,8 +18,7 @@ resolution: '`07-Mar-2023 <https://discuss.python.org/t/pep-688-making-the-buffe
 python_status: Final
 url: https://peps.python.org/pep-0688/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0688.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:28+00:00'
+source_commit: 2197334753c974473dad314e7a2b815b12a306a9
 ---
 
 ::: canonical-doc

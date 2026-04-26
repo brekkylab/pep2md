@@ -11,8 +11,7 @@ post_history: []
 python_status: Final
 url: https://peps.python.org/pep-0100/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0100.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:12+00:00'
+source_commit: 325d63e4fb8d21f5121b0d4515b1c5c0b475c308
 ---
 
 # Historical Note

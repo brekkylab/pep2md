@@ -16,8 +16,7 @@ resolution: '`23-Apr-2026 <https://discuss.python.org/t/pep-661-sentinel-values/
 python_status: Accepted
 url: https://peps.python.org/pep-0661/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0661.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:27+00:00'
+source_commit: 6c91efa42f5161c3c60d3063487dc0bcdb8e632a
 ---
 
 # Abstract

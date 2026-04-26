@@ -16,8 +16,7 @@ resolution: '`04-Dec-2025 <https://discuss.python.org/t/104606/20>`__'
 python_status: Accepted
 url: https://peps.python.org/pep-0811/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0811.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:33+00:00'
+source_commit: 5f9307d2a256b53ec81a5545bd7635fd7c046d82
 ---
 
 # Abstract

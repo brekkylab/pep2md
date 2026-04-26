@@ -12,8 +12,7 @@ post_history: []
 python_status: Deferred
 url: https://peps.python.org/pep-0547/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0547.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:23+00:00'
+source_commit: fff5d19d9a6f54a0abd8f41f79e6d4fa6e2950db
 ---
 
 # Deferral Notice

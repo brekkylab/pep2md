@@ -10,8 +10,7 @@ python_version: '3.0'
 python_status: Rejected
 url: https://peps.python.org/pep-3139/
 source_path: https://github.com/python/peps/blob/main/peps/pep-3139.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:35+00:00'
+source_commit: 5890bac1e35bfbab1c53a2c1dbbe14cde043df36
 ---
 
 # Rejection Notice

@@ -12,8 +12,7 @@ post_history: []
 python_status: Withdrawn
 url: https://peps.python.org/pep-0534/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0534.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:22+00:00'
+source_commit: 59fd05db408911dc9272a57bebdcedc5f7bdd5a2
 ---
 
 # Abstract

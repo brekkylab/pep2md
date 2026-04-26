@@ -16,8 +16,7 @@ resolution: '`07-Nov-2023 <https://discuss.python.org/t/pep-702-marking-deprecat
 python_status: Final
 url: https://peps.python.org/pep-0702/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0702.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:29+00:00'
+source_commit: 241b5bf31e21c816613cac10e30864e16ba13834
 ---
 
 ::: canonical-typing-spec

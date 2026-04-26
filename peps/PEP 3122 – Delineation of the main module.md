@@ -10,8 +10,7 @@ post_history: []
 python_status: Rejected
 url: https://peps.python.org/pep-3122/
 source_path: https://github.com/python/peps/blob/main/peps/pep-3122.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:35+00:00'
+source_commit: 438df5ab5c0b1cf22371a4e750913009392b02e1
 ---
 
 :::: attention

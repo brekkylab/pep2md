@@ -13,8 +13,7 @@ post_history:
 python_status: Final
 url: https://peps.python.org/pep-3115/
 source_path: https://github.com/python/peps/blob/main/peps/pep-3115.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:35+00:00'
+source_commit: f97f16bb70914d16f4b3be6d22f634ba790b9d74
 ---
 
 # Abstract

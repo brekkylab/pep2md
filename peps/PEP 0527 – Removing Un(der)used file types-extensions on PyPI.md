@@ -15,8 +15,7 @@ resolution: https://mail.python.org/pipermail/distutils-sig/2016-September/02962
 python_status: Final
 url: https://peps.python.org/pep-0527/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0527.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:22+00:00'
+source_commit: e1d926a95659eead2c4f539cd6c0494fcc578614
 ---
 
 # Abstract

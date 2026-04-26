@@ -12,8 +12,7 @@ post_history:
 python_status: Rejected
 url: https://peps.python.org/pep-0365/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0365.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:16+00:00'
+source_commit: fc2f2d105cec3446cea751de9bf9bb1fc50a5c97
 ---
 
 # Abstract

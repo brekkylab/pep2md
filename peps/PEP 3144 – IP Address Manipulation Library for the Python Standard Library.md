@@ -13,8 +13,7 @@ resolution: https://mail.python.org/pipermail/python-dev/2012-May/119474.html
 python_status: Final
 url: https://peps.python.org/pep-3144/
 source_path: https://github.com/python/peps/blob/main/peps/pep-3144.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:35+00:00'
+source_commit: e1b24f52cd5d3c7df2f91f59b6d824919a2dc344
 ---
 
 # Abstract

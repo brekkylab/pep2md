@@ -17,8 +17,7 @@ resolution: '`02-Aug-2023 <https://discuss.python.org/t/28928/13>`__'
 python_status: Final
 url: https://peps.python.org/pep-0721/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0721.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:30+00:00'
+source_commit: 5a13ad965d3ddeca69507de8f830b331aa00b57c
 ---
 
 ::: canonical-pypa-spec

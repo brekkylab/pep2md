@@ -13,8 +13,7 @@ post_history:
 python_status: Final
 url: https://peps.python.org/pep-0389/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0389.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:17+00:00'
+source_commit: a6d8a167be9bc0eb5aa524df3a299d2ab54199e9
 ---
 
 # Acceptance

@@ -10,8 +10,7 @@ python_version: '3.3'
 python_status: Rejected
 url: https://peps.python.org/pep-0416/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0416.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:18+00:00'
+source_commit: 5c406372e9bbc27eeebea1e7fcaf15af39e437aa
 ---
 
 # Rejection Notice

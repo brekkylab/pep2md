@@ -13,8 +13,7 @@ resolution: https://mail.python.org/archives/list/python-dev@python.org/message/
 python_status: Final
 url: https://peps.python.org/pep-0465/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0465.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:20+00:00'
+source_commit: 568650b28ec2eb525a1d140a309dc14c6e3ec806
 ---
 
 # Abstract

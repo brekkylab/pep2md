@@ -11,8 +11,7 @@ superseded_by: '287'
 python_status: Withdrawn
 url: https://peps.python.org/pep-0216/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0216.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:12+00:00'
+source_commit: a293228643d87d6562c826c7e752801a9b845c8f
 ---
 
 ::: withdrawn

@@ -10,8 +10,7 @@ created: 16-Sep-2018
 python_status: Rejected
 url: https://peps.python.org/pep-8014/
 source_path: https://github.com/python/peps/blob/main/peps/pep-8014.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:36+00:00'
+source_commit: 060b7c161423f5a055cd0e094cf08096061495b9
 ---
 
 # Abstract

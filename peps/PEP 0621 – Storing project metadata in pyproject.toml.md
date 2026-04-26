@@ -23,8 +23,7 @@ resolution: https://discuss.python.org/t/pep-621-round-3/5472/109
 python_status: Final
 url: https://peps.python.org/pep-0621/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0621.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:26+00:00'
+source_commit: 5f8718006b6db3e1691d15f0b5a45cb3cd7f18f1
 ---
 
 ::: canonical-pypa-spec

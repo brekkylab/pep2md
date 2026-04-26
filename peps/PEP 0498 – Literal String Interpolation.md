@@ -17,8 +17,7 @@ resolution: https://mail.python.org/pipermail/python-dev/2015-September/141526.h
 python_status: Final
 url: https://peps.python.org/pep-0498/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0498.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:21+00:00'
+source_commit: 2e33996f7fd17ee6b02a74476b9b8e0deea6ef72
 ---
 
 # Abstract

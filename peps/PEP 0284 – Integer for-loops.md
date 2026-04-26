@@ -12,8 +12,7 @@ post_history: []
 python_status: Rejected
 url: https://peps.python.org/pep-0284/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0284.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:14+00:00'
+source_commit: 86c1d3dccd88d819c4f2c9d5d7f2371ec9069384
 ---
 
 # Abstract

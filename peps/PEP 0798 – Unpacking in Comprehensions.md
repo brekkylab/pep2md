@@ -18,8 +18,7 @@ resolution: '`03-Nov-2025 <https://discuss.python.org/t/pep-798-unpacking-in-com
 python_status: Accepted
 url: https://peps.python.org/pep-0798/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0798.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:33+00:00'
+source_commit: 15f2b58b1d8218cca0549a9f3d8ec7df9ba3147c
 ---
 
 # Abstract

@@ -14,8 +14,7 @@ post_history:
 python_status: Draft
 url: https://peps.python.org/pep-0797/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0797.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:32+00:00'
+source_commit: 42f05c1798c766ed776d8bfd269935d9cf4300d8
 ---
 
 # Abstract

@@ -11,8 +11,7 @@ created: 03-Jul-2015
 python_status: Rejected
 url: https://peps.python.org/pep-0496/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0496.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:21+00:00'
+source_commit: 70c410dcb083f54ff30ae44c40ba41bd100b18d4
 ---
 
 # PEP Status

@@ -10,8 +10,7 @@ created: 08-Oct-2013
 python_status: Final
 url: https://peps.python.org/pep-0457/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0457.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:20+00:00'
+source_commit: 3b9f043338076ddcce085f7562867dbd9682744f
 ---
 
 # Overview

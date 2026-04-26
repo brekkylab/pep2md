@@ -19,8 +19,7 @@ resolution: '`21-Sep-2025 <https://discuss.python.org/t/69487/38>`__'
 python_status: Withdrawn
 url: https://peps.python.org/pep-0763/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0763.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:31+00:00'
+source_commit: 1f04b2ce11cf423032e74980aad5e98aece6bdc3
 ---
 
 # PEP Withdrawal

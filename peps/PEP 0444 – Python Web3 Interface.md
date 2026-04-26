@@ -11,8 +11,7 @@ created: 19-Jul-2010
 python_status: Deferred
 url: https://peps.python.org/pep-0444/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0444.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:19+00:00'
+source_commit: 4472812a7a68738a6d20d6aef1fe19332b9a2aef
 ---
 
 # Abstract

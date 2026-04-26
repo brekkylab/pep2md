@@ -17,8 +17,7 @@ resolution: https://mail.python.org/pipermail/python-dev/2017-December/151042.ht
 python_status: Superseded
 url: https://peps.python.org/pep-0563/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0563.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:24+00:00'
+source_commit: 0bdb7f2a9caa38e10ac37aeb0c795fbeea7d86a7
 ---
 
 # Resolution

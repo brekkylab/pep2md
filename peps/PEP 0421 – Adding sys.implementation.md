@@ -14,8 +14,7 @@ resolution: https://mail.python.org/pipermail/python-dev/2012-May/119683.html
 python_status: Final
 url: https://peps.python.org/pep-0421/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0421.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:18+00:00'
+source_commit: 86f66e1d6a4ec29fadf8b6be882c17bc4ede23b6
 ---
 
 # Abstract

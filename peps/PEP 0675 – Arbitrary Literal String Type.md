@@ -17,8 +17,7 @@ resolution: https://mail.python.org/archives/list/python-dev@python.org/message/
 python_status: Final
 url: https://peps.python.org/pep-0675/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0675.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:28+00:00'
+source_commit: 1f41253fb4750d93366954409102745bd548465c
 ---
 
 ::: canonical-typing-spec

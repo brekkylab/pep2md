@@ -11,8 +11,7 @@ post_history: []
 python_status: Final
 url: https://peps.python.org/pep-3134/
 source_path: https://github.com/python/peps/blob/main/peps/pep-3134.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:35+00:00'
+source_commit: c54db2e5a0faf182c265bd8c1d9b5a62da547eb2
 ---
 
 # Numbering Note

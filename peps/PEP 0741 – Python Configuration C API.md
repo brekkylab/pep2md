@@ -15,8 +15,7 @@ resolution: https://discuss.python.org/t/pep-741-python-configuration-c-api-seco
 python_status: Final
 url: https://peps.python.org/pep-0741/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0741.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:31+00:00'
+source_commit: 74dc434547a9d5f7ca9684a213ccd356e422f992
 ---
 
 # Abstract

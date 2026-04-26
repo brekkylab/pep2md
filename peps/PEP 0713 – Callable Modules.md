@@ -15,8 +15,7 @@ resolution: https://discuss.python.org/t/26127/86
 python_status: Rejected
 url: https://peps.python.org/pep-0713/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0713.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:29+00:00'
+source_commit: d34c75c64aadd6e613b7ca6fbaae2d4d6aef5114
 ---
 
 # Rejection Notice

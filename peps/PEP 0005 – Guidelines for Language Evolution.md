@@ -11,8 +11,7 @@ superseded_by: '387'
 python_status: Superseded
 url: https://peps.python.org/pep-0005/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0005.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:12+00:00'
+source_commit: 6367f76135d2caa0ad109602bf184c0b35e43596
 ---
 
 # Abstract

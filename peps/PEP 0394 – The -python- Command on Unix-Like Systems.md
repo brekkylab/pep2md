@@ -22,8 +22,7 @@ resolution: https://mail.python.org/pipermail/python-dev/2012-February/116594.ht
 python_status: Active
 url: https://peps.python.org/pep-0394/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0394.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:17+00:00'
+source_commit: ae6cc22df95fef2872676f5240a0e6ef4383dec1
 ---
 
 # Abstract

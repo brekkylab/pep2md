@@ -13,8 +13,7 @@ post_history:
 python_status: Withdrawn
 url: https://peps.python.org/pep-0298/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0298.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:15+00:00'
+source_commit: 21b4a890105a441be02136a49905aa2a2c25a5a8
 ---
 
 # Abstract

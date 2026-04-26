@@ -15,8 +15,7 @@ resolution: '`11-Feb-2026 <https://discuss.python.org/t/pep-814-add-frozendict-b
 python_status: Final
 url: https://peps.python.org/pep-0814/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0814.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:33+00:00'
+source_commit: 0bb44fb5a5b5abef16ee43ae292cee2ea84fe3d9
 ---
 
 ::: canonical-doc

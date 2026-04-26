@@ -16,8 +16,7 @@ resolution: '`24-Jun-2023 <https://discuss.python.org/t/pep-715-disabling-bdist-
 python_status: Final
 url: https://peps.python.org/pep-0715/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0715.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:29+00:00'
+source_commit: fcee60a82b051a0746719e8fdfcaf044277bdc99
 ---
 
 # Abstract

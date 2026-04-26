@@ -13,8 +13,7 @@ resolution: https://discuss.python.org/t/pep-592-support-for-yanked-files-in-the
 python_status: Final
 url: https://peps.python.org/pep-0592/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0592.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:25+00:00'
+source_commit: 5ef853a583258d9f58cd6e37eefa8e83a3ae2167
 ---
 
 # Abstract

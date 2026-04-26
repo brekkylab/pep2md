@@ -15,8 +15,7 @@ python_version: '3.8'
 python_status: Final
 url: https://peps.python.org/pep-0570/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0570.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:24+00:00'
+source_commit: fbd49620a3d549da7f7563206f307d27255a27e5
 ---
 
 # Abstract

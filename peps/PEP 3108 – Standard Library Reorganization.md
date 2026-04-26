@@ -12,8 +12,7 @@ post_history:
 python_status: Final
 url: https://peps.python.org/pep-3108/
 source_path: https://github.com/python/peps/blob/main/peps/pep-3108.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:34+00:00'
+source_commit: c719a549d097960f99fab4ae7f80bbcac3cb016e
 ---
 
 :::: note

@@ -14,8 +14,7 @@ created: 24-Aug-2018
 python_status: Final
 url: https://peps.python.org/pep-8002/
 source_path: https://github.com/python/peps/blob/main/peps/pep-8002.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:36+00:00'
+source_commit: fbaf01fcc3bf0c21008caf46991da03596db3ac6
 ---
 
 # Abstract

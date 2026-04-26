@@ -11,8 +11,7 @@ post_history: []
 python_status: Rejected
 url: https://peps.python.org/pep-0382/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0382.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:17+00:00'
+source_commit: 68a6bfc534de8b84fd508b0fd1eec0bc36f484e5
 ---
 
 # Rejection Notice

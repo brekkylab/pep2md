@@ -18,8 +18,7 @@ resolution: https://mail.python.org/pipermail/python-dev/2014-March/133621.html
 python_status: Final
 url: https://peps.python.org/pep-0461/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0461.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:20+00:00'
+source_commit: 18b84ac3f7d47b307bec33f81dc207408441b440
 ---
 
 # Abstract

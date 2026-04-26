@@ -16,8 +16,7 @@ replaces: 245, 246, 3124
 python_status: Final
 url: https://peps.python.org/pep-0443/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0443.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:19+00:00'
+source_commit: d35a2c6ef98d029bc4ac92b7b4a341576c768ea6
 ---
 
 # Abstract

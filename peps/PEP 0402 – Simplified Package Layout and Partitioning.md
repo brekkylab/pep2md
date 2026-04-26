@@ -14,8 +14,7 @@ replaces: '382'
 python_status: Rejected
 url: https://peps.python.org/pep-0402/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0402.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:18+00:00'
+source_commit: 924116bde78c348b8d4e62cabd2e73c6dd5aeb2f
 ---
 
 # Rejection Notice

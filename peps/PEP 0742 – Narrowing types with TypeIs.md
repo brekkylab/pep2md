@@ -16,8 +16,7 @@ resolution: '`03-Apr-2024 <https://discuss.python.org/t/pep-742-narrowing-types-
 python_status: Final
 url: https://peps.python.org/pep-0742/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0742.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:31+00:00'
+source_commit: b4258cfcbc60bdd7782eaba74fede5648d6acf8d
 ---
 
 ::: canonical-typing-spec

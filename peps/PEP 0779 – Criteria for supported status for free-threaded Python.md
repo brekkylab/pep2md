@@ -16,8 +16,7 @@ resolution: '`16-Jun-2025 <https://discuss.python.org/t/84319/123>`__'
 python_status: Final
 url: https://peps.python.org/pep-0779/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0779.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:32+00:00'
+source_commit: a94c4cd4b28d51a7c55c4645e202db77198d466b
 ---
 
 :::: note

@@ -17,8 +17,7 @@ resolution: https://mail.python.org/pipermail/distutils-sig/2018-April/032156.ht
 python_status: Superseded
 url: https://peps.python.org/pep-0571/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0571.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:24+00:00'
+source_commit: 5ac5c2cc20cb1014905b0790af4f00176eb03166
 ---
 
 # Abstract

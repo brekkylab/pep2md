@@ -11,8 +11,7 @@ post_history: []
 python_status: Rejected
 url: https://peps.python.org/pep-0244/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0244.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:13+00:00'
+source_commit: 89572b60a48d3ebcc18d8a78fddca7e8ef93497f
 ---
 
 # Motivation

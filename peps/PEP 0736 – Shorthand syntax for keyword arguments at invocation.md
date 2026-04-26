@@ -17,8 +17,7 @@ resolution: '`13-Mar-2025 <https://discuss.python.org/t/43432/222>`__'
 python_status: Rejected
 url: https://peps.python.org/pep-0736/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0736.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:30+00:00'
+source_commit: 63a10ad172752e8478c634c10576c8ba768fd0b3
 ---
 
 # Abstract

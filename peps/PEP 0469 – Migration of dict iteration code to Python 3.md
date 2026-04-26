@@ -13,8 +13,7 @@ post_history:
 python_status: Withdrawn
 url: https://peps.python.org/pep-0469/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0469.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:20+00:00'
+source_commit: 1002cfc10fb328f35e1a2f1355bbfb47b3ba3885
 ---
 
 # Abstract

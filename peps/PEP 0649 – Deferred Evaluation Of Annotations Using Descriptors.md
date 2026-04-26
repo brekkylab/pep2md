@@ -26,8 +26,7 @@ resolution: '`08-May-2023 <https://discuss.python.org/t/pep-649-deferred-evaluat
 python_status: Final
 url: https://peps.python.org/pep-0649/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0649.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:27+00:00'
+source_commit: d4c8e792468e2b50fb207da481d4f82bbff80c6c
 ---
 
 ::: canonical-doc

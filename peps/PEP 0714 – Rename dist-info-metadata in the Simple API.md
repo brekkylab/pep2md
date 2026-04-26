@@ -15,8 +15,7 @@ resolution: '`27-Jun-2023 <https://discuss.python.org/t/27471/19>`__'
 python_status: Accepted
 url: https://peps.python.org/pep-0714/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0714.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:29+00:00'
+source_commit: 2ddbeb3b054007c717d63081bd02be8caa1e38d4
 ---
 
 # Abstract

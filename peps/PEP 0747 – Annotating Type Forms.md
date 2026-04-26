@@ -19,8 +19,7 @@ resolution: '`20-Feb-2026 <https://discuss.python.org/t/pep-747-typeexpr-type-hi
 python_status: Final
 url: https://peps.python.org/pep-0747/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0747.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:31+00:00'
+source_commit: 78c54ed1f55518a32a4c7d246c75d2eb540c50d4
 ---
 
 ::: canonical-typing-spec

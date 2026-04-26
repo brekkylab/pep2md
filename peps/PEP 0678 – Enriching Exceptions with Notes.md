@@ -17,8 +17,7 @@ resolution: https://discuss.python.org/t/pep-678-enriching-exceptions-with-notes
 python_status: Final
 url: https://peps.python.org/pep-0678/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0678.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:28+00:00'
+source_commit: bef9662279903e993cfdad18b3626c5f0fc2ba3b
 ---
 
 ::: canonical-doc

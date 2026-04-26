@@ -16,8 +16,7 @@ resolution: https://discuss.python.org/t/how-to-specify-dependencies-pep-508-str
 python_status: Rejected
 url: https://peps.python.org/pep-0633/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0633.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:26+00:00'
+source_commit: faa7b1791e8dd3f3d58c4d75c575c9a2438e0570
 ---
 
 # Rejection Notice

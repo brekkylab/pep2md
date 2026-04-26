@@ -16,8 +16,7 @@ resolution: https://discuss.python.org/t/8651/48
 python_status: Accepted
 url: https://peps.python.org/pep-0658/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0658.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:27+00:00'
+source_commit: 4c232e5fe4616bd0d8fed5bdd551e1835b80eb4b
 ---
 
 # Abstract

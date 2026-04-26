@@ -12,8 +12,7 @@ post_history:
 python_status: Final
 url: https://peps.python.org/pep-0378/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0378.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:17+00:00'
+source_commit: b408e3e5760b75f28685ca4a91d8cae34c8c0c7b
 ---
 
 # Motivation

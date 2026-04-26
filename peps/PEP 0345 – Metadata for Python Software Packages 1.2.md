@@ -17,8 +17,7 @@ resolution: https://mail.python.org/archives/list/python-dev@python.org/thread/M
 python_status: Superseded
 url: https://peps.python.org/pep-0345/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0345.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:16+00:00'
+source_commit: 8e21970c5410a7363a09df8b8d19d7ed4b2a4098
 ---
 
 ::: canonical-pypa-spec

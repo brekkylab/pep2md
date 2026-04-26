@@ -10,8 +10,7 @@ created: 03-Oct-2018
 python_status: Rejected
 url: https://peps.python.org/pep-8012/
 source_path: https://github.com/python/peps/blob/main/peps/pep-8012.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:36+00:00'
+source_commit: ac90a81f0697873b560785810452e7c2e867b5ac
 ---
 
 # PEP Rejection

@@ -11,8 +11,7 @@ created: 23-Oct-2023
 python_status: Final
 url: https://peps.python.org/pep-8105/
 source_path: https://github.com/python/peps/blob/main/peps/pep-8105.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:37+00:00'
+source_commit: fb74a10ed1db3d6162c4af4cc5ff36bef01a2c9a
 ---
 
 # Abstract

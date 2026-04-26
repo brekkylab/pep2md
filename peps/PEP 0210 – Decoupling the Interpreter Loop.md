@@ -11,8 +11,7 @@ post_history: []
 python_status: Rejected
 url: https://peps.python.org/pep-0210/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0210.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:12+00:00'
+source_commit: 526e3b9ec189af7736b6b261d5e01ceb54d8763b
 ---
 
 ::: rejected

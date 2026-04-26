@@ -20,8 +20,7 @@ resolution: https://mail.python.org/pipermail/distutils-sig/2015-September/02678
 python_status: Final
 url: https://peps.python.org/pep-0470/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0470.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:20+00:00'
+source_commit: 83f9ca6b4dde95d226daf9ab2b77fb42dea58782
 ---
 
 # Abstract

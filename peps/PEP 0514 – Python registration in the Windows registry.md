@@ -15,8 +15,7 @@ resolution: https://mail.python.org/pipermail/python-dev/2016-July/145697.html
 python_status: Active
 url: https://peps.python.org/pep-0514/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0514.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:22+00:00'
+source_commit: 83c4116825e161b53362502e14fc6f1b435bef93
 ---
 
 # Abstract

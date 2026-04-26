@@ -11,8 +11,7 @@ python_version: '3.1'
 python_status: Final
 url: https://peps.python.org/pep-0375/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0375.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:17+00:00'
+source_commit: 8a591bc6313a9b19618ad959e26b8bf411e330d3
 ---
 
 # Abstract

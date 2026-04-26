@@ -17,8 +17,7 @@ resolution: https://discuss.python.org/t/pep-696-type-defaults-for-typevarlikes/
 python_status: Final
 url: https://peps.python.org/pep-0696/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0696.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:29+00:00'
+source_commit: 79ccf5b663975c2496d0b2d4648513b717630807
 ---
 
 ::: canonical-typing-spec

@@ -14,8 +14,7 @@ post_history:
 python_status: Final
 url: https://peps.python.org/pep-0488/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0488.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:21+00:00'
+source_commit: 97f63c5e1c3a1d866e824bc2c210235ffcc03855
 ---
 
 # Abstract

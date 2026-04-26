@@ -14,8 +14,7 @@ resolution: https://mail.python.org/pipermail/python-dev/2014-March/133118.html
 python_status: Rejected
 url: https://peps.python.org/pep-0463/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0463.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:20+00:00'
+source_commit: f14d394a50ecd36fe96ab07ed851581392d6f0df
 ---
 
 # Rejection Notice

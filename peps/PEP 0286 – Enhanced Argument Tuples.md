@@ -11,8 +11,7 @@ post_history: []
 python_status: Deferred
 url: https://peps.python.org/pep-0286/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0286.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:14+00:00'
+source_commit: 72aeeb6d696c0766b84d49a3fd19171e14bb2d98
 ---
 
 # Abstract

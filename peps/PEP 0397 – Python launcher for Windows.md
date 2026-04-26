@@ -16,8 +16,7 @@ resolution: https://mail.python.org/pipermail/python-dev/2012-June/120505.html
 python_status: Final
 url: https://peps.python.org/pep-0397/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0397.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:17+00:00'
+source_commit: ee99ca72c9a90d353a42ae601a942d57f073bd9f
 ---
 
 # Abstract

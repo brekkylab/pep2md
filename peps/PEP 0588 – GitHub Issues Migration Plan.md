@@ -11,8 +11,7 @@ created: 27-Mar-2019
 python_status: Final
 url: https://peps.python.org/pep-0588/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0588.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:25+00:00'
+source_commit: 8e4010ddf1f0c30ee9ac35e9cab486021bb9b2d1
 ---
 
 ::: canonical-doc

@@ -13,8 +13,7 @@ created: 29-Oct-2020
 python_status: Final
 url: https://peps.python.org/pep-8102/
 source_path: https://github.com/python/peps/blob/main/peps/pep-8102.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:37+00:00'
+source_commit: 9e6e57d88c8348f18dcc23cdcbb5ad7cd9fd2bc3
 ---
 
 # Abstract

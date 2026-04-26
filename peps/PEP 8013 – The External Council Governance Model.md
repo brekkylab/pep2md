@@ -10,8 +10,7 @@ created: 14-Sep-2018
 python_status: Rejected
 url: https://peps.python.org/pep-8013/
 source_path: https://github.com/python/peps/blob/main/peps/pep-8013.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:36+00:00'
+source_commit: 50e66462657492c2b1ef766321922d8a520b3811
 ---
 
 # Abstract

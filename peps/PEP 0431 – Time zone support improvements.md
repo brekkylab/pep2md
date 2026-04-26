@@ -15,8 +15,7 @@ superseded_by: '615'
 python_status: Superseded
 url: https://peps.python.org/pep-0431/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0431.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:18+00:00'
+source_commit: 5109e10d9440b3ba2baa83a3c4a8d4b1aa2c20b2
 ---
 
 # Abstract

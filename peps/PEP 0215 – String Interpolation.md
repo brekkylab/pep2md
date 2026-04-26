@@ -12,8 +12,7 @@ superseded_by: '292'
 python_status: Superseded
 url: https://peps.python.org/pep-0215/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0215.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:12+00:00'
+source_commit: df51b07ea087f13c7704fbfafcaedcb3d07a33c5
 ---
 
 ::: superseded

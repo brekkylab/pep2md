@@ -15,8 +15,7 @@ resolution: https://discuss.python.org/t/23903/10
 python_status: Final
 url: https://peps.python.org/pep-0706/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0706.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:29+00:00'
+source_commit: 465b25e912fa2e25fbca5fb99045fb47a3de2b6d
 ---
 
 ::: canonical-doc

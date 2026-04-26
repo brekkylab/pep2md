@@ -14,8 +14,7 @@ replaces: '333'
 python_status: Final
 url: https://peps.python.org/pep-3333/
 source_path: https://github.com/python/peps/blob/main/peps/pep-3333.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:36+00:00'
+source_commit: b9125c2c73e503a078b75799883c42a2f70ccc9f
 ---
 
 # Preface for Readers of PEP 333

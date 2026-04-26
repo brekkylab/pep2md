@@ -15,8 +15,7 @@ resolution: '`19-Dec-2022 <https://discuss.python.org/t/pep-700-additional-field
 python_status: Final
 url: https://peps.python.org/pep-0700/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0700.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:29+00:00'
+source_commit: 85feb6af3e6129e4a35b0544795276327f3aa360
 ---
 
 ::: canonical-pypa-spec

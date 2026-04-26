@@ -10,8 +10,7 @@ resolution: https://mail.python.org/pipermail/python-dev/2019-March/156695.html
 python_status: Rejected
 url: https://peps.python.org/pep-0542/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0542.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:23+00:00'
+source_commit: 14c75f0d53042d694059afad1720370d13db8002
 ---
 
 # Abstract

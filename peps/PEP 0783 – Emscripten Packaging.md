@@ -16,8 +16,7 @@ resolution: '`06-Apr-2026 <https://discuss.python.org/t/pep-783-emscripten-packa
 python_status: Accepted
 url: https://peps.python.org/pep-0783/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0783.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:32+00:00'
+source_commit: 8128937e16212a3ed932ccf20ca0d44a93a033d6
 ---
 
 # Abstract

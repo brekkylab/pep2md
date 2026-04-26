@@ -15,8 +15,7 @@ post_history:
 python_status: Final
 url: https://peps.python.org/pep-0613/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0613.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:25+00:00'
+source_commit: 6aaf9b2478d02f361e4f915a1acbf07ce737f0da
 ---
 
 ::: canonical-typing-spec

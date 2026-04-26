@@ -13,8 +13,7 @@ post_history:
 python_status: Draft
 url: https://peps.python.org/pep-0820/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0820.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:33+00:00'
+source_commit: 61060e306ace34ebbb3d41e9ce0c87f23f322712
 ---
 
 # Abstract

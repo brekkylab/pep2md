@@ -18,8 +18,7 @@ resolution: https://mail.python.org/archives/list/typing-sig@python.org/message/
 python_status: Final
 url: https://peps.python.org/pep-0586/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0586.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:24+00:00'
+source_commit: 39ba7a9067a7e4cd53c0fe0310610276a5ebf7d7
 ---
 
 ::: canonical-typing-spec

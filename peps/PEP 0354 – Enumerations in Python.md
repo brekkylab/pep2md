@@ -13,8 +13,7 @@ superseded_by: '435'
 python_status: Superseded
 url: https://peps.python.org/pep-0354/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0354.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:16+00:00'
+source_commit: 54d766b8d21cc67527df2b6fa0e08be834e7c380
 ---
 
 # Rejection Notice

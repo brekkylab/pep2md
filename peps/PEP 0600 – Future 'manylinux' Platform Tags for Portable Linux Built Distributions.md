@@ -18,8 +18,7 @@ resolution: https://discuss.python.org/t/pep-600-future-manylinux-platform-tags-
 python_status: Final
 url: https://peps.python.org/pep-0600/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0600.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:25+00:00'
+source_commit: dbbca3e1cf022190dfa77378f643cc7aba25bc24
 ---
 
 # Abstract

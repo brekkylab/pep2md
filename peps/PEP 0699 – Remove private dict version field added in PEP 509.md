@@ -15,8 +15,7 @@ resolution: https://discuss.python.org/t/pep-699-remove-private-dict-version-fie
 python_status: Accepted
 url: https://peps.python.org/pep-0699/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0699.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:29+00:00'
+source_commit: 7aecbdad9a62f8a8378ae929480ca3dde17d59f7
 ---
 
 # Abstract

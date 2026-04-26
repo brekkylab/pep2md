@@ -15,8 +15,7 @@ resolution: '`23-Oct-2025 <https://discuss.python.org/t/93444/46>`__'
 python_status: Accepted
 url: https://peps.python.org/pep-0793/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0793.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:32+00:00'
+source_commit: 868e14945e61ea362711c285471a0e9da4f22137
 ---
 
 # Abstract

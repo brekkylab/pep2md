@@ -13,8 +13,7 @@ post_history: []
 python_status: Withdrawn
 url: https://peps.python.org/pep-3146/
 source_path: https://github.com/python/peps/blob/main/peps/pep-3146.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:36+00:00'
+source_commit: c1914144d9a021729cc28d65d2f6268bbe5c7af4
 ---
 
 # PEP Withdrawal

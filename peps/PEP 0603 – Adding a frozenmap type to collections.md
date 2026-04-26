@@ -12,8 +12,7 @@ post_history:
 python_status: Draft
 url: https://peps.python.org/pep-0603/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0603.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:25+00:00'
+source_commit: f80135fe842f324a7d81938a895ee0e2c63fa9fd
 ---
 
 # Abstract

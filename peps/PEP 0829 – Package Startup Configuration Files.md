@@ -16,8 +16,7 @@ resolution: '`24-Apr-2026 <https://discuss.python.org/t/pep-829-structured-start
 python_status: Accepted
 url: https://peps.python.org/pep-0829/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0829.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:34+00:00'
+source_commit: 1fc732f79690cf123336be9309cc482cbbeb2b9e
 ---
 
 # Abstract

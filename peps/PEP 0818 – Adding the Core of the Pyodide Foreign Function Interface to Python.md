@@ -12,8 +12,7 @@ python_version: '3.15'
 python_status: Draft
 url: https://peps.python.org/pep-0818/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0818.rst
-source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
-generated_at: '2026-04-26T03:34:33+00:00'
+source_commit: e7dfd3ecd1a2e3b8332d977a7b712c960b49acf0
 ---
 
 # Abstract
