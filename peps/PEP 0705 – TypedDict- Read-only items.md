@@ -20,8 +20,8 @@ resolution: '`29-Feb-2024 <https://discuss.python.org/t/pep-705-read-only-typedd
 python_status: Final
 url: https://peps.python.org/pep-0705/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0705.rst
-source_commit: b167bc87fdcb0d316ed4b4af1e32d30cba9e07f7
-generated_at: '2026-04-25T02:55:44+00:00'
+source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
+generated_at: '2026-04-26T03:34:29+00:00'
 ---
 
 ::: canonical-typing-spec

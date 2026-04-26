@@ -16,8 +16,8 @@ resolution: '`06-Nov-2024 <https://discuss.python.org/t/pep-761-deprecating-pgp-
 python_status: Active
 url: https://peps.python.org/pep-0761/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0761.rst
-source_commit: b167bc87fdcb0d316ed4b4af1e32d30cba9e07f7
-generated_at: '2026-04-25T02:55:46+00:00'
+source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
+generated_at: '2026-04-26T03:34:31+00:00'
 ---
 
 # Abstract

@@ -4,7 +4,7 @@ title: Package Startup Configuration Files
 author:
 - Barry Warsaw <barry@python.org>
 discussions_to: https://discuss.python.org/t/pep-829-structured-startup-configuration-via-site-toml-files/106789
-status: Draft
+status: Accepted
 type: Standards Track
 created: 31-Mar-2026
 python_version: '3.15'
@@ -12,11 +12,12 @@ post_history:
 - '`01-Apr-2026 <https://discuss.python.org/t/pep-829-structured-startup-configuration-files/106789>`__'
 - '`13-Apr-2026 <https://discuss.python.org/t/pep-829-structured-startup-configuration-files/106789/69>`__'
 - '`15-Apr-2026 <https://discuss.python.org/t/pep-829-structured-startup-configuration-files/106789/99>`__'
-python_status: Draft
+resolution: '`24-Apr-2026 <https://discuss.python.org/t/pep-829-structured-startup-configuration-files/106789/112>`__'
+python_status: Accepted
 url: https://peps.python.org/pep-0829/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0829.rst
-source_commit: b167bc87fdcb0d316ed4b4af1e32d30cba9e07f7
-generated_at: '2026-04-25T02:55:49+00:00'
+source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
+generated_at: '2026-04-26T03:34:34+00:00'
 ---
 
 # Abstract
@@ -27,19 +28,23 @@ the `site.py` file during interpreter startup, such files are used to
 extend `sys.path` and execute package initialization code before control
 is passed to the first line of user code.
 
-`.pth` files in their historical form have a [long
-history](https://github.com/python/cpython/issues/78125) of proposed
-removal, primarily because of the obtuse nature of the arbitrary code
-execution feature. Recent [supply chain
-attacks](https://securitylabs.datadoghq.com/articles/litellm-compromised-pypi-teampcp-supply-chain-campaign/)
-have used arbitrary code execution in `.pth` files as an attack vector.
+This PEP proposes:
 
-This PEP doesn\'t completely close this vector, but it does propose an
-important and useful improvement, by narrowing the attack surface and
-enabling a future policy mechanism for controlling which packages are
-allowed or prevented from extending the path and executing start up
-code. See `security`{.interpreted-text role="ref"} for additional
-discussion.
+- Replacing `import` lines in `.pth` files with entry point
+  specifications (i.e. `pkg.mod:callable`) in `.start` files.
+- The presence of a matching `.start` file disables `import` line
+  processing in the matched `.pth` file.
+- The `sys.path` extension functionality of `.pth` files is retained.
+
+Support for `import` lines in `.pth` files will be gradually removed:
+
+- For the first three years (expected to be Python 3.15, 3.16, and 3.17)
+  `import` line processing in `.pth` files will remain, *except* in the
+  presence of a matching `.start` file.
+- For the next two years (expected to be Python 3.18 and 3.19), `import`
+  lines in `.pth` files will be silently ignored.
+- Afterwards (expected to be Python 3.20 and higher), a warning will be
+  produced for the existence of `import` lines in `.pth` files.
 
 # Motivation
 
@@ -308,14 +313,15 @@ callable in an entry point specification inside a `<name>.start` file.
 
 # Security Implications {#security}
 
-This PEP improves the security posture of interpreter startup.
+This PEP makes it easier to audit code execution paths during
+interpreter startup.
 
+- Splitting `sys.path` extension from code execution into two separate
+  files means that you can tell by listing the files in the site-dir,
+  exactly where arbitrary code execution occurs.
 - The removal of arbitrary code execution by `exec`{.interpreted-text
   role="func"} with entry point execution, which is more constrained and
   auditable.
-- Splitting `sys.path` extensioni from code execution into two separate
-  files means that you can tell by listing the files in the site-dir,
-  exactly where arbitrary code execution occurs.
 - Python\'s import system is used to access and run the entry points, so
   the standard audit hooks (`578`{.interpreted-text role="pep"}) can
   provide monitoring.
@@ -325,10 +331,10 @@ This PEP improves the security posture of interpreter startup.
 - The `package.module:callable` syntax limits execution to callables
   within importable modules.
 
-The overall attack surface is not eliminated \-- a malicious package can
-still cause arbitrary code execution via entry points, but the mechanism
-proposed in this PEP is more structured, auditable, and amenable to
-future policy controls.
+The overall pre-start code execution attack surface is not eliminated by
+this PEP. A malicious package can still cause arbitrary code execution
+via entry points, but the mechanism proposed in this PEP is more
+structured, auditable, and amenable to future policy controls.
 
 # How to Teach This {#teach}
 

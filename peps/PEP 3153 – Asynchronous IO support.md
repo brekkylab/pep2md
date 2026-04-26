@@ -11,8 +11,8 @@ superseded_by: '3156'
 python_status: Superseded
 url: https://peps.python.org/pep-3153/
 source_path: https://github.com/python/peps/blob/main/peps/pep-3153.rst
-source_commit: b167bc87fdcb0d316ed4b4af1e32d30cba9e07f7
-generated_at: '2026-04-25T02:55:52+00:00'
+source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
+generated_at: '2026-04-26T03:34:36+00:00'
 ---
 
 # Abstract

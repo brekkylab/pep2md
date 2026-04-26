@@ -13,8 +13,8 @@ resolution: https://discuss.python.org/t/pep-730-adding-ios-as-a-supported-platf
 python_status: Final
 url: https://peps.python.org/pep-0730/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0730.rst
-source_commit: b167bc87fdcb0d316ed4b4af1e32d30cba9e07f7
-generated_at: '2026-04-25T02:55:45+00:00'
+source_commit: b4269b24f4308101504a87d3e3094a40af0ff4da
+generated_at: '2026-04-26T03:34:30+00:00'
 ---
 
 ::: canonical-doc
