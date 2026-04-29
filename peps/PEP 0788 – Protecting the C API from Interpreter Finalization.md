@@ -5,7 +5,7 @@ author:
 - Peter Bierma <peter@python.org>
 sponsor: Victor Stinner <vstinner@python.org>
 discussions_to: https://discuss.python.org/t/104150
-status: Draft
+status: Accepted
 type: Standards Track
 created: 23-Apr-2025
 python_version: '3.15'
@@ -14,10 +14,11 @@ post_history:
 - '`27-Apr-2025 <https://discuss.python.org/t/89863>`__'
 - '`28-May-2025 <https://discuss.python.org/t/93653>`__'
 - '`03-Oct-2025 <https://discuss.python.org/t/104150>`__'
-python_status: Draft
+resolution: '`28-Apr-2026 <https://discuss.python.org/t/104150/44>`__'
+python_status: Accepted
 url: https://peps.python.org/pep-0788/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0788.rst
-source_commit: 7f3c6105c73b4e61953b8a89955eee157f592e6e
+source_commit: 21b32efaadf88acea9449e27a9f259cbe2dd8ee8
 ---
 
 # Abstract

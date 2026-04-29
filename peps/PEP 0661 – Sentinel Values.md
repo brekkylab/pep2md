@@ -5,7 +5,7 @@ author:
 - Tal Einat <tal@python.org>
 - Jelle Zijlstra <jelle.zijlstra@gmail.com>
 discussions_to: https://discuss.python.org/t/pep-661-sentinel-values/9126
-status: Accepted
+status: Final
 type: Standards Track
 created: 06-Jun-2021
 python_version: '3.15'
@@ -13,11 +13,15 @@ post_history:
 - '`20-May-2021 <https://discuss.python.org/t/sentinel-values-in-the-stdlib/8810>`__'
 - '`06-Jun-2021 <https://discuss.python.org/t/pep-661-sentinel-values/9126>`__'
 resolution: '`23-Apr-2026 <https://discuss.python.org/t/pep-661-sentinel-values/9126/337>`__'
-python_status: Accepted
+python_status: Final
 url: https://peps.python.org/pep-0661/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0661.rst
-source_commit: 6c91efa42f5161c3c60d3063487dc0bcdb8e632a
+source_commit: 8da85bf978959868d71d9749ff4c6870abc3ed1a
 ---
+
+::: canonical-doc
+`sentinel`{.interpreted-text role="external+py3.15:class"}
+:::
 
 # Abstract
 

@@ -16,7 +16,7 @@ post_history:
 python_status: Draft
 url: https://peps.python.org/pep-0833/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0833.rst
-source_commit: 20b65c328c522998f5138cbbd915ff99560dfd18
+source_commit: 4cfb944bfa1258359b12f4b7bc5bcdbf3608be26
 ---
 
 # Abstract
@@ -145,6 +145,13 @@ representation will retain the following versioning marker:
 ``` html
 <meta name="pypi:repository-version" content="1.4">
 ```
+
+This specification [deliberately]{#deliberately}\_ uses **SHOULD NOT**
+rather than **MUST NOT** when describing the prohibition on future
+updates to the HTML representation. Future PEPs [may]{#may}\_ update the
+HTML representation, but this specification discourages doing so without
+a specific and compelling reason (beyond the desire to make symmetric
+changes to both representations).
 
 # Future Considerations
 

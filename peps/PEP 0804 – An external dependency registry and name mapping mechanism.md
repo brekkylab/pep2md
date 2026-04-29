@@ -19,7 +19,7 @@ post_history:
 python_status: Draft
 url: https://peps.python.org/pep-0804/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0804.rst
-source_commit: 239567c86d3f7c41c26c1abeb3239d46aff76d43
+source_commit: 9439bf9901f7be7594df3c9686e79e99f7d40bad
 ---
 
 # Abstract
@@ -36,15 +36,15 @@ are not present on PyPI. `725`{.interpreted-text role="pep"} introduced
 metadata to express such dependencies. Using concrete external
 dependency metadata for a Python package requires mapping the given
 dependency identifiers to the specifiers used in other ecosystems, which
-would allow to:
+would allow:
 
 - Enabling tools to automatically map external dependencies to packages
   in other packaging repositories/ecosystems,
 - Including the needed external dependencies *with the package names
   used by the relevant system package manager on the user\'s system* in
   error messages emitted by Python package installers and build
-  frontends, as well as allowing the user to query for those names
-  directly to obtain install instructions.
+  frontends, as well as allowing the user to obtain installation
+  instructions for those packages.
 
 Packaging ecosystems like Linux distros, conda, Homebrew, Spack, and Nix
 need full sets of dependencies for Python packages, and have tools like
@@ -58,7 +58,7 @@ metadata for this in `pyproject.toml` or any other standard metadata
 file. Enabling its automatic conversion is a key benefit of this PEP,
 making Python packaging easier and more reliable. In addition, the
 authors envision other types of tools making use of this information;
-e.g., dependency analysis tools like [Repology](https://repology.org/),
+e.g. dependency analysis tools like [Repology](https://repology.org/),
 [Dependabot](https://github.com/dependabot) and
 [libraries.io](https://libraries.io/).
 
@@ -84,19 +84,31 @@ RPM-based distributions, like Fedora, can use a [rule-based
 implementation](https://discuss.python.org/t/wanting-a-singular-packaging-tool-vision/21141/117)
 (`NameConvertor`) in
 [pyp2rpm](https://github.com/fedora-python/pyp2rpm). The main rule is
-that the RPM name for a PyPI package is `f"python-{pypi_package_name}"`.
-This seems to work quite well; there are a few variants like Python
-version specific names, where the prefix contains the Python major and
-minor version numbers (e.g. `python311-` instead of `python-`).
+that the RPM name for a PyPI package is typically
+`f"python3-{pypi_package_name}"`. The rare exceptions include packages
+that primarily distribute an application, which drop the prefix, (e.g.
+the Black formatter is simply `black`, not `python3-black`), and
+variants for different Python versions (e.g. in RHEL 9 `setuptools` can
+be found as `python3-setuptools` for Python 3.9, but
+`python3.11-setuptools` and `python3.12-setuptools` are also available).
+More details are available in [Fedora\'s packaging guidelines for
+Python](https://docs.fedoraproject.org/en-US/packaging-guidelines/Python/#_naming).
+
+Debian packages typically follow a `f"python3-{import_name}"` naming
+scheme, with some exceptions: some sub-communities have an infix (e.g.
+Django packages go under `f"python3-django-*"`), and applications are
+often distributed by their name, with no `python3-` prefix. Additional
+details are available in [Debian\'s Python
+Policy](https://www.debian.org/doc/packaging-manuals/python-policy/#module-package-names).
 
 Gentoo follows a similar approach to naming Python packages, using the
 `dev-python/` category and some [well-specified
 rules](https://projects.gentoo.org/python/guide/package-maintenance.html).
 
 Conda-forge has a more explicit name mapping, because the base names are
-the same in conda-forge as on PyPI (e.g., `numpy` maps to `numpy`), but
+the same in conda-forge as on PyPI (e.g. `numpy` maps to `numpy`), but
 there are many exceptions because of both name collisions and renames
-(e.g., the PyPI name for PyTorch is `torch` while in conda-forge it\'s
+(e.g. the PyPI name for PyTorch is `torch` while in conda-forge it\'s
 `pytorch`). There are several name mappings efforts maintained by
 different teams. Conda-forge\'s infrastructure generates one in
 [regro/cf-graph-countyfair](https://github.com/regro/cf-graph-countyfair/tree/master/mappings/pypi).
@@ -157,10 +169,8 @@ pkg-config):
 
 - Debian/Ubuntu:
   `sudo apt install -y gcc g++ gfortran libopenblas-dev liblapack-dev pkg-config python3-pip python3-dev`
-- Fedora:
+- Fedora/CentOS/RHEL:
   `sudo dnf install gcc-gfortran python3-devel openblas-devel lapack-devel pkgconfig`
-- CentOS/RHEL:
-  `sudo yum install gcc-gfortran python3-devel openblas-devel lapack-devel pkgconfig`
 - Arch Linux: `sudo pacman -S gcc-fortran openblas pkgconf`
 - Homebrew on macOS: `brew install gfortran openblas pkg-config`
 
@@ -171,16 +181,16 @@ in this PEP, this could be made both more comprehensive and easier to
 maintain through a tool command with semantics of *\"show this
 ecosystem\'s preferred package manager install command for all external
 dependencies\"*. This may be done as a standalone tool, or as a new
-subcommand in any Python development workflow tool (e.g., Pip, Poetry,
+subcommand in any Python development workflow tool (e.g. Pip, Poetry,
 Hatch, PDM, uv).
 
 To this end, each ecosystem mapping can provide a list of package
 managers known to be compatible, with templated instructions on how to
-install and query packages. The provided install command templates are
-paired with query command templates so those tools can check whether the
-needed packages are already present without having to attempt an install
-operation (which might be expensive and have unintended side effects
-like version upgrades).
+install and query installed packages. The provided install command
+templates are paired with query command templates so those tools can
+check whether the needed packages are already present without having to
+attempt an install operation (which might be expensive and have
+unintended side effects like version upgrades).
 
 ## Registry design
 
@@ -188,7 +198,7 @@ The mapping infrastructure has been designed to present the following
 components and properties:
 
 - A central registry of PEP 725 identifiers (DepURLs), including at
-  least the well-known generic and virtual identifiers considered
+  least the well-known `generic` and `virtual` identifiers considered
   canonical.
 - A list of known ecosystems, where ecosystem maintainers can register
   their name mapping(s).
@@ -206,27 +216,10 @@ dependencies).
 
 # Specification
 
-Three schemas are proposed:
-
-1.  A central registry of known DepURLs, as introduced in PEP 725.
-2.  A list of known ecosystems and the canonical URL for their mappings.
-3.  The ecosystem-specific mappings of DepURLs to their corresponding
-    ecosystem specifiers, plus details of their package manager(s).
-
 ## Central registry
 
 The central registry defines which identifiers are recognized as
-canonical, plus known aliases. Each entry MUST provide a valid DepURL in
-the field `id`, with an optional free form `description` text.
-Additionally an entry MAY refer to another entry via its `provides`
-field, which takes a string or a list of strings already defined as `id`
-in the registry. This is useful for both aliases (e.g.
-`dep:generic/arrow` and `dep:github/apache/arrow`) and concrete
-implementations of a `dep:virtual/` entry (e.g. `dep:generic/gcc` would
-provide `dep:virtual/compiler/c`). Entries without `provides` content
-or, if populated, only with `dep:virtual/` identifiers, are considered
-canonical. The `provides` field MUST NOT be present in `dep:virtual/`
-definitions.
+canonical, plus known aliases.
 
 Having a central registry enables the validation of the `[external]`
 table. All involved tools MUST check that the provided identifiers are
@@ -248,449 +241,385 @@ Appendix B). The corresponding answers are not given in this PEP;
 instead we delegate that responsibility to the central registry
 maintainers.
 
-## Mappings
+The canonical filename for the central registry document MUST be
+`registry.json`.
 
-The mappings specify which ecosystem-specific identifiers provide the
-canonical entries available in the central registry. A mapping mainly
-consists of a list of dictionaries, in which each entry consists of:
-
-- an `id` field with the canonical DepURL.
-- an optional free form `description` text.
-- a `specs` field whose value MUST be one of:
-  - a dictionary with three keys (`build`, `host`, `run`). The values
-    MUST be a string or list of strings representing the
-    ecosystem-specific package identifiers as needed as build-, host-
-    and runtime dependencies (see PEP 725 for details on these
-    definitions).
-  - for convenience, a string or a list of strings are also accepted as
-    a shorthand form. In this case, the identifier(s) will be used to
-    populate the three categories mentioned in the item above.
-  - an empty list, which is understood as the ecosystem not having
-    packages to provide such dependency.
-- a `specs_from` field whose value is a DepURL from which the `specs`
-  field will be imported. Either `specs` or `specs_from` MUST be
-  present.
-- an optional `urls` field whose value MUST be a URL, a list of URLs, or
-  a dictionary that maps a string to a URL. This is useful to link to
-  external resources that provide more information about the mapped
-  packages.
-
-The mappings SHOULD also specify another section `package_managers`,
-reporting which package managers are available in the ecosystem and how
-to use them. This field MUST take a list of dictionaries, with each of
-them reporting the following fields:
-
-- `name` (string), unique identifier for this package manager. Usually,
-  the executable name.
-- `commands` (list of dictionaries), the commands to run to install the
-  mapped package(s) and check whether they are already installed.
-- `specifier_syntax`: instructions on how to map a subset of PEP 440
-  specifiers to the target package manager. Three levels of support are
-  offered: name-only, exact-version-only, and version-range
-  compatibility (with per-operator translations).
-
-Each mapping MUST have a canonical URL for online retrieval. These
-mappings MAY also be packaged for offline distribution in each platform.
-The authors recommend placing in the standard location for data
-artifacts in each operating system; e.g. `$XDG_DATA_DIRS` on Linux and
-others, `~/Library/Application Support` on macOS, and `%LOCALAPPDATA%`
-for Windows. The subdirectory identifier MUST be
-`external-packaging-metadata-mappings`. This data directory SHOULD only
-contain mapping documents named `{ecosystem-identifier}.mapping.json`.
-The central registry and known ecosystem documents MAY also be
-distributed in this directory, as `registry.json` and
-`known-ecosystems.json`, respectively.
-
-## Known ecosystems
-
-The list of known ecosystems has two roles:
-
-1.  Reporting the canonical URL for its mapping.
-2.  Assigning a short identifier to each ecosystem. This is the
-    identifier that MUST be used in the mapping filenames mentioned
-    above so they can be found in the local filesystem.
-
-For ecosystems corresponding to Linux distributions, the identifier MUST
-be the one reported by their
-[os-release](https://www.freedesktop.org/software/systemd/man/latest/os-release.html)
-`ID` parameter. For other ecosystems, it MUST be decided during the
-submission to the list of known ecosystems document. It MUST only use
-the characters allowed in `os-release`\'s `ID` field, as per this regex
-`[a-z0-9\-_.]+`.
-
-## Schema details
-
-Three JSON Schema documents are provided to fully standardize the
-registries and mappings.
-
-### Central registry schema
+### Schema
 
 The central registry is specified by the following [JSON
 schema](https://github.com/jaimergp/external-metadata-mappings/blob/main/schemas/central-registry.schema.json):
 
 #### `$schema`
 
-  ----------------- -----------------------------------------------------
-  Type              `string`
+  ------------- ------------------------------------------------------------
+  Type          `string`
 
-  Description       URL of the definition list schema in use for the
-                    document.
+  Description   URL of the definition list schema in use for the document.
 
-  Required          False
-  ----------------- -----------------------------------------------------
+  Required      False
+  ------------- ------------------------------------------------------------
 
 #### `schema_version`
 
-  ----------------- -----------------------------------------------------
-  Type              `integer`
+  ---------- ------------------------------------------------------------
+  Type       `integer`
 
-  Required          False
-  ----------------- -----------------------------------------------------
+  Required   False
+  ---------- ------------------------------------------------------------
 
 #### `definitions`
 
-  ----------------- -----------------------------------------------------
-  Type              `array`
+  ------------- ------------------------------------------------------------
+  Type          `array`
 
-  Description       List of DepURLs currently recognized.
+  Description   List of DepURLs currently recognized.
 
-  Required          True
-  ----------------- -----------------------------------------------------
+  Required      True
+  ------------- ------------------------------------------------------------
 
 Each entry in this list is defined as:
 
-  ----------------------------------------------------------------------------------------------------------------
-  Field           Type                                                     Description                  Required
-  --------------- -------------------------------------------------------- ---------------------------- ----------
-  `id`            `DepURLField` (`string` matching regex `^dep:.+$`)       DepURL                       True
+  ------------------------------------------------------------------------------------------------------------
+  Field           Type                                                     Description
+  --------------- -------------------------------------------------------- -----------------------------------
+  `id` (required) `string` matching regex `^dep:.+$`                       The entry identifier MUST be a
+                                                                           valid DepURL string.
 
-  `description`   `string`                                                 Free-form field to add some  False
-                                                                           details about the package.   
-                                                                           Allows Markdown.             
+  `description`   `string`                                                 Free-form field to add some details
+                                                                           about the package. Allows Markdown.
 
-  `provides`      `DepURLField | list[DepURLField]`                        List of identifiers this     False
-                                                                           entry connects to. Useful to 
-                                                                           annotate aliases or virtual  
-                                                                           package implementations.     
+  `provides`      `DepURLField | list[DepURLField]`                        List of `id` strings this entry
+                                                                           connects to. Useful to annotate
+                                                                           aliases (e.g. `dep:generic/arrow`
+                                                                           and `dep:github/apache/arrow`) or
+                                                                           virtual package implementations
+                                                                           (e.g. `dep:generic/gcc` would
+                                                                           provide `dep:virtual/compiler/c`).
+                                                                           This field MUST NOT be present in
+                                                                           `dep:virtual/` definitions. Entries
+                                                                           without `provides` content or, if
+                                                                           populated, only with `dep:virtual/`
+                                                                           identifiers, are considered
+                                                                           canonical.
 
-  `urls`          `AnyUrl | list[AnyUrl] | dict[NonEmptyString, AnyUrl]`   Hyperlinks to web locations  False
-                                                                           that provide more            
-                                                                           information about the        
-                                                                           definition.                  
-  ----------------------------------------------------------------------------------------------------------------
+  `urls`          `AnyUrl | list[AnyUrl] | dict[NonEmptyString, AnyUrl]`   Hyperlinks to web locations that
+                                                                           provide more information about the
+                                                                           definition.
+  ------------------------------------------------------------------------------------------------------------
 
-### Known ecosystems schema
+## Known ecosystems
+
+The list of known ecosystems has two roles:
+
+1.  Reporting the canonical URL for a given ecosystem mapping.
+2.  Assigning a unique, short identifier to each ecosystem, as described
+    in Mappings.
+
+The canonical filename for the known ecosystems list MUST be
+`known-ecosystems.json`.
+
+### Schema
 
 The known ecosystems list is specified by the following [JSON
 Schema](https://github.com/jaimergp/external-metadata-mappings/blob/main/schemas/known-ecosystems.schema.json):
 
 #### `$schema`
 
-  ----------------- -----------------------------------------------------
-  Type              `string`
+  ------------- ------------------------------------------------------------
+  Type          `string`
 
-  Description       URL of the mappings schema in use for the document.
+  Description   URL of the schema in use for the document.
 
-  Required          False
-  ----------------- -----------------------------------------------------
+  Required      False
+  ------------- ------------------------------------------------------------
 
 #### `schema_version`
 
-  ----------------- -----------------------------------------------------
-  Type              `integer`
+  ------------- ------------------------------------------------------------
+  Type          `integer`
 
-  Required          False
-  ----------------- -----------------------------------------------------
+  Description   Version of the schema in use.
+
+  Required      False
+  ------------- ------------------------------------------------------------
 
 #### `ecosystems`
 
-  ----------------- -----------------------------------------------------
-  Type              `dict`
+  ------------- ------------------------------------------------------------
+  Type          `dict`
 
-  Description       Ecosystems names and their corresponding details.
+  Description   Ecosystems names and their corresponding details.
 
-  Required          True
-  ----------------- -----------------------------------------------------
+  Required      True
+  ------------- ------------------------------------------------------------
 
 This dictionary maps non-empty string keys referring to the ecosystem
-identifiers to a sub-dictionary defined as:
+*identifiers* to a sub-dictionary defined as:
 
-  --------------------------------------------------------------------------------
-  Key                    Value type        Value description            Required
-  ---------------------- ----------------- ---------------------------- ----------
-  `Literal['mapping']`   `AnyURL`          URL to the mapping for this  True
-                                           ecosystem                    
+  ------------------------------------------------------------------------
+  Key            Value type     Value description
+  -------------- -------------- ------------------------------------------
+  `mapping`      `AnyURL`       URL to the mapping for this ecosystem.
+  (required)                    
 
-  --------------------------------------------------------------------------------
+  ------------------------------------------------------------------------
 
-### Mappings schema
+## Mappings
+
+The mappings specify which ecosystem-specific identifiers provide the
+canonical entries available in the central registry. A mapping mainly
+consists of two lists of dictionaries: one where each entry maps a
+DepURL to one or more ecosystem-specific identifiers, and another that
+exposes how to use one or more package managers.
+
+Each mapping MUST have a canonical URL for online retrieval. Its
+complete filename MUST be `{ecosystem-identifier}.mapping.json`, where
+\"ecosystem identifier\" MUST conform to this regex:
+`[a-z0-9\-_.]+(\+[a-z0-9\-_.]+)?`. In other words, a first field
+optionally followed by a second, separated by a `+` symbol.
+
+For ecosystems corresponding to Linux distributions, the first field
+MUST correspond to the `ID` string as specified in the
+[os-release](https://www.freedesktop.org/software/systemd/man/latest/os-release.html)
+specification. If provided and relevant, the second field MUST
+correspond to the `VERSION_ID` string.
+
+Since the version field is optional, tools SHOULD try to access the
+versioned identifier but fallback to the name-only identifier if not
+found.
+
+### Schema
 
 The mappings are specified by the following [JSON
 Schema](https://github.com/jaimergp/external-metadata-mappings/blob/main/schemas/external-mapping.schema.json):
 
 #### `$schema`
 
-  ----------------- -----------------------------------------------------
-  Type              `string`
+  ------------- ------------------------------------------------------------
+  Type          `string`
 
-  Description       URL of the mappings schema in use for the document.
+  Description   URL of the mappings schema in use for the document.
 
-  Required          False
-  ----------------- -----------------------------------------------------
+  Required      False
+  ------------- ------------------------------------------------------------
 
 #### `schema_version`
 
-  ----------------- -----------------------------------------------------
-  Type              `integer`
+  ------------- ------------------------------------------------------------
+  Type          `integer`
 
-  Required          False
-  ----------------- -----------------------------------------------------
+  Description   Version of the schema in use.
+
+  Required      False
+  ------------- ------------------------------------------------------------
 
 #### `name`
 
-  ----------------- -----------------------------------------------------
-  Type              `string`
+  ------------- ------------------------------------------------------------
+  Type          `string`
 
-  Description       Name of the schema
+  Description   Display name for the mapping.
 
-  Required          True
-  ----------------- -----------------------------------------------------
+  Required      True
+  ------------- ------------------------------------------------------------
 
 #### `description`
 
-  ----------------- -----------------------------------------------------
-  Type              `string | None`
+  ------------- ------------------------------------------------------------
+  Type          `string`
 
-  Description       Free-form field to add information this mapping.
-                    Allows Markdown.
+  Description   Free-form field to add information this mapping. Allows
+                Markdown.
 
-  Required          False
-  ----------------- -----------------------------------------------------
+  Required      False
+  ------------- ------------------------------------------------------------
 
 #### `mappings`
 
-  ----------------- -----------------------------------------------------
-  Type              `array`
+  ------------- ------------------------------------------------------------
+  Type          `array`
 
-  Description       List of DepURL-to-specs mappings.
+  Description   List of DepURL-to-specs mappings.
 
-  Required          True
-  ----------------- -----------------------------------------------------
+  Required      True
+  ------------- ------------------------------------------------------------
 
-Each entry in this list is defined as:
+Each entry in `mappings` is defined as:
 
-  -------------------------------------------------------------------------------------------------------------------------------------------------------
-  Field              Type                                                                                     Description                  Required
-  ------------------ ---------------------------------------------------------------------------------------- ---------------------------- --------------
-  `id`               `DepURLField` (`string` matching regex `^dep:.+$`)                                       DepURL, as provided in the   True
-                                                                                                              central registry             
+  -----------------------------------------------------------------------------------------------------------------------------------------------
+  Field              Type                                                                                     Description
+  ------------------ ---------------------------------------------------------------------------------------- -----------------------------------
+  `id` (required)    `string` matching regex `^dep:.+$`                                                       DepURL, as provided in the central
+                                                                                                              registry.
 
-  `description`      `string`                                                                                 Free-form field to add some  False
-                                                                                                              details about the package.   
-                                                                                                              Allows Markdown.             
+  `description`      `string`                                                                                 Free-form field to add some details
+                                                                                                              about the package. Allows Markdown.
 
-  `urls`             `AnyUrl | list[AnyUrl] | dict[NonEmptyString, AnyUrl]`                                   Hyperlinks to web locations  False
-                                                                                                              that provide more            
-                                                                                                              information about the        
-                                                                                                              definition.                  
+  `specs` †          `string | list[string] | dict[Literal['build', 'host', 'run'], string | list[string]]`   Ecosystem-specific identifiers for
+                                                                                                              this package. The full form is a
+                                                                                                              dictionary that maps the categories
+                                                                                                              `build`, `host` and `run` to their
+                                                                                                              corresponding package identifiers.
+                                                                                                              As a shorthand, a single string or
+                                                                                                              a list of strings can be provided,
+                                                                                                              in which case will be used to
+                                                                                                              populate the three categories
+                                                                                                              identically. An empty list
+                                                                                                              indicates that the ecosystem does
+                                                                                                              not have packages for this entry.
 
-  `specs`            `string | list[string] | dict[Literal['build', 'host', 'run'], string | list[string]]`   Ecosystem-specific           Either `specs`
-                                                                                                              identifiers for this         or
-                                                                                                              package. The full form is a  `specs_from`
-                                                                                                              dictionary that maps the     MUST be
-                                                                                                              categories `build`, `host`   present.
-                                                                                                              and `run` to their           
-                                                                                                              corresponding package        
-                                                                                                              identifiers. As a shorthand, 
-                                                                                                              a single string or a list of 
-                                                                                                              strings can be provided, in  
-                                                                                                              which case will be used to   
-                                                                                                              populate the three           
-                                                                                                              categories identically.      
+  `specs_from` †     `string` matching regex `^dep:.+$`                                                       DepURL identifier of another entry
+                                                                                                              whose `specs` will be reused here.
 
-  `specs_from`       `DepURLField` (`string` matching regex `^dep:.+$`)                                       Take specs from another      Either `specs`
-                                                                                                              mapping entry.               or
-                                                                                                                                           `specs_from`
-                                                                                                                                           MUST be
-                                                                                                                                           present.
+  `urls`             `AnyUrl | list[AnyUrl] | dict[NonEmptyString, AnyUrl]`                                   Hyperlinks to web locations that
+                                                                                                              provide more information about the
+                                                                                                              definition.
 
-  `extra_metadata`   `dict[NonEmptyString, Any]`                                                              Free-form key-value store    False
-                                                                                                              for arbitrary metadata.      
-  -------------------------------------------------------------------------------------------------------------------------------------------------------
+  `extra_metadata`   `dict[NonEmptyString, Any]`                                                              Free-form key-value store for
+                                                                                                              arbitrary metadata.
+  -----------------------------------------------------------------------------------------------------------------------------------------------
+
+† Exactly one of `specs` and `specs_from` MUST be present.
 
 #### `package_managers`
 
-  ----------------- -----------------------------------------------------
-  Type              `array`
+  ------------- ------------------------------------------------------------
+  Type          `array`
 
-  Description       List of tools that can be used to install packages in
-                    this ecosystem.
+  Description   List of tools that can be used to install packages in this
+                ecosystem.
 
-  Required          True
-  ----------------- -----------------------------------------------------
+  Required      True
+  ------------- ------------------------------------------------------------
 
-Each entry in this list is defined as a dictionary with these fields:
+Each entry in `package_managers` MUST be a dictionary with these fields:
 
-+--------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------------+----------+
-| Field              | Type                                                                                                                                                                                                                                  | Description               | Required |
-+====================+=======================================================================================================================================================================================================================================+===========================+==========+
-| `name`             | `string`                                                                                                                                                                                                                              | Short identifier for this | True     |
-|                    |                                                                                                                                                                                                                                       | package manager (usually  |          |
-|                    |                                                                                                                                                                                                                                       | the command name)         |          |
-+--------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------------+----------+
-| `commands`         | `dict[Literal['install', 'query'], dict[Literal['command', 'requires_elevation', 'multiple_specifiers'], list[str] | bool | Literal['always', 'name-only', 'never']]]`                                                                | Commands used to install  | True     |
-|                    |                                                                                                                                                                                                                                       | or query the given        |          |
-|                    |                                                                                                                                                                                                                                       | package(s). Only two keys |          |
-|                    |                                                                                                                                                                                                                                       | are allowed: `install`    |          |
-|                    |                                                                                                                                                                                                                                       | and `query`. Their value  |          |
-|                    |                                                                                                                                                                                                                                       | is a dictionary with:     |          |
-|                    |                                                                                                                                                                                                                                       |                           |          |
-|                    |                                                                                                                                                                                                                                       | - a required key          |          |
-|                    |                                                                                                                                                                                                                                       |   `command` that takes a  |          |
-|                    |                                                                                                                                                                                                                                       |   list of strings (as     |          |
-|                    |                                                                                                                                                                                                                                       |   expected by             |          |
-|                    |                                                                                                                                                                                                                                       |   `subprocess.run`).      |          |
-|                    |                                                                                                                                                                                                                                       |                           |          |
-|                    |                                                                                                                                                                                                                                       | - an optional             |          |
-|                    |                                                                                                                                                                                                                                       |   `requires_elevation`    |          |
-|                    |                                                                                                                                                                                                                                       |   boolean (`False` by     |          |
-|                    |                                                                                                                                                                                                                                       |   default) to indicate    |          |
-|                    |                                                                                                                                                                                                                                       |   whether the command     |          |
-|                    |                                                                                                                                                                                                                                       |   must run with elevated  |          |
-|                    |                                                                                                                                                                                                                                       |   permissions (e.g.       |          |
-|                    |                                                                                                                                                                                                                                       |   administrator on        |          |
-|                    |                                                                                                                                                                                                                                       |   Windows, superuser on   |          |
-|                    |                                                                                                                                                                                                                                       |   Linux and macOS).       |          |
-|                    |                                                                                                                                                                                                                                       |                           |          |
-|                    |                                                                                                                                                                                                                                       | - an enum                 |          |
-|                    |                                                                                                                                                                                                                                       |   `multiple_specifiers`   |          |
-|                    |                                                                                                                                                                                                                                       |   that determines whether |          |
-|                    |                                                                                                                                                                                                                                       |   the command accepts     |          |
-|                    |                                                                                                                                                                                                                                       |   multiple package        |          |
-|                    |                                                                                                                                                                                                                                       |   specifiers at the same  |          |
-|                    |                                                                                                                                                                                                                                       |   time, accepting one of: |          |
-|                    |                                                                                                                                                                                                                                       |                           |          |
-|                    |                                                                                                                                                                                                                                       |   > - `always`, default   |          |
-|                    |                                                                                                                                                                                                                                       |   >   in `install`.       |          |
-|                    |                                                                                                                                                                                                                                       |   > - `name-only`, the    |          |
-|                    |                                                                                                                                                                                                                                       |   >   command only        |          |
-|                    |                                                                                                                                                                                                                                       |   >   accepts multiple    |          |
-|                    |                                                                                                                                                                                                                                       |   >   specifiers if they  |          |
-|                    |                                                                                                                                                                                                                                       |   >   do not contain      |          |
-|                    |                                                                                                                                                                                                                                       |   >   version             |          |
-|                    |                                                                                                                                                                                                                                       |   >   constraints.        |          |
-|                    |                                                                                                                                                                                                                                       |   > - `never`, default in |          |
-|                    |                                                                                                                                                                                                                                       |   >   `query`.            |          |
-|                    |                                                                                                                                                                                                                                       |                           |          |
-|                    |                                                                                                                                                                                                                                       | Exactly one of the        |          |
-|                    |                                                                                                                                                                                                                                       | `command` items MUST      |          |
-|                    |                                                                                                                                                                                                                                       | include a `{}`            |          |
-|                    |                                                                                                                                                                                                                                       | placeholder, which will   |          |
-|                    |                                                                                                                                                                                                                                       | be replaced by the mapped |          |
-|                    |                                                                                                                                                                                                                                       | package identifier(s).    |          |
-|                    |                                                                                                                                                                                                                                       | The `install` command     |          |
-|                    |                                                                                                                                                                                                                                       | SHOULD support the        |          |
-|                    |                                                                                                                                                                                                                                       | placeholder being         |          |
-|                    |                                                                                                                                                                                                                                       | replaced by multiple      |          |
-|                    |                                                                                                                                                                                                                                       | identifiers, `query` MUST |          |
-|                    |                                                                                                                                                                                                                                       | only receive a single     |          |
-|                    |                                                                                                                                                                                                                                       | identifier per command.   |          |
-+--------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------------+----------+
-| `specifier_syntax` | `dict[Literal['name_only', 'exact_version', 'version_ranges'], None | list[str] | dict[Literal['and', 'equal', 'greater_than', 'greater_than_equal', 'less_than', 'less_than_equal', 'not_equal', 'syntax'], None | str | list[str]]` | Mapping of allowed PEP440 | True     |
-|                    |                                                                                                                                                                                                                                       | version specifiers to the |          |
-|                    |                                                                                                                                                                                                                                       | syntax used in this       |          |
-|                    |                                                                                                                                                                                                                                       | package manager. Three    |          |
-|                    |                                                                                                                                                                                                                                       | top-level keys are        |          |
-|                    |                                                                                                                                                                                                                                       | expected and required:    |          |
-|                    |                                                                                                                                                                                                                                       |                           |          |
-|                    |                                                                                                                                                                                                                                       | - `name_only` MUST take a |          |
-|                    |                                                                                                                                                                                                                                       |   list of strings as the  |          |
-|                    |                                                                                                                                                                                                                                       |   syntax used for         |          |
-|                    |                                                                                                                                                                                                                                       |   specifiers that do not  |          |
-|                    |                                                                                                                                                                                                                                       |   contain any version     |          |
-|                    |                                                                                                                                                                                                                                       |   information; it MUST    |          |
-|                    |                                                                                                                                                                                                                                       |   include the placeholder |          |
-|                    |                                                                                                                                                                                                                                       |   `{name}`.               |          |
-|                    |                                                                                                                                                                                                                                       |                           |          |
-|                    |                                                                                                                                                                                                                                       | - `exact_version` MUST be |          |
-|                    |                                                                                                                                                                                                                                       |   `None` or a list of     |          |
-|                    |                                                                                                                                                                                                                                       |   strings that describe   |          |
-|                    |                                                                                                                                                                                                                                       |   the syntax used for     |          |
-|                    |                                                                                                                                                                                                                                       |   specifiers that only    |          |
-|                    |                                                                                                                                                                                                                                       |   express exact version   |          |
-|                    |                                                                                                                                                                                                                                       |   constraints; in the     |          |
-|                    |                                                                                                                                                                                                                                       |   latter case, the        |          |
-|                    |                                                                                                                                                                                                                                       |   placeholders `{name}`   |          |
-|                    |                                                                                                                                                                                                                                       |   and `{version}` MUST be |          |
-|                    |                                                                                                                                                                                                                                       |   present in at least one |          |
-|                    |                                                                                                                                                                                                                                       |   of the strings          |          |
-|                    |                                                                                                                                                                                                                                       |   (although not necessary |          |
-|                    |                                                                                                                                                                                                                                       |   the same string for     |          |
-|                    |                                                                                                                                                                                                                                       |   both).                  |          |
-|                    |                                                                                                                                                                                                                                       |                           |          |
-|                    |                                                                                                                                                                                                                                       | - `version_ranges` MUST   |          |
-|                    |                                                                                                                                                                                                                                       |   be `None` or a          |          |
-|                    |                                                                                                                                                                                                                                       |   dictionary with the     |          |
-|                    |                                                                                                                                                                                                                                       |   following required      |          |
-|                    |                                                                                                                                                                                                                                       |   keys:                   |          |
-|                    |                                                                                                                                                                                                                                       |                           |          |
-|                    |                                                                                                                                                                                                                                       |   - the key `syntax`      |          |
-|                    |                                                                                                                                                                                                                                       |     takes a list of       |          |
-|                    |                                                                                                                                                                                                                                       |     strings where at      |          |
-|                    |                                                                                                                                                                                                                                       |     least one MUST        |          |
-|                    |                                                                                                                                                                                                                                       |     include the           |          |
-|                    |                                                                                                                                                                                                                                       |     `{ranges}`            |          |
-|                    |                                                                                                                                                                                                                                       |     placeholder (to be    |          |
-|                    |                                                                                                                                                                                                                                       |     replaced by the       |          |
-|                    |                                                                                                                                                                                                                                       |     maybe-joined version  |          |
-|                    |                                                                                                                                                                                                                                       |     constraints, as       |          |
-|                    |                                                                                                                                                                                                                                       |     determined by the     |          |
-|                    |                                                                                                                                                                                                                                       |     value of `and`). They |          |
-|                    |                                                                                                                                                                                                                                       |     MAY also include the  |          |
-|                    |                                                                                                                                                                                                                                       |     `{name}` placeholder. |          |
-|                    |                                                                                                                                                                                                                                       |   - the keys `equal`,     |          |
-|                    |                                                                                                                                                                                                                                       |     `greater_than`,       |          |
-|                    |                                                                                                                                                                                                                                       |     `greater_than_equal`, |          |
-|                    |                                                                                                                                                                                                                                       |     `less_than`,          |          |
-|                    |                                                                                                                                                                                                                                       |     `less_than_equal`,    |          |
-|                    |                                                                                                                                                                                                                                       |     and `not_equal` take  |          |
-|                    |                                                                                                                                                                                                                                       |     a string if the       |          |
-|                    |                                                                                                                                                                                                                                       |     operator is           |          |
-|                    |                                                                                                                                                                                                                                       |     supported, `None`     |          |
-|                    |                                                                                                                                                                                                                                       |     otherwise. In the     |          |
-|                    |                                                                                                                                                                                                                                       |     former case, the      |          |
-|                    |                                                                                                                                                                                                                                       |     value MUST include    |          |
-|                    |                                                                                                                                                                                                                                       |     the `{version}`       |          |
-|                    |                                                                                                                                                                                                                                       |     placeholder, and MAY  |          |
-|                    |                                                                                                                                                                                                                                       |     include `{name}`.     |          |
-|                    |                                                                                                                                                                                                                                       |   - the key `{and}` takes |          |
-|                    |                                                                                                                                                                                                                                       |     a string used to join |          |
-|                    |                                                                                                                                                                                                                                       |     multiple version      |          |
-|                    |                                                                                                                                                                                                                                       |     constraints in a      |          |
-|                    |                                                                                                                                                                                                                                       |     single token, or      |          |
-|                    |                                                                                                                                                                                                                                       |     `None` if only a      |          |
-|                    |                                                                                                                                                                                                                                       |     single constraint can |          |
-|                    |                                                                                                                                                                                                                                       |     be used per token. In |          |
-|                    |                                                                                                                                                                                                                                       |     the latter case, the  |          |
-|                    |                                                                                                                                                                                                                                       |     different constraints |          |
-|                    |                                                                                                                                                                                                                                       |     will be \"exploded\"  |          |
-|                    |                                                                                                                                                                                                                                       |     into several tokens   |          |
-|                    |                                                                                                                                                                                                                                       |     using the `syntax`    |          |
-|                    |                                                                                                                                                                                                                                       |     template.             |          |
-|                    |                                                                                                                                                                                                                                       |                           |          |
-|                    |                                                                                                                                                                                                                                       |   When `exact_version` or |          |
-|                    |                                                                                                                                                                                                                                       |   `version_ranges` are    |          |
-|                    |                                                                                                                                                                                                                                       |   set to `None`, it       |          |
-|                    |                                                                                                                                                                                                                                       |   indicates that the      |          |
-|                    |                                                                                                                                                                                                                                       |   respective types of     |          |
-|                    |                                                                                                                                                                                                                                       |   specifiers are not      |          |
-|                    |                                                                                                                                                                                                                                       |   supported by the        |          |
-|                    |                                                                                                                                                                                                                                       |   package manager.        |          |
-+--------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------------+----------+
+  --------------------------------------------------------------------------
+  Field                Type       Description
+  -------------------- ---------- ------------------------------------------
+  `name` (required)    `string`   Short identifier for this package manager
+                                  (usually the command name).
+
+  `commands`           `dict`     See subsection below.
+  (required)                      
+
+  `specifier_syntax`   `dict`     See subsection below.
+  (required)                      
+  --------------------------------------------------------------------------
+
+##### `commands`
+
+Commands used to install or query the given package(s).
+
+It MUST be a dictionary where only two keys MUST be allowed: `install`
+(to generate install instructions) and `query` (to check whether a given
+package is already installed). Their value MUST be a dictionary with:
+
+- a required `command` key that MUST take a list of strings (as expected
+  by `subprocess.run`). Exactly one item in this list MUST be the `{}`
+  placeholder, which will be replaced by the mapped package
+  specifier(s).
+- an optional `requires_elevation` boolean (`False` by default) to
+  indicate whether the command must run with elevated permissions (e.g.
+  administrator on Windows, superuser on Linux and macOS).
+- a required `multiple_specifiers` enum that determines whether the
+  command accepts multiple package specifiers at the same time, taking
+  one of:
+  - `always`, default in `install`.
+  - `name-only`, the command only accepts multiple specifiers if they do
+    not contain version constraints.
+  - `never`, default in `query`.
+
+The `install` command SHOULD support the placeholder being replaced by
+multiple specifiers; `query` MUST only receive a single specifier per
+command.
+
+For `install`, the exit code MUST be `0` when the package was
+successfully installed or if it was already present.
+
+For `query`, if the package is installed, the command MUST result in an
+exit code of `0`. Otherwise, a non-zero exit code MUST be returned.
+
+##### `specifier_syntax`
+
+A dictionary describing the instructions on how to map a subset of PEP
+440 specifiers (as determined in PEP 725) to the target package manager.
+Three levels of support are offered: name-only, exact-version-only, and
+version-range compatibility (with per-operator translations).
+Subsequently, these three top-level keys MUST be required. Extra keys
+MUST NOT be allowed.
+
+- `name_only` MUST take a list of strings as the syntax used for
+  specifiers that do not contain any version information; it MUST
+  include the placeholder `{name}`.
+
+- `exact_version` MUST be `None` or a list of strings that describe the
+  syntax used for specifiers that only express exact version
+  constraints; in the latter case, the placeholders `{name}` and
+  `{version}` MUST be present in at least one of the strings (although
+  not necessary the same string for both).
+
+- `version_ranges` MUST be `None` or a dictionary with the following
+  required keys:
+
+  - the key `syntax` takes a list of strings where at least one MUST
+    include the `{ranges}` placeholder (to be replaced by the
+    maybe-joined version constraints, as determined by the value of
+    `and`). They MAY also include the `{name}` placeholder.
+  - the keys `equal`, `greater_than`, `greater_than_equal`, `less_than`,
+    and `less_than_equal` take a string if the operator is supported,
+    `None` otherwise. In the former case, the value MUST include the
+    `{version}` placeholder, and MAY include `{name}`.
+  - the key `and` takes a string used to join multiple version
+    constraints in a single token, or `None` if only a single constraint
+    can be used per token. In the latter case, the different constraints
+    will be \"exploded\" into several tokens using the `syntax`
+    template.
+
+  When `exact_version` or `version_ranges` are set to `None`, it
+  indicates that the respective types of specifiers are not supported by
+  the package manager.
+
+:::: note
+::: title
+Note
+:::
+
+The `specifier_syntax` mappings are meant to provide interoperability
+between ecosystems where choosing which package version to install is
+possible. For example, this is not the case in many Linux distributions,
+where each distro release commits to a package version during its
+lifecycle (although often with the necessary security backports).
+
+In these cases, the `install` command could be used, optimistically, in
+\"name-only\" mode, hoping that the OS-provided version is a good fit. A
+more pessimistic alternative would be to use the `query` command first
+to see if the available version matches the project constraints, and
+then install the package by name.
+
+Even in those cases, perfect 1:1 version matching is not always possible
+due to how different ecosystems map upstream releases to repackaged
+versions (e.g. the epoch had to be bumped to accommodate a change of
+release schema). In that regard, we do not encode explicit mapping
+semantics for epochs or pre-releases.
+::::
+
+## Redistribution
+
+The central registry, the known ecosystems list and the mapping
+documents MAY be packaged for offline distribution in each platform.
+
+The authors recommend placing them in the standard location for data
+artifacts in each operating system; e.g. `$XDG_DATA_DIRS` on Linux and
+others, `~/Library/Application Support` on macOS, and `%LOCALAPPDATA%`
+for Windows. The subdirectory identifier MUST be
+`external-packaging-metadata-mappings`, and SHOULD only contain
+documents corresponding to the aforementioned schemas, which MUST use
+their canonical filenames.
 
 ## Examples
 
-### Registry, known ecosystems and mappings
+### Registry
 
 A simplified registry would look like this:
 
@@ -715,6 +644,8 @@ A simplified registry would look like this:
 }
 ```
 
+### Known ecosystems
+
 A minimal list of known ecosystems with a single entry would look like
 this:
 
@@ -729,7 +660,20 @@ this:
 }
 ```
 
-That hypothetical conda-forge mapping (`conda-forge.mapping.json`), with
+Some representative identifiers:
+
+  Ecosystem              Identifier       Filename
+  ---------------------- ---------------- -----------------------------
+  Debian Bookworm        `debian+12`      `debian+12.mapping.json`
+  Fedora 40              `fedora+40`      `fedora+40.mapping.json`
+  Ubuntu 24.04           `ubuntu+24.04`   `ubuntu+24.04.mapping.json`
+  Arch Linux (rolling)   `arch`           `arch.mapping.json`
+  Homebrew               `homebrew`       `homebrew.mapping.json`
+  conda-forge            `conda-forge`    `conda-forge.mapping.json`
+
+### Mappings
+
+A hypothetical conda-forge mapping (`conda-forge.mapping.json`), with
 only a couple entries for brevity, could look like:
 
 ``` js
@@ -740,10 +684,10 @@ only a couple entries for brevity, could look like:
   "mappings": [
     {
       "id": "dep:generic/zlib",
-      "description": "zlib data compression library for the next generation systems. From zlib-ng/zlib-ng.",
-      "specs": "zlib-ng",  // Simplest form
+      "description": "Massively spiffy yet delicately unobtrusive compression library.",
+      "specs": "zlib",  // Simplest form
       "urls": {
-        "feedstock": "https://github.com/conda-forge/zlib-ng-feedstock"
+        "feedstock": "https://github.com/conda-forge/zlib-feedstock"
       }
     },
     {
@@ -819,7 +763,6 @@ only a couple entries for brevity, could look like:
           "greater_than_equal": ">={version}",
           "less_than": "<{version}",
           "less_than_equal": "<={version}",
-          "not_equal": "!={version}",
           "syntax": [
             "{name}{ranges}"
           ]
@@ -829,6 +772,8 @@ only a couple entries for brevity, could look like:
   ]
 }
 ```
+
+### Practical examples
 
 The following repository provides examples of how these schemas *could*
 look like in real cases. They are not meant to be prescriptive, but just
@@ -898,11 +843,11 @@ host-requires = [
 # show all external dependencies, but mapped to the autodetected ecosystem
 $ python -m pyproject_external show --output=mapped .
 [external]
-build_requires = [
+build-requires = [
     "g++",
     "python3",
 ]
-host_requires = [
+host-requires = [
     "zlib1g",
     "zlib1g-dev",
 ]
@@ -1016,9 +961,11 @@ mean any of ['dep:virtual/compiler/c', 'dep:virtual/compiler/cxx',
 'pixi'
 >>> external.to_dict(mapped_for=ecosystem, package_manager=package_manager)
 {'external': {'build_requires': ['c-compiler', 'cxx-compiler', 'python']}}
->>> external.install_command(ecosystem, package_manager=package_manager)
+>>> external.install_commands(ecosystem, package_manager=package_manager)
 # {"command": ["pixi", "add", "{}"]}
-['pixi', 'add', 'c-compiler', 'cxx-compiler', 'python']
+[
+  ['pixi', 'add', 'c-compiler', 'cxx-compiler', 'python'],
+]
 >>> external.query_commands(ecosystem, package_manager=package_manager)
 # {"command": ["pixi", "list", "{}"]}
 [
@@ -1087,7 +1034,7 @@ Instead:
 
 - they should vendor the relevant documents in the distributed packages,
 - or depend on prepackaged, offline distributions of these documents,
-- or implement best-practices for authenticity verification of the
+- or implement best practices for authenticity verification of the
   fetched documents.
 
 The install commands have the potential to modify the system
@@ -1125,7 +1072,7 @@ templates, or linting tools.
 
 ## Package ecosystem maintainers usage
 
-Missing mapping entries will result in the absence tailored error
+Missing mapping entries will result in the absence of tailored error
 messages and other UX affordances for end users of the impacted
 ecosystems. It is thus recommended that each package ecosystem keeps
 their mappings up-to-date with the central registry. The key to this
@@ -1164,7 +1111,7 @@ impact will be driven by external runtime dependencies (expected to be
 rare), and even in those cases they need to opt-in by installing a
 compatible tool.
 
-Users that do opt-in may find missing entries in for their target
+Users that do opt-in may find missing entries for their target
 ecosystems, for which they should obtain informative error messages that
 point to the relevant documentation sections. This will allow them to
 get acquainted with the nature of the issue and its potential solutions.
@@ -1172,7 +1119,7 @@ get acquainted with the nature of the issue and its potential solutions.
 We hope that this results in a subset of them reporting the missing
 entries, submitting a fix to the affected mapping or, if totally absent,
 even deciding to maintain a new one on their own. To that end, they
-should get familiar with the responsibilties of mapping maintainers
+should get familiar with the responsibilities of mapping maintainers
 (discussed above).
 
 # Reference Implementation
@@ -1202,7 +1149,7 @@ For (3), the JSON Schema is defined at
 An example list can be found at
 [known-ecosystems.json](https://github.com/jaimergp/external-metadata-mappings/blob/main/data/known-ecosystems.json).
 The JSON Schemas are created with [these Pydantic
-models](https://github.com/jaimergp/external-metadata-mappings/blob/main/schemas/schema.py).
+models](https://github.com/jaimergp/external-metadata-mappings/blob/main/schemas/schemas.py).
 
 The reference CLI and Python API to consume the different JSON documents
 and `[external]` tables can be found in
@@ -1223,9 +1170,9 @@ ecosystems.
 
 Some ecosystems have their own variants of known packages; e.g.
 Debian\'s `libsymspg2-dev`. While an identifier such as
-`dep:debian/libsymspg2-dev` is syntactically valid, the central registry
-should not recognize it as a well-known identifier, preferring its
-`generic` counterpart instead. Users may still choose to use it, but
+`dep:deb/debian/libsymspg2-dev` is syntactically valid, the central
+registry should not recognize it as a well-known identifier, preferring
+its `generic` counterpart instead. Users may still choose to use it, but
 tools may warn about it and suggest using the generic one. This is meant
 to encourage ecosystem-agnostic metadata whenever possible to facilitate
 adoption across platforms and operating systems.
@@ -1247,7 +1194,7 @@ The reasons include:
   where that extra metadata can be obtained (e.g. the repository at the
   URL will likely include details about authorship and licensing).
 - These details can also be obtained from the actual target ecosystems.
-  In some cases this might even be preferable; e.g., for licenses, where
+  In some cases this might even be preferable; e.g. for licenses, where
   downstream packaging can actually affect it by unvendoring
   dependencies or adjusting optional bits.
 - Those details may change over the lifetime of the project, and keeping
@@ -1324,6 +1271,132 @@ We suggest simply checking that the provided identifiers are
 well-formed. Future work may choose to also enforce that the identifiers
 are recognized as canonical, once the central registry has matured with
 significant adoption.
+
+## Inheritance and cross-referenced mappings
+
+A potential improvement to improve the reusability of mappings is to
+provide a mechanism to inherit a parent mapping and extend it or replace
+it with additional values. The authors have decided to not add this
+feature given the implied complexity (e.g. URL resolution, nested
+dependencies, possibilities of broken resources). Instead, the following
+alternatives are proposed:
+
+- For mapping authors, automate the generation of derived mappings via
+  scripting and cron jobs. For example, simple logic such as fetching
+  the parent mapping, applying the necessary modifications and
+  republishing it to the target location should not result in much
+  maintenance burden.
+- For end-users wishing to extend a given mapping with custom overrides,
+  client-side tools should implement the necessary affordances to do
+  this easily. For example, a tool such as `pyproject-external` could
+  provide the following CLI flags or environment variables:
+  - `--use-mapping` / `<TOOL>_USE_MAPPING`: Use the given local or
+    remote mapping instead of the the canonical location.
+  - `--patch-mapping` / `<TOOL>_PATCH_MAPPING`: Given a local or remote
+    mapping, replace the matching keys in the canonical location and
+    append the non-matching ones.
+  - `--extend-mapping` / `<TOOL>_EXTEND_MAPPING`: Given a local or
+    remote mapping, append its contents to the canonical one. Assuming
+    the tool allows the user to pick different mapping options if more
+    than one is available, this option enriches the set of options
+    without complete overrides.
+
+So, for example, given a package with this `external` table:
+
+``` toml
+[external]
+build-requires = [
+  "dep:virtual/compiler/c",
+]
+host-requires = [
+  "dep:generic/libffi",
+]
+```
+
+And a target ecosystem that maps `dep:virtual/compiler/c` to `gcc` but
+`clang` is preferred, the following mapping override could be provided:
+
+``` json
+{
+  "$schema": "https://raw.githubusercontent.com/jaimergp/external-metadata-mappings/main/schemas/external-mapping.schema.json",
+  "schema_version": 1,
+  "name": "ecosystem override",
+  "description": "Mapping override for my ecosystem of choice",
+  "mappings": [
+    {
+      "id": "dep:virtual/compiler/c",
+      "description": "Clang override",
+      "specs": "clang"
+    }
+  ]
+}
+```
+
+Then, it would be used like this:
+
+``` shell
+$ python -m my-tool show \
+    sdist/cryptography-46.0.2.tar.gz \
+    --output install-command \
+    --patch-mapping=my-override.mapping.json
+```
+
+## Tracking package name changes
+
+Packaging ecosystems tend to correct, extend and evolve the naming
+schemes used. It is common to split what started as a monolithic build
+into smaller components (e.g. avoid shipping development files to
+runtime-only environments, saving bandwidth). Some practitioners also
+use the package name to track ABI compatibility across SONAME changes.
+The reasons may be multiple and diverse, but the problem is the same: a
+given upstream project name may be distributed as different names over
+time.
+
+A proposal to track these changes in the mapping suggested the inclusion
+of additional date fields (such as `valid_from` and `valid_to`), but the
+authors decided to reject this idea. It adds complexity to the
+implementation, it is difficult to maintain up-to-date, and doesn\'t add
+value to the end-user, simply serving as a historical record.
+
+Instead, we expect that versioned distributions maintain a separate
+mapping per release (see the proposed mapping naming schemes). Rolling
+ecosystems should strive to keep alias packages around, with deprecation
+warnings if needed and feasible. In general, we also recommend keeping
+the mapping files under public version control so end-users can refer to
+older versions if necessary.
+
+## Reusing existing databases as a central registry
+
+A cursory online search for cross-ecosystem databases of packages would
+reveal different sets of results close to the needs of this proposal,
+but not quite there. For example:
+
+- Some solutions only focus on Linux distributions or Unix systems, like
+  [Repology](https://repology.org/) or [pkgs.org](https://pkgs.org).
+- Other services like [Libraries.io](https://libraries.io) require a
+  login.
+- Other providers like [ecosyste.ms](https://ecosyste.ms) are only
+  available via APIs.
+- The service [purldb](https://github.com/aboutcode-org/purldb) only
+  focuses on collecting concrete PURLs (which identify specific package
+  artifacts), instead of abstract PURLs concerned with identifying input
+  requirements.
+
+The proposed mappings try to be as lightweight as possible, without
+requiring the maintenance of a live server and an API. Simply a
+collection of static JSON files that can be easily updated and
+distributed online and offline.
+
+If in the future a service exists providing the following features, then
+it would be a strong contender for superseding this PEP:
+
+- Provides mappings between source DepURLs, PURLs and their repackaged
+  counterparts. This implies that PURLs have gained the notion of
+  virtual packages and ergonomic version range expressions.
+- Can generate package manager instructions for a given input PURL.
+- Can be distributed as local artifacts for offline consumption.
+- Does not require a live server or an API.
+- FOSS-licensed.
 
 # Open Issues
 
