@@ -4,16 +4,17 @@ title: 'PySlot: Unified slot system for the C API'
 author:
 - Petr Viktorin <encukou@gmail.com>
 discussions_to: https://discuss.python.org/t/105552
-status: Draft
+status: Accepted
 type: Standards Track
 created: 19-Dec-2025
 python_version: '3.15'
 post_history:
 - '`06-Jan-2026 <https://discuss.python.org/t/105552>`__'
-python_status: Draft
+resolution: '`23-Apr-2025 <https://discuss.python.org/t/105552/24>`__'
+python_status: Accepted
 url: https://peps.python.org/pep-0820/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0820.rst
-source_commit: 61060e306ace34ebbb3d41e9ce0c87f23f322712
+source_commit: e7fe352c4fa9a25cf0b1116bf497f1f46135f8cb
 ---
 
 # Abstract
@@ -145,7 +146,7 @@ static PySlot myClass_slots[] = {
 
 // ...
 
-PyObject *MyClass = PyType_FromSlots(myClass_slots, -1);
+PyObject *MyClass = PyType_FromSlots(myClass_slots);
 ```
 
 The macros simplify hand-written literals. For more complex use cases,
@@ -319,7 +320,9 @@ NULL for the same effect.
 
 To allow changing the edge case behaviour in the (far) future, and to
 allow freedom for possible alternative implementations of the C API,
-we\'ll start issuing runtime deprecation warnings in these cases.
+we\'ll start issuing runtime deprecation warnings in these cases. To
+avoid flooding users with warnings for things that are outside of their
+control, we\'ll only show deprecation warnings when the new API is used.
 
 # Specification
 
@@ -472,7 +475,7 @@ Each `PyType_Slot` in the array will be converted to
 similar with `PyModuleDef_Slot`.
 
 In the initial implementation, nesting depth will be limited to 5
-levels. This restrictions may be lifted in the future.
+levels. This restriction may be lifted in the future.
 
 ## New slot IDs
 
@@ -561,9 +564,10 @@ in this PEP. This includes nested \"new-style\" slots
 
 ## Deprecation warnings {#pep820-hard-deprecations}
 
-CPython will emit runtime deprecation warnings for the following cases,
-for slots where the case is currently disallowed in documentation but
-allowed by the runtime:
+Functions that take `PySlot` arrays (but not functions that take the
+older `PyType_Slot` or `PyModuleDef_Slot` arrays) will emit runtime
+deprecation warnings for the following cases, for slots where the case
+is currently disallowed in documentation but allowed by the runtime:
 
 - setting a slot value to NULL:
   - all type slots except `Py_tp_doc`
@@ -693,6 +697,9 @@ substantial input on this iteration of the proposal.
 
 # Change History
 
+- 24-Apr-2026
+  - Limit deprecation for NULL and repeated slots to the new API.
+  - PEP is accepted
 - [12-Mar-2026](https://discuss.python.org/t/105552/12)
   - Remove unnecessary flag `PySlot_HAS_FALLBACK`
 - [28-Jan-2026](https://discuss.python.org/t/105552/6)
