@@ -6,16 +6,17 @@ author:
 - Ken Jin <kenjin@python.org>
 - Savannah Ostrowski <savannah@python.org>
 discussions_to: https://discuss.python.org/t/106958
-status: Draft
+status: Accepted
 type: Standards Track
 created: 14-Mar-2026
 python_version: '3.15'
 post_history:
 - '`13-Apr-2026 <https://discuss.python.org/t/106958>`__'
-python_status: Draft
+resolution: '`30-Apr-2026 <https://discuss.python.org/t/106958/6>`__'
+python_status: Accepted
 url: https://peps.python.org/pep-0831/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0831.rst
-source_commit: 2f9ac8e0eb96161098bd70ecb00c9c5c4b944e44
+source_commit: 48c794dc72109058754df8d3bbb1232c93a2a389
 ---
 
 # Abstract
