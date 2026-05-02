@@ -11,7 +11,7 @@ python_version: '3.14'
 python_status: Active
 url: https://peps.python.org/pep-0745/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0745.rst
-source_commit: 2af84bed011e2e58a3bd34865d93bcc80d682852
+source_commit: 1f9fea3131e930cd5f17b0ac91c637958ca63760
 ---
 
 # Abstract
@@ -65,15 +65,17 @@ Actual:
 
 Expected:
 
-- 3.14.5: Tuesday, 2026-06-09
-- 3.14.6: Tuesday, 2026-08-04
-- 3.14.7: Tuesday, 2026-10-06
-- 3.14.8: Tuesday, 2026-12-01
-- 3.14.9: Tuesday, 2027-02-02
-- 3.14.10: Tuesday, 2027-04-06
-- 3.14.11: Tuesday, 2027-06-01
-- 3.14.12: Tuesday, 2027-08-03
-- 3.14.13: Tuesday, 2027-10-05 (Final regular bugfix release with binary
+- 3.14.5 candidate 1: Saturday, 2026-05-02
+- 3.14.5: Friday, 2026-05-08
+- 3.14.6: Tuesday, 2026-06-09
+- 3.14.7: Tuesday, 2026-08-04
+- 3.14.8: Tuesday, 2026-10-06
+- 3.14.9: Tuesday, 2026-12-01
+- 3.14.10: Tuesday, 2027-02-02
+- 3.14.11: Tuesday, 2027-04-06
+- 3.14.12: Tuesday, 2027-06-01
+- 3.14.13: Tuesday, 2027-08-03
+- 3.14.14: Tuesday, 2027-10-05 (Final regular bugfix release with binary
   installers)
 
 ## Source-only security fix releases
