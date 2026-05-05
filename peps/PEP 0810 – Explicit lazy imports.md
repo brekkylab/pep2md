@@ -20,7 +20,7 @@ resolution: '`03-Nov-2025 <https://discuss.python.org/t/pep-810-explicit-lazy-im
 python_status: Accepted
 url: https://peps.python.org/pep-0810/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0810.rst
-source_commit: db84fa16f80701d468dd3414c2a329e3b6db09e7
+source_commit: ebafbc2db0a7d7849e761661a19f7a43b1f2897f
 ---
 
 # Abstract
@@ -609,12 +609,19 @@ LOAD_ATTR_MODULE         2 (dumps)
 
 ## Lazy imports filter
 
-*Note: This is an advanced feature. These are intended for
-specialized/advanced users who need fine-grained control over lazy
-import behavior when using the global flags. Library developers are
-discouraged from using these functions as they can affect the runtime
-execution of applications (similar to \`\`sys.setrecursionlimit()\`\`,
-\`\`sys.setswitchinterval()\`\`, or \`\`gc.set_threshold()\`\`).*
+:::: note
+::: title
+Note
+:::
+
+This is an advanced feature. These are intended for specialized/advanced
+users who need fine-grained control over lazy import behavior when using
+the global flags. Library developers are discouraged from using these
+functions as they can affect the runtime execution of applications
+(similar to `sys.setrecursionlimit`{.interpreted-text role="func"},
+`sys.setswitchinterval`{.interpreted-text role="func"}, or
+`gc.set_threshold`{.interpreted-text role="func"}).
+::::
 
 This PEP adds the following new functions to the `sys` module to manage
 the lazy imports filter:
