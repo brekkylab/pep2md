@@ -11,7 +11,7 @@ python_version: '3.16'
 python_status: Active
 url: https://peps.python.org/pep-0826/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0826.rst
-source_commit: 62030c17c7af4bbd1e67a8a67a5e93d7948d6398
+source_commit: 526e0ae58116425c881bf4d39e80c21355a276a4
 ---
 
 # Abstract
@@ -36,7 +36,7 @@ The dates below use a 17-month development period that results in a
 
 Expected:
 
-- 3.16 development begins: Tuesday, 2026-05-05
+- 3.16 development begins: Thursday, 2026-05-07
 - 3.16.0 alpha 1: Tuesday, 2026-10-13
 - 3.16.0 alpha 2: Tuesday, 2026-11-10
 - 3.16.0 alpha 3: Tuesday, 2026-12-15
