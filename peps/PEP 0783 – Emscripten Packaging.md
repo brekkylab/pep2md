@@ -16,7 +16,7 @@ resolution: '`06-Apr-2026 <https://discuss.python.org/t/pep-783-emscripten-packa
 python_status: Accepted
 url: https://peps.python.org/pep-0783/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0783.rst
-source_commit: 8128937e16212a3ed932ccf20ca0d44a93a033d6
+source_commit: 75ce364a9eba5da9d8c27dfc277ac230484a1778
 ---
 
 # Abstract
@@ -218,8 +218,8 @@ There are no security implications in this PEP.
 ## A Custom Interpreter Tag For Pyodide
 
 We don\'t need a custom interpreter tag for Pyodide because Pyodide is
-CPython. While we do apply a few minor patches, they have no affect on
-the interpeter ABI and our long term goal is to upstream everything.
+CPython. While we do apply a few minor patches, they have no effect on
+the interpreter ABI and our long term goal is to upstream everything.
 
 ## Alternative Options for the Platform Tag
 
@@ -263,7 +263,7 @@ No patch version
 
 # How to Teach This
 
-## Fo Pyodide Users
+## For Pyodide Users
 
 We recommend the [Pyodide documentation on installing
 packages](https://pyodide.org/en/stable/usage/loading-packages.html). We
