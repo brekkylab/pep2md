@@ -7,14 +7,14 @@ discussions_to: https://discuss.python.org/t/106459
 status: Draft
 type: Standards Track
 created: 07-Mar-2026
-python_version: '3.15'
+python_version: '3.16'
 post_history:
 - '`07-Mar-2026 <https://discuss.python.org/t/106430>`__'
 - '`09-Mar-2026 <https://discuss.python.org/t/106459>`__'
 python_status: Draft
 url: https://peps.python.org/pep-0828/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0828.rst
-source_commit: 54b9078d6338f8bcf7ad10033ca5ed01a1ff026f
+source_commit: 95ec463d0eeb890eedfbe71d04d05cec7153d117
 ---
 
 # Abstract

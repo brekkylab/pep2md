@@ -5,7 +5,7 @@ author:
 - Seth Michael Larson <seth@python.org>
 sponsor: Gregory P. Smith <greg@krypto.org>
 discussions_to: https://discuss.python.org/t/104606
-status: Accepted
+status: Active
 type: Process
 topic: Governance
 created: 22-Oct-2025
@@ -13,10 +13,10 @@ post_history:
 - '`06-Oct-2025 <https://discuss.python.org/t/104199>`__'
 - '`28-Oct-2025 <https://discuss.python.org/t/104606>`__'
 resolution: '`04-Dec-2025 <https://discuss.python.org/t/104606/20>`__'
-python_status: Accepted
+python_status: Active
 url: https://peps.python.org/pep-0811/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0811.rst
-source_commit: 5f9307d2a256b53ec81a5545bd7635fd7c046d82
+source_commit: 408ab98aa81505bfd5d94a036373750529525b52
 ---
 
 # Abstract
