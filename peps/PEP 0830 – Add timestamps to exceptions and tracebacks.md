@@ -7,14 +7,14 @@ discussions_to: https://discuss.python.org/t/106942
 status: Draft
 type: Standards Track
 created: 15-Mar-2026
-python_version: '3.15'
+python_version: '3.16'
 post_history:
 - '`12-Apr-2026 <https://discuss.python.org/t/106942>`__'
 - '`18-Apr-2026 <https://discuss.python.org/t/pep-830-add-timestamps-to-exceptions-and-tracebacks/106942/27>`__'
 python_status: Draft
 url: https://peps.python.org/pep-0830/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0830.rst
-source_commit: 4c750641d1d5534e884acf674b9848bffb839053
+source_commit: e4c84d982bf4c4e41f94af91c83e03d5b5cd0c50
 ---
 
 # Abstract

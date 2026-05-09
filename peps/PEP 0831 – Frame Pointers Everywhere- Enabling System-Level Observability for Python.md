@@ -5,6 +5,7 @@ author:
 - Pablo Galindo Salgado <pablogsal@python.org>
 - Ken Jin <kenjin@python.org>
 - Savannah Ostrowski <savannah@python.org>
+- Diego Russo <diego.russo@arm.com>
 discussions_to: https://discuss.python.org/t/106958
 status: Accepted
 type: Standards Track
@@ -16,7 +17,7 @@ resolution: '`30-Apr-2026 <https://discuss.python.org/t/106958/6>`__'
 python_status: Accepted
 url: https://peps.python.org/pep-0831/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0831.rst
-source_commit: 48c794dc72109058754df8d3bbb1232c93a2a389
+source_commit: 45e2a9a3df210e75d1a94a5f38004bd5b45174b4
 ---
 
 # Abstract
