@@ -11,7 +11,7 @@ python_version: '3.14'
 python_status: Active
 url: https://peps.python.org/pep-0745/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0745.rst
-source_commit: ca45c8c59b9f2a7716294123f9b8807f816a983e
+source_commit: 7de2c212482aa0b8b35b198584f9ddde602bceb3
 ---
 
 # Abstract
@@ -63,10 +63,10 @@ Actual:
 - 3.14.3: Tuesday, 2026-02-03
 - 3.14.4: Tuesday, 2026-04-07
 - 3.14.5 candidate 1: Monday, 2026-05-04
+- 3.14.5: Sunday, 2026-05-10
 
 Expected:
 
-- 3.14.5: Sunday, 2026-05-10
 - 3.14.6: Tuesday, 2026-06-09
 - 3.14.7: Tuesday, 2026-08-04
 - 3.14.8: Tuesday, 2026-10-06
