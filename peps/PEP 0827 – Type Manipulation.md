@@ -16,7 +16,7 @@ post_history:
 python_status: Draft
 url: https://peps.python.org/pep-0827/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0827.rst
-source_commit: 979c73067f01cbe50e18618c2c66ef5efa40dd5f
+source_commit: dcea0d4b8ec44536105d7846848b00c4fe66c48a
 ---
 
 # Abstract
@@ -567,8 +567,9 @@ which produce aliases that have some dunder methods overloaded for
 Many of the operators specified have type bounds listed for some of
 their operands. These should be interpreted more as documentation than
 as exact type bounds. Trying to evaluate operators with invalid
-arguments will produce `Never` as the return. (There is some discussion
-of potential alternatives
+arguments will produce an error. When this happens, the value of the
+failed operator is `Any`, so that downstream evaluation does not cascade
+further errors. (There is some discussion of potential alternatives
 `below <pep827-strict-kinds>`{.interpreted-text role="ref"}.)
 
 Note that in some of these bounds below we write things like
@@ -597,10 +598,12 @@ propose to add that as actual syntax yet.
 ### Basic operators
 
 - `GetArg[T, Base, Idx: Literal[int]]`: returns the type argument number
-  `Idx` to `T` when interpreted as `Base`, or `Never` if it cannot be.
-  (That is, if we have `class A(B[C]): ...`, then
-  `GetArg[A, B, Literal[0]] == C` while
-  `GetArg[A, A, Literal[0]] == Never`).
+  `Idx` to `T` when interpreted as `Base`, or generates a type error if
+  it cannot be or if the index is invalid. (That is, if we have
+  `class A(B[C]): ...`, then `GetArg[A, B, Literal[0]] == C` while
+  `GetArg[A, A, Literal[0]]` is a type error).
+
+  If `T` is `Any`, the result is `Any`.
 
   Negative indexes work in the usual way.
 
@@ -615,14 +618,18 @@ propose to add that as actual syntax yet.
   types.
 
 - `GetArgs[T, Base]`: returns a tuple containing all of the type
-  arguments of `T` when interpreted as `Base`, or `Never` if it cannot
+  arguments of `T` when interpreted as `Base`, or an error if it cannot
   be.
+
+  If `T` is `Any`, the result is `Any`.
 
 - `Length[T: tuple]` - Gets the length of a tuple as an int literal (or
   `Literal[None]` if it is unbounded)
 
 - `Slice[S: tuple, Start: Literal[int | None], End: Literal[int | None]]`:
   Slices a tuple type.
+
+  If `S` is `Any`, the result is `Any`.
 
 - `GetSpecialAttr[T, Attr: Literal[str]]`: Extracts the value of the
   special attribute named `Attr` from the class `T`. Valid attributes
@@ -659,10 +666,14 @@ All of the operators in this section are `lifted over union types
   methods).
 
 - `GetMember[T, S: Literal[str]]`: Produces a `Member` type for the
-  member named `S` from the class `T`, or `Never` if it does not exist.
+  member named `S` from the class `T`, or an error if it does not exist.
+
+  If `T` is `Any`, the result is `Any`.
 
 - `GetMemberType[T, S: Literal[str]]`: Extract the type of the member
   named `S` from the class `T`, or `Never` if it does not exist.
+
+  If `T` is `Any`, the result is `Any`.
 
 - `Member[N: Literal[str], T, Q: MemberQuals, Init, D]`: `Member`, is a
   simple type, not an operator, that is used to describe members of
@@ -1000,8 +1011,8 @@ iterating over all attributes.
     type InitFnType[T] = typing.Member[
         Literal["__init__"],
         Callable[
-            [
-                typing.Param[Literal["self"], Self],
+            typing.Params[
+                typing.Param[Literal["self"], T],
                 *[
                     typing.Param[
                         p.name,
@@ -1036,7 +1047,7 @@ iterating over all attributes.
         # Add the computed __init__ function
         InitFnType[T],
     ]:
-        pass
+        raise NotImplementedError
 
 Or to create a base class (a la Pydantic) that does.
 
@@ -1047,77 +1058,32 @@ Or to create a base class (a la Pydantic) that does.
             # Add the computed __init__ function
             InitFnType[T],
         ]:
-            super().__init_subclass__()
+            pass
 
-## NumPy-style broadcasting
+## zip-like functions {#pep827-zip-impl}
 
-One of the motivations for the introduction of `TypeVarTuple` in
-`646`{.interpreted-text role="pep"} is to represent the shapes of
-multi-dimensional arrays, such as:
+Using type iteration and `GetArg`, we can give a proper type to `zip`.
 
-    x: Array[float, L[480], L[640]] = Array()
+    type ElemOf[T] = typing.GetArg[T, Iterable, Literal[0]]
 
-The example in that PEP shows how `TypeVarTuple` can be used to make
-sure that both sides of an arithmetic operation have matching shapes.
-Most multi-dimensional array libraries, however, also support
-[broadcasting](https://numpy.org/doc/stable/user/basics.broadcasting.html),
-which allows the mixing of differently shaped data. With this PEP, we
-can define a `Broadcast[A, B]` type alias, and then use it as a return
-type:
+    def zip[*Ts](
+        *args: *Ts, strict: bool = False
+    ) -> Iterator[tuple[*[ElemOf[t] for t in typing.Iter[tuple[*Ts]]]]]:
+        return builtins.zip(*args, strict=strict)  # type: ignore[call-overload]
 
-    class Array[DType, *Shape]:
-        def __add__[*Shape2](
-            self,
-            other: Array[DType, *Shape2]
-        ) -> Array[DType, *Broadcast[tuple[*Shape], tuple[*Shape2]]]:
-            raise BaseException
+Using the `Slice` operator and type alias recursion, we can also give a
+more precise type for zipping together heterogeneous tuples.
 
-(The somewhat clunky syntax of wrapping the `TypeVarTuple` in another
-`tuple` is because typecheckers currently disallow having two
-`TypeVarTuple` arguments. A possible improvement would be to allow
-writing the bare (non-starred or `Unpack`-ed) variable name to mean its
-interpretation as a tuple.)
+For example, zipping `tuple[int, str]` and `tuple[str, bool]` should
+produce `tuple[tuple[int, float], tuple[str, bool]]`
 
-We can then do:
-
-    a1: Array[float, L[4], L[1]]
-    a2: Array[float, L[3]]
-    a1 + a2  # Array[builtins.float, Literal[4], Literal[3]]
-
-    b1: Array[float, int, int]
-    b2: Array[float, int]
-    b1 + b2  # Array[builtins.float, int, int]
-
-    err1: Array[float, L[4], L[2]]
-    err2: Array[float, L[3]]
-    # err1 + err2  # E: Broadcast mismatch: Literal[2], Literal[3]
-
-Note that this is meant to be an example of the expressiveness of type
-manipulation, and not any kind of final proposal about the typing of
-tensor types.
-
-### Implementation {#pep827-numpy-impl}
-
-    class Array[DType, *Shape]:
-        def __add__[*Shape2](
-            self, other: Array[DType, *Shape2]
-        ) -> Array[DType, *Broadcast[tuple[*Shape], tuple[*Shape2]]]:
-            raise BaseException
-
-`MergeOne` is the core of the broadcasting operation. If the two types
-are equivalent, we take the first, and if either of the types is
-`Literal[1]` then we take the other.
-
-On a mismatch, we use the `RaiseError` operator to produce an error
-message identifying the two types.
-
-    type MergeOne[T, S] = (
-        T
-        if typing.IsEquivalent[T, S] or typing.IsEquivalent[S, Literal[1]]
-        else S
-        if typing.IsEquivalent[T, Literal[1]]
-        else typing.RaiseError[Literal["Broadcast mismatch"], T, S]
-    )
+    def zip_pairs[*Ts, *Us](
+        a: tuple[*Ts], b: tuple[*Us]
+    ) -> Zip[tuple[*Ts], tuple[*Us]]:
+        return cast(
+            Zip[tuple[*Ts], tuple[*Us]],
+            tuple(zip(a, b, strict=True)),
+        )
 
     type DropLast[T] = typing.Slice[T, Literal[0], Literal[-1]]
     type Last[T] = typing.GetArg[T, tuple, Literal[-1]]
@@ -1126,18 +1092,16 @@ message identifying the two types.
     # recursions when T is not a tuple.
     type Empty[T] = typing.IsAssignable[typing.Length[T], Literal[0]]
 
-Broadcast recursively walks down the input tuples applying `MergeOne`
-until one of them is empty.
+Zip recursively walks down the input tuples until one or both of them is
+empty. If the lengths don\'t match (because only one is empty), raise an
+error.
 
-    type Broadcast[T, S] = (
-        S
-        if typing.Bool[Empty[T]]
-        else T
-        if typing.Bool[Empty[S]]
-        else tuple[
-            *Broadcast[DropLast[T], DropLast[S]],
-            MergeOne[Last[T], Last[S]],
-        ]
+    type Zip[T, S] = (
+        tuple[()]
+        if typing.Bool[Empty[T]] and typing.Bool[Empty[S]]
+        else typing.RaiseError[Literal["Zip length mismatch"], T, S]
+        if typing.Bool[Empty[T]] or typing.Bool[Empty[S]]
+        else tuple[*Zip[DropLast[T], DropLast[S]], tuple[Last[T], Last[S]]]
     )
 
 ## TypeScript-style \"Utility Types\" {#pep827-ts-utils}
@@ -1647,18 +1611,29 @@ This proposal is less \"strictly-typed\" than TypeScript
 
 TypeScript has better typechecking at the alias definition site: For
 `P[K]`, `K` needs to have `keyof P`. The `extends` conditional type
-operator narrows the type to help spuport this.
+operator narrows the type to help support this.
 
-We could do potentially better but it would require quite a bit more
-machinery.
+It\'s not possible to define a type alias in TypeScript that fails at
+expansion time, but it *is* possible to do so in this system.
+
+We could potentially also make this impossible but it would require
+quite a bit more machinery.
 
 - `KeyOf[T]` - literal keys of `T`
 - `Member[T]`, when statically checking a type alias, could be treated
   as having some type like
   `tuple[Member[KeyOf[T], object, str, ..., ...], ...]`
-- `GetMemberType[T, S: KeyOf[T]]` - but this isn\'t supported yet.
-  TypeScript supports it.
-- We would also need to do context sensitive type bound inference
+- `GetMemberType[T, S: KeyOf[T]]` - Make `GetMember` have a bound
+  requiring the index be a key\... but this kind of dependent bound
+  isn\'t supported currently. (TypeScript supports it.)
+- We would also need to do context sensitive type bound inference. This
+  is subtle but obviously this sort of thing is done at term level.
+
+We think that this isn\'t worth the complexity, and is also not even
+obviously better. TypeScript commonly requires doing many conditionals
+where often it is always intended that they take the true
+branch\--typically the false branch returns `never`, and these can be
+quite difficult to track down.
 
 # Potential Future Extensions
 
@@ -1738,9 +1713,6 @@ we don\'t want to tangle with yet, and because many use cases can be
 simulated in other ways.
 
 # Open Issues
-
-- What invalid operations should be errors and what should return
-  `Never`?
 
 - `Unpack of typevars for **kwargs <pep827-unpack-kwargs>`{.interpreted-text
   role="ref"}: Should whether we try to infer literal types for extra
