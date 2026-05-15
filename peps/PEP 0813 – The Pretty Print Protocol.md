@@ -8,14 +8,14 @@ discussions_to: https://discuss.python.org/t/pep-813-the-pretty-print-protocol/1
 status: Draft
 type: Standards Track
 created: 07-Nov-2025
-python_version: '3.15'
+python_version: '3.16'
 post_history:
 - '`21-Feb-2026 <https://discuss.python.org/t/pep-813-the-pretty-print-protocol/106242>`__'
 - '`04-Mar-2026 <https://discuss.python.org/t/pep-813-the-pretty-print-protocol/106242/79>`__'
 python_status: Draft
 url: https://peps.python.org/pep-0813/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0813.rst
-source_commit: 4f17d64b5a1ff690df229ea3b7ba7aab8c5aee1a
+source_commit: 79dab99d1cab9991c4dcaea8f38ad5fe9b9d2600
 ---
 
 # Abstract
