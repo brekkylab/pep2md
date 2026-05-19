@@ -14,17 +14,17 @@ post_history:
 python_status: Draft
 url: https://peps.python.org/pep-0797/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0797.rst
-source_commit: 708c4ff2ca20e47a71df667d07cc5e0cbf1afc12
+source_commit: 72ecb99168b390651f64e547275a73327dbd26d3
 ---
 
 # Abstract
 
 This PEP introduces a new
-`~concurrent.interpreters.share`{.interpreted-text role="func"} function
-to the `concurrent.interpreters`{.interpreted-text role="mod"} module,
-which allows any arbitrary object to be shared across interpreters using
-an object proxy, at the cost of being less efficient to concurrently
-access across multiple interpreters.
+`~concurrent.interpreters.SharedObjectProxy`{.interpreted-text
+role="func"} type to the `concurrent.interpreters`{.interpreted-text
+role="mod"} module, which allows any arbitrary object to be shared
+across interpreters using an object proxy, at the cost of being less
+efficient to concurrently access across multiple interpreters.
 
 For example:
 
@@ -33,7 +33,7 @@ from concurrent import interpreters
 
 with open("spanish_inquisition.txt") as unshareable:
     interp = interpreters.create()
-    proxy = interpreters.share(unshareable)
+    proxy = interpreters.SharedObjectProxy(unshareable)
     interp.prepare_main(file=proxy)
     interp.exec("file.write('I didn't expect the Spanish Inquisition')")
 ```
@@ -54,7 +54,7 @@ in `the documentation
 
 # Motivation
 
-## Many Objects Cannot be Shared Between Subinterpreters
+## Many objects cannot be shared between subinterpreters
 
 In Python 3.14, the new `concurrent.interpreters`{.interpreted-text
 role="mod"} module can be used to create multiple interpreters in a
@@ -75,7 +75,7 @@ operation, which is not ideal for multithreaded applications.
 
 # Rationale
 
-## A Fallback for Object Sharing
+## A fallback for object sharing
 
 A shared object proxy is designed to be a fallback for sharing an object
 between interpreters. A shared object proxy should only be used as a
@@ -87,65 +87,13 @@ implementing other methods to share objects between interpreters.
 
 # Specification
 
-::: function
-concurrent.interpreters.share(obj)
-
-Ensure *obj* is natively shareable.
-
-If *obj* is natively shareable, this function does not create a proxy
-and simply returns *obj*. Otherwise, *obj* is wrapped in an instance of
-`~concurrent.interpreters.SharedObjectProxy`{.interpreted-text
-role="class"} and returned.
-
-If *obj* has a `~object.__share__`{.interpreted-text role="meth"}
-method, the default behavior of this function is overridden; the
-object\'s `__share__` method will be called to convert *obj* into a
-natively shareable version of itself, which will be returned by this
-function. If the object returned by `__share__` is not natively
-shareable, this function raises an exception.
-
-The behavior of this function is roughly equivalent to:
-
-``` python
-def share(obj):
-    if _is_natively_shareable(obj):
-        return obj
-
-    if hasattr(obj, "__share__"):
-        shareable = obj.__share__()
-        if not _is_natively_shareable(shareable):
-            raise TypeError(f"__share__() returned unshareable object: {shareable!r}")
-
-        return shareable
-
-    return SharedObjectProxy(obj)
-```
-:::
-
 ::: concurrent.interpreters.SharedObjectProxy(obj)
 A proxy type that allows access to an object across multiple
 interpreters. Instances of this object are natively shareable between
 subinterpreters.
-
-Unlike `~concurrent.interpreters.share`{.interpreted-text role="func"},
-*obj* will always be wrapped, even if it is natively shareable already
-or already a `SharedObjectProxy` instance. The object\'s
-`~object.__share__`{.interpreted-text role="meth"} method is not invoked
-if it is available. Thus, prefer using `share` where possible.
 :::
 
-::: function
-object.\_\_share\_\_()
-
-Return a natively shareable version of the current object. This includes
-shared object proxies, as they are also natively shareable. Objects
-composed of shared object proxies are also allowed, such as a
-`tuple`{.interpreted-text role="class"} whose elements are
-`~concurrent.interpreters.SharedObjectProxy`{.interpreted-text
-role="class"} instances.
-:::
-
-## Interpreter Switching
+## Interpreter switching
 
 When interacting with the wrapped object, the proxy will switch to the
 interpreter in which the object was created. This must happen for any
@@ -165,15 +113,13 @@ interp.prepare_main(foo=proxy)
 interp.exec("foo()")
 ```
 
-## Method Proxying
+## Method proxying
 
 Methods on a shared object proxy will switch to their owning interpreter
 when accessed. In addition, any arguments passed to the method are
-implicitly called with
-`~concurrent.interpreters.share`{.interpreted-text role="func"} to
-ensure they are shareable (only types that are not natively shareable
-are wrapped in a proxy). The same happens to the return value of the
-method.
+implicitly ensured to be shareable. If they aren\'t natively shareable,
+they are wrapped in an instance of `SharedObjectProxy`. The same happens
+to the return value of the method.
 
 For example, the `__add__` method on an object proxy is roughly
 equivalent to the following code:
@@ -185,7 +131,7 @@ def __add__(self, other):
         return share(result)
 ```
 
-## Multithreaded Scaling
+## Multithreaded scaling
 
 To switch to a wrapped object\'s interpreter, an object proxy must swap
 the `attached thread state`{.interpreted-text role="term"} of the
@@ -229,13 +175,13 @@ def execute(n, write_log):
 
     thread.join()
 
-proxy = interpreters.share(write_log)
+proxy = interpreters.SharedObjectProxy(write_log)
 for n in range(4):
     interp = interpreters.create()
     interp.call_in_thread(execute, n, proxy)
 ```
 
-## Proxy Copying
+## Proxy copying
 
 Contrary to what one might think, a shared object proxy itself can only
 be used in one interpreter, because the proxy\'s reference count is not
@@ -252,7 +198,7 @@ from concurrent import interpreters
 
 interp = interpreters.create()
 foo = object()
-proxy = interpreters.share(foo)
+proxy = interpreters.SharedObjectProxy(foo)
 
 # The proxy crosses an interpreter boundary here. 'proxy' is *not* directly
 # send to 'interp'. Instead, a new proxy is created for 'interp', and the
@@ -261,7 +207,7 @@ proxy = interpreters.share(foo)
 interp.prepare_main(proxy=proxy)
 ```
 
-## Thread-local State
+## Thread-local state
 
 Accessing an object proxy will retain information stored on the current
 `thread state`{.interpreted-text role="term"}, such as thread-local
@@ -280,7 +226,7 @@ def foo():
     assert thread_local.value == 1
 
 interp = interpreters.create()
-proxy = interpreters.share(foo)
+proxy = interpreters.SharedObjectProxy(foo)
 interp.prepare_main(foo=proxy)
 interp.exec("foo()")
 ```
@@ -313,7 +259,7 @@ proxy accesses in the thread. In other words, a shared object proxy
 ensures that thread local variables and similar state will not
 disappear.
 
-## Memory Management
+## Memory management
 
 All proxy objects hold a `strong reference`{.interpreted-text
 role="term"} to the object that they wrap. As such, destruction of a
@@ -358,16 +304,16 @@ interp.prepare_main(proxy=proxy)
 interp.exec("import gc; print(gc.get_referents(proxy))")
 ```
 
-### Interpreter Lifetimes
+## Interpreter lifetime management
 
 When an interpreter is destroyed, shared object proxies wrapping objects
 owned by that interpreter may still exist elsewhere. To prevent this
 from causing crashes, an interpreter will invalidate all proxies
-pointing to any object it owns by overwriting the proxy\'s wrapped
-object with `None`.
+pointing to any object it owns, so any subsequent access to a proxy will
+raise an exception.
 
 To demonstrate, the following snippet first prints out `Alive`, and then
-`None` after deleting the interpreter:
+raises a `RuntimeError` after deleting the interpreter:
 
 ``` python
 from concurrent import interpreters
@@ -385,12 +331,8 @@ interp = interpreters.create()
 wrapped = interp.call(test)
 print(wrapped)  # Alive
 interp.close()
-print(wrapped)  # None
+print(wrapped)  # RuntimeError
 ```
-
-Note that the proxy is not physically replaced (`wrapped` in the above
-example is still a `SharedObjectProxy` instance), but instead has its
-wrapped object replaced with `None`.
 
 # Backwards Compatibility
 
@@ -413,7 +355,16 @@ A reference implementation of this PEP can be found at
 
 # Rejected Ideas
 
-## Directly Sharing Proxy Objects
+## Introducing a generic sharing protocol
+
+This PEP used to specify a `share()` function that would call a
+`__share__()` method on an object, or otherwise implicitly wrap the
+object in a `SharedObjectProxy`.
+
+It was deemed that this wasn\'t necessary for this proposal to work, so
+this protocol is left to be done by a future PEP.
+
+## Directly sharing proxy objects
 
 The initial revision of this proposal took an approach where an instance
 of `~concurrent.interpreters.SharedObjectProxy`{.interpreted-text

@@ -16,7 +16,7 @@ post_history:
 python_status: Draft
 url: https://peps.python.org/pep-0827/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0827.rst
-source_commit: dcea0d4b8ec44536105d7846848b00c4fe66c48a
+source_commit: 60706edc89465b877f334fbb6ddcc170a3e7f6f7
 ---
 
 # Abstract
@@ -588,8 +588,8 @@ propose to add that as actual syntax yet.
   `IsAssignable[T, S] and IsAssignable[S, T]`. Technically this relation
   is \"consistency\" in the typing spec, not equivalence.
 
-- `Bool[T]`: Returns `Literal[True]` if `T` is also `Literal[True]` or a
-  union containing it. Equivalent to
+- `Bool[T]`: Returns `Literal[True]` if `T` is also `Literal[True]`.
+  Equivalent to
   `IsAssignable[T, Literal[True]] and not IsAssignable[T, Never]`.
 
   This is useful for invoking \"helper aliases\" that return a boolean
@@ -613,7 +613,7 @@ propose to add that as actual syntax yet.
   iterable may fail in a runtime evaluator of types.)
 
   Special forms require special handling: the arguments list of a
-  `Callable` will be packed in a tuple and a `...` will be treated as
+  `Callable` will be packed in a `Params` and a `...` will be treated as
   `*args: Any` and `**kwargs: Any`, represented with the new `Param`
   types.
 
@@ -803,8 +803,11 @@ Many of the builtin operations are \"lifted\" over `Union`.
 
 For example:
 
-    Concat[Literal['a'] | Literal['b'], Literal['c'] | Literal['d']] = (
-        Literal['ac'] | Literal['ad'] | Literal['bc'] | Literal['bd']
+    Slice[tuple[A, B, C], Literal[0] | Literal[1], Literal[2] | Literal[3]] = (
+        tuple[A, B]
+        | tuple[A, B, C]
+        | tuple[B]
+        | tuple[B, C]
     )
 
 When an operation is lifted over union types, we take the cross product
@@ -1219,7 +1222,7 @@ unbound type variables and let them be generalized:
     type Foo = NewProtocol[
         Member[
             Literal["process"],
-            Callable[[T], set[T] if IsAssignable[T, int] else T]
+            Callable[[T], T if IsAssignable[T, list] else list[T]]
         ]
     ]
 
@@ -1233,6 +1236,18 @@ case of delaying evaluation works quite nicely for functions with
 explicit generic annotations. For old-style generics, we\'ll probably
 have to try to evaluate it and then raise an error when we encounter a
 variable.)
+
+With our real syntax, this look likes:
+
+    type Foo = NewProtocol[
+        Member[
+            Literal["process"],
+            GenericCallable[
+                tuple[T],
+                lambda T: Callable[[T], T if IsAssignable[T, list] else list[T]],
+            ],
+        ]
+    ]
 
 The reason we suggest restricting the use of `GenericCallable` to the
 type argument of `Member` is because impredicative polymorphism (where
