@@ -16,7 +16,7 @@ resolution: '`23-Apr-2026 <https://discuss.python.org/t/pep-661-sentinel-values/
 python_status: Final
 url: https://peps.python.org/pep-0661/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0661.rst
-source_commit: 8da85bf978959868d71d9749ff4c6870abc3ed1a
+source_commit: adc15929572175aed8ad52e2577e164d914ba492
 ---
 
 ::: canonical-doc
@@ -156,20 +156,36 @@ many different possible implementations, the design below was chosen to
 meet these criteria while keeping the API and implementation small (see
 [Reference Implementation](#reference-implementation)).
 
+To support common use cases, we add two customization points:
+
+- The `repr` argument can be used to customize the `repr()` of
+  sentinels. Many pre-existing sentinels in the standard library use a
+  custom repr like `<missing>`, and this argument allows us to convert
+  these sentinels to the new API while preserving this behavior.
+- The `__module__` attribute of sentinels is writable, allowing users to
+  control the module used for pickling in some unusual cases, such as
+  sentinels created through `exec()`. This aligns with the behavior of
+  other built-in types with a `__module__` attribute, including classes,
+  functions, `TypeVar` objects, and (as of Python 3.15) type aliases.
+
 # Specification
 
 A new built-in callable named `sentinel` will be added.
 
 > \>\>\> MISSING = sentinel(\'MISSING\') \>\>\> MISSING MISSING
 
-`sentinel()` takes a single positional-only argument, `name`, which must
-be a `str`. Passing a non-string raises `TypeError`. The name is used as
-the sentinel\'s name and repr.
+`sentinel()` takes a single required positional-only argument, `name`,
+which must be a `str`, and an optional keyword-only argument, `repr`.
+Passing a non-string as the `name` raises `TypeError`. The name is used
+as the sentinel\'s name. The value of the `repr` argument is used for
+the `str()` and `repr()` of the sentinel object, if given. If not given,
+the name is used instead.
 
 Sentinel objects have two public attributes:
 
 - `__name__` is the sentinel\'s name.
 - `__module__` is the name of the module where `sentinel()` was called.
+  This attribute is writable.
 
 `sentinel` may not be subclassed.
 
@@ -276,8 +292,9 @@ this part of the proposal.
 Sentinels can also be useful in C extensions. We propose two new C API
 functions:
 
-- `PyObject *PySentinel_New(const char *name, const char *module_name)`
-  creates a new sentinel object.
+- `PyObject *PySentinel_New(const char *name, const char *module_name, const char *repr)`
+  creates a new sentinel object. `repr` may be `NULL`, in which case the
+  sentinel\'s repr will be the same as its name.
 - `bool PySentinel_Check(PyObject *obj)` checks if an object is a
   sentinel.
 
@@ -313,23 +330,20 @@ repo[^9]. A sketch of the intended behavior follows:
     class sentinel:
         """Unique sentinel values."""
 
-        __slots__ = ("__name__", "_module_name")
+        __slots__ = ("__name__", "__module__", "_repr")
 
         def __init_subclass__(cls):
             raise TypeError("type 'sentinel' is not an acceptable base type")
 
-        def __init__(self, name, /):
+        def __init__(self, name, /, repr=None):
             if not isinstance(name, str):
                 raise TypeError("sentinel name must be a string")
             self.__name__ = name
-            self._module_name = sys._getframemodulename(1)
-
-        @property
-        def __module__(self):
-            return self._module_name
+            self.__module__ = sys._getframemodulename(1)
+            self._repr = repr if repr is not None else name
 
         def __repr__(self):
-            return self.__name__
+            return self._repr
 
         def __reduce__(self):
             return self.__name__
@@ -484,12 +498,6 @@ pickle can serialize importable sentinels by module and name. This
 internal module name does not affect the sentinel\'s repr. If users want
 a repr that includes a module or class name, they can include it in the
 single `name` argument explicitly, e.g. `sentinel("mymodule.MISSING")`.
-
-## Allowing customization of repr
-
-This was desirable to allow using this for existing sentinel values
-without changing their repr. However, this was eventually dropped as it
-wasn\'t considered worth the added complexity.
 
 ## Allowing customization of boolean evaluation
 
