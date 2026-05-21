@@ -7,18 +7,23 @@ author:
 - Savannah Ostrowski <savannah@python.org>
 - Diego Russo <diego.russo@arm.com>
 discussions_to: https://discuss.python.org/t/106958
-status: Accepted
+status: Final
 type: Standards Track
 created: 14-Mar-2026
 python_version: '3.15'
 post_history:
 - '`13-Apr-2026 <https://discuss.python.org/t/106958>`__'
 resolution: '`30-Apr-2026 <https://discuss.python.org/t/106958/6>`__'
-python_status: Accepted
+python_status: Final
 url: https://peps.python.org/pep-0831/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0831.rst
-source_commit: 45e2a9a3df210e75d1a94a5f38004bd5b45174b4
+source_commit: 70c401a563c1585abafe1696b45841f5c94e17b9
 ---
+
+::: canonical-doc
+`--without-frame-pointers`{.interpreted-text
+role="external+py3.15:option"}
+:::
 
 # Abstract
 
@@ -492,11 +497,12 @@ has already adopted.
 The following changes are made to `configure.ac`:
 
     AX_CHECK_COMPILE_FLAG([-fno-omit-frame-pointer],
-      [CFLAGS="$CFLAGS -fno-omit-frame-pointer"])
+      [BASECFLAGS="$BASECFLAGS -fno-omit-frame-pointer"])
     AX_CHECK_COMPILE_FLAG([-mno-omit-leaf-frame-pointer],
-      [CFLAGS="$CFLAGS -mno-omit-leaf-frame-pointer"])
+      [BASECFLAGS="$BASECFLAGS -mno-omit-leaf-frame-pointer"])
 
-Using `CFLAGS` ensures:
+The flags are prepended to `BASECFLAGS` (rather than `CFLAGS_NODIST`) so
+they propagate to third-party builds via `sysconfig`. This ensures:
 
 1.  The flags apply to all `*.c` files compiled as part of the
     interpreter: the `python` binary, `libpython`, and built-in
@@ -505,6 +511,18 @@ Using `CFLAGS` ensures:
     third-party C extensions built against this Python (via `pip`,
     Setuptools, or direct `sysconfig` queries) inherit frame pointers by
     default.
+
+Several architectures need adjustments to produce a walkable
+frame-pointer chain:
+
+- On 32-bit ARM, `-marm` (GCC) or `-mno-thumb` (Clang) is added to force
+  ARM mode, since GCC\'s default Thumb prologue does not preserve the
+  `fp[0]`/`fp[1]` layout the simple unwinder expects.
+- On s390x, `-mbackchain` is added *instead* of the frame-pointer flags;
+  GCC and Clang do not emit a usable backchain on s390x without it.
+- On ppc64le, no compiler flags are added: the Power ABI already
+  requires compilers to maintain a back chain by default, so unwinding
+  works without `-fno-omit-frame-pointer`.
 
 This is an intentional design choice. For profiling data to be useful,
 the frame-pointer chain must be continuous through the entire call
@@ -525,11 +543,12 @@ A new `configure` option is added:
 
     --without-frame-pointers
 
-When specified, neither flag is added to `CFLAGS`. This is appropriate
-for deployments that have measured an unacceptable regression on their
-specific workload, or for distributions that inject frame-pointer flags
-at a higher level and wish to avoid double-specification, analogous to
-Fedora\'s per-package `%undefine _include_frame_pointers` macro.
+When specified, neither flag is added to `BASECFLAGS`. This is
+appropriate for deployments that have measured an unacceptable
+regression on their specific workload, or for distributions that inject
+frame-pointer flags at a higher level and wish to avoid
+double-specification, analogous to Fedora\'s per-package
+`%undefine _include_frame_pointers` macro.
 
 Extension authors who wish to override the default for a specific module
 can pass `-fomit-frame-pointer` in their `extra_compile_args` or via
@@ -574,10 +593,10 @@ recommendation for earlier versions.
 
 ## Platform Scope
 
-Both flags are accepted by GCC and Clang on all supported Linux
-architectures (x86-64, AArch64, s390x, RISC-V, ARM). On macOS with Apple
-Silicon, the ARM64 ABI mandates frame pointers; the flags are redundant
-but harmless.
+Both flags are accepted by GCC and Clang on x86-64, AArch64, RISC-V, and
+32-bit ARM. s390x and ppc64le require different handling (see above). On
+macOS with Apple Silicon, the ARM64 ABI mandates frame pointers; the
+flags are redundant but harmless.
 
 On Windows x64, MSVC does not use frame pointers for stack unwinding.
 Instead, the Windows x64 ABI mandates `.pdata` / `.xdata` unwind
@@ -778,14 +797,14 @@ reversed course:
 
 CPython has not yet adopted this change.
 
-## Why Not Use `CFLAGS_NODIST` Instead of `CFLAGS`
+## Why Not Use `CFLAGS_NODIST` Instead of `BASECFLAGS`
 
 CPython\'s build system provides `CFLAGS_NODIST` specifically for flags
 that should apply to the interpreter but not propagate to extension
 module builds via `sysconfig`. Using `CFLAGS_NODIST` would confine the
 overhead to the interpreter itself.
 
-This PEP deliberately chooses `CFLAGS` over `CFLAGS_NODIST` because
+This PEP deliberately chooses `BASECFLAGS` over `CFLAGS_NODIST` because
 frame pointers are only useful when the chain is continuous. Unlike
 debugging aids such as sanitizers or assertions, which are useful even
 when applied to a single component, a frame-pointer chain with a gap at
@@ -805,7 +824,7 @@ density and sees negligible overhead.
 As Gregory Szorc (`python-build-standalone` creator) noted: \"Turning
 the corner on the long tail of compiled extensions having frame pointers
 will take years. So the sooner we start\...\"[^43] Propagating the flags
-via `CFLAGS` is how CPython starts that process.
+via `BASECFLAGS` is how CPython starts that process.
 
 ## Alternatives to Frame-Pointer Unwinding
 

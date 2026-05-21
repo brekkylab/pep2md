@@ -15,8 +15,12 @@ resolution: '`05-Sep-2025 <https://discuss.python.org/t/94567/85>`__'
 python_status: Accepted
 url: https://peps.python.org/pep-0794/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0794.rst
-source_commit: 4bcf4710fede4a1f56abb9042b193ce9f70c60cf
+source_commit: 2e2e6e4a84e6a38e24d9064cd68c68836966f08b
 ---
+
+::: canonical-pypa-spec
+`core-metadata`{.interpreted-text role="ref"}
+:::
 
 # Abstract
 
