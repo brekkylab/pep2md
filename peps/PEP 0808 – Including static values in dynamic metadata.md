@@ -7,17 +7,18 @@ author:
 sponsor: Filipe Laíns <lains@python.org>
 pep_delegate: Paul Moore <p.f.moore@gmail.com>
 discussions_to: https://discuss.python.org/t/104883
-status: Draft
+status: Accepted
 type: Standards Track
 topic: Packaging
 created: 19-Sep-2025
 post_history:
 - '`17-Apr-2025 <https://discuss.python.org/t/88608>`__'
 - '`14-Nov-2025 <https://discuss.python.org/t/104883>`__'
-python_status: Draft
+resolution: '`19-May-2026 <https://discuss.python.org/t/104883/39>`__'
+python_status: Accepted
 url: https://peps.python.org/pep-0808/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0808.rst
-source_commit: a7598fd0673d0752de8a37da9a5094af8b35e183
+source_commit: 36ea21e04683ba36fb54e5aa3d84a12796dbaaa5
 ---
 
 # Abstract
