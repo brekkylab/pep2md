@@ -10,13 +10,13 @@ status: Draft
 type: Standards Track
 topic: Typing
 created: 27-Feb-2026
-python_version: '3.15'
+python_version: '3.16'
 post_history:
 - 02-Mar-2026
 python_status: Draft
 url: https://peps.python.org/pep-0827/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0827.rst
-source_commit: 60706edc89465b877f334fbb6ddcc170a3e7f6f7
+source_commit: 3f4bf714c3a36f617614e3ca9fc1e686598ae3a4
 ---
 
 # Abstract
@@ -368,18 +368,37 @@ introspecting callable types using the other features of this PEP.
 We introduce a `Param` type that contains all the information about a
 function param:
 
-    class Param[N: str | None, T, Q: ParamQuals = typing.Never]:
+    class Param[
+        N: str | None,
+        T,
+        K: ParamKind = Literal["positional_or_keyword"],
+        D = typing.Never,
+    ]:
         pass
 
-    ParamQuals = typing.Literal["*", "**", "default", "keyword"]
+    ParamKind = typing.Literal[
+        "*", "**", "keyword", "positional", "positional_or_keyword"
+    ]
 
-    type PosParam[N: str | None, T] = Param[N, T, Literal["positional"]]
-    type PosDefaultParam[N: str | None, T] = Param[N, T, Literal["positional", "default"]]
-    type DefaultParam[N: str, T] = Param[N, T, Literal["default"]]
+    type PosParam[T] = Param[None, T, Literal["positional"]]
+    type PosDefaultParam[T] = Param[None, T, Literal["positional"], T]
+    type DefaultParam[N: str, T] = Param[N, T, Literal["positional_or_keyword"], T]
     type NamedParam[N: str, T] = Param[N, T, Literal["keyword"]]
-    type NamedDefaultParam[N: str, T] = Param[N, T, Literal["keyword", "default"]]
-    type ArgsParam[T] = Param[Literal[None], T, Literal["*"]]
-    type KwargsParam[T] = Param[Literal[None], T, Literal["**"]]
+    type NamedDefaultParam[N: str, T] = Param[N, T, Literal["keyword"], T]
+    type ArgsParam[T] = Param[None, T, Literal["*"]]
+    type KwargsParam[T] = Param[None, T, Literal["**"]]
+
+The argument `K`, of type `ParamKind`, represents the parameter kind of
+the parameter, and defaults to the ordinary
+`Literal["positional_or_keyword"]`. It is an error to create `Callable`
+with a `Param` containing multiple kinds unioned together.
+
+The argument `D` carries the type of the parameter\'s default, if one
+exists, and is `Never` otherwise. When the default value is a literal
+(e.g. `None`, an int, a string, an enum member), `D` may be a `Literal`
+carrying that value. (Having it be such a `Literal` has no effect other
+than to make it available to introspection and potentially for
+diagnostics.)
 
 We also introduce a `Params` type that wraps a sequence of `Param`
 types, serving as the first argument to `Callable`:
@@ -411,16 +430,17 @@ as:
         Params[
             Param[Literal["a"], int, Literal["positional"]],
             Param[Literal["b"], int],
-            Param[Literal["c"], int, Literal["default"]],
+            Param[Literal["c"], int, Literal["positional_or_keyword"], Literal[0]],
             Param[None, int, Literal["*"]],
             Param[Literal["d"], int, Literal["keyword"]],
-            Param[Literal["e"], int, Literal["default", "keyword"]],
+            Param[Literal["e"], int, Literal["keyword"], Literal[0]],
             Param[None, int, Literal["**"]],
         ],
         int,
     ]
 
-or, using the type abbreviations we provide:
+or, using the type abbreviations we provide (though this version will
+not track specific values for the defaults):
 
     Callable[
         Params[
@@ -754,8 +774,9 @@ field of the `Member`.
 `Callable` types always have their arguments exposed in the extended
 Callable format discussed above.
 
-The names, type, and qualifiers share associated type names with
-`Member` (`.name`, `.type`, and `.quals`).
+The name and type associated type names with `Member` (`.name` and
+`.type`). `Param` also has a `.kind` associated type, which exposes `K`
+and a `.default` associated type, which exposes `D`.
 
 ### Generic Callable {#pep827-generic-callable}
 
@@ -1021,13 +1042,10 @@ iterating over all attributes.
                         p.name,
                         p.type,
                         # All arguments are keyword-only
-                        # It takes a default if a default is specified in the class
-                        Literal["keyword"]
-                        if typing.IsAssignable[
-                            GetDefault[p.init],
-                            Never,
-                        ]
-                        else Literal["keyword", "default"],
+                        Literal["keyword"],
+                        # GetDefault is Never when there's no default, so use it
+                        # directly as D.
+                        GetDefault[p.init],
                     ]
                     for p in typing.Iter[typing.Attrs[T]]
                 ],
@@ -1237,7 +1255,7 @@ explicit generic annotations. For old-style generics, we\'ll probably
 have to try to evaluate it and then raise an error when we encounter a
 variable.)
 
-With our real syntax, this look likes:
+With our real syntax, this looks like:
 
     type Foo = NewProtocol[
         Member[
@@ -1740,11 +1758,6 @@ simulated in other ways.
   brevity, but an alternate approach would be to mirror
   `inspect.Signature` more directly, and have an enum with names like
   `ParamKind.POSITIONAL_OR_KEYWORD`. Would that be better?
-
-  A related potential change would be to fully separate the kind from
-  whether there is a default, and have whether there is a default
-  represented in an `init` field, like we do for class member
-  initializers with `Member`.
 
 - `Members <pep827-members>`{.interpreted-text role="ref"}: Should
   `Members` return all methods, even those without annotations? We
