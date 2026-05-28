@@ -12,7 +12,7 @@ replaces: '102'
 python_status: Active
 url: https://peps.python.org/pep-0101/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0101.rst
-source_commit: 7f0998ffcd5d8c97a7d0184178d8249ae8780567
+source_commit: b57b871ebe48426f6376b34ab53a62da902b5caa
 ---
 
 # Abstract
@@ -522,7 +522,7 @@ the main repo.
   do some post-merge cleanup. Check the top-level `README.rst` and
   `include/patchlevel.h` files to ensure they now reflect the desired
   post-release values for on-going development. The patchlevel should be
-  the release tag with a `+`. Also, if you cherry-picked changes from
+  the release tag with a `+dev`. Also, if you cherry-picked changes from
   the standard release branch into the release engineering branch for
   this release, you will now need to manually remove each blurb entry
   from the `Misc/NEWS.d/next` directory that was cherry-picked into the

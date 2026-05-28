@@ -16,7 +16,7 @@ post_history:
 python_status: Active
 url: https://peps.python.org/pep-0011/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0011.rst
-source_commit: 043f32b074099a35ca45638d6af7a3650be984d2
+source_commit: 28a3c6b7d34b8fd9e82b55a25eef45ebfd8bf229
 ---
 
 # Abstract
@@ -267,6 +267,34 @@ least one of `C.UTF-8` (full locale), `C.utf8` (full locale) or `UTF-8`
 Any Unicode-related integration problems that occur only in the legacy
 `C` locale and cannot be reproduced in an appropriately configured
 non-ASCII locale will be closed as \"won\'t fix\".
+
+### WASI {#wasi-support}
+
+WASI support is defined in `816`{.interpreted-text role="pep"}.
+
+  Python   WASI   WASI SDK
+  -------- ------ ----------
+  3.15     0.1    33
+  3.14     0.1    24
+  3.13     0.1    24
+  3.12     0.1    21
+  3.11     0.1    21
+
+All versions prior to Python 3.15 predate `816`{.interpreted-text
+role="pep"}. The version support for those earlier versions is based on
+what was supported when that PEP was written.
+
+WASI was a tier 3 platform for Python 3.11 and 3.12, and became a tier 2
+platform starting with Python 3.13.
+
+WASI 0.2 support has been skipped due to lack of time, to the point that
+it was deemed better to go straight to WASI 0.3 instead. This is based
+on a recommendation from the [Bytecode
+Alliance](https://bytecodealliance.org).
+
+WASI SDK 26 and 27 have a
+[bug](https://github.com/WebAssembly/wasi-libc/issues/617) which causes
+CPython to hang in certain situations, and so they have been skipped.
 
 # Unsupporting platforms
 

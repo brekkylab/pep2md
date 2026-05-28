@@ -13,8 +13,17 @@ resolution: https://discuss.python.org/t/pep-816-wasi-support/105237/3
 python_status: Active
 url: https://peps.python.org/pep-0816/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0816.rst
-source_commit: a0c73ce6d4616607df6987d6db1d88ece430aa0a
+source_commit: 728a7e916b4aa95d07181f484561286e40621c7a
 ---
+
+:::: note
+::: title
+Note
+:::
+
+See `PEP 11 <wasi-support>`{.interpreted-text role="ref"} for WASI
+version support by Python version.
+::::
 
 # Abstract
 
