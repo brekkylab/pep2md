@@ -4,7 +4,7 @@ title: Disjoint bases in the type system
 author:
 - Jelle Zijlstra <jelle.zijlstra@gmail.com>
 discussions_to: https://discuss.python.org/t/99910/
-status: Accepted
+status: Final
 type: Standards Track
 topic: Typing
 created: 21-Jul-2025
@@ -13,11 +13,17 @@ post_history:
 - '`18-Jul-2025 <https://discuss.python.org/t/solid-bases-for-detecting-incompatible-base-classes/99280>`__'
 - '`23-Jul-2025 <https://discuss.python.org/t/99910>`__'
 resolution: '`15-Apr-2026 <https://discuss.python.org/t/pep-800-solid-bases-in-the-type-system/99910/41>`__'
-python_status: Accepted
+python_status: Final
 url: https://peps.python.org/pep-0800/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0800.rst
-source_commit: 58731e6be6194aa419349324dc8f702526ab7e93
+source_commit: 3b9254d494dcac20bb872100be34bbbe3445f2e7
 ---
+
+::: canonical-typing-spec
+`typing:disjoint-base`{.interpreted-text role="ref"} and
+`@typing.disjoint_base <typing.disjoint_base>`{.interpreted-text
+role="external+py3.15:func"}
+:::
 
 # Abstract
 
