@@ -13,7 +13,7 @@ post_history:
 python_status: Final
 url: https://peps.python.org/pep-0301/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0301.rst
-source_commit: d7e845dc9b16502da36fd4f07ffe2ed9fde8f40f
+source_commit: 0eebb6c567fe548b4cb125ca16d58acf67da3f81
 ---
 
 # Abstract
@@ -372,7 +372,8 @@ over the years.
 
 [^2]: Trove (<http://www.catb.org/~esr/trove/>)
 
-[^3]: Vaults of Parnassus (<http://www.vex.net/parnassus/>)
+[^3]: Vaults of Parnassus
+    (<https://web.archive.org/web/20030603185537/http://www.vex.net/parnassus/>)
 
 [^4]: CPAN (<http://www.cpan.org/>)
 

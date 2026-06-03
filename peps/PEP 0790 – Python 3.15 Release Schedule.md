@@ -11,7 +11,7 @@ python_version: '3.15'
 python_status: Active
 url: https://peps.python.org/pep-0790/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0790.rst
-source_commit: 07bd8fd9062dde4464026c41636ca60384417d34
+source_commit: a25a394ca5338be42f29ca82f7df6353614918b6
 ---
 
 # Abstract
@@ -47,10 +47,10 @@ Actual:
 - 3.15.0 alpha 8: Tuesday, 2026-04-07
 - 3.15.0 beta 1: Thursday, 2026-05-07 (No new features beyond this
   point.)
+- 3.15.0 beta 2: Tuesday, 2026-06-02
 
 Expected:
 
-- 3.15.0 beta 2: Tuesday, 2026-06-02
 - 3.15.0 beta 3: Tuesday, 2026-06-23
 - 3.15.0 beta 4: Saturday, 2026-07-18
 - 3.15.0 candidate 1: Tuesday, 2026-08-04
