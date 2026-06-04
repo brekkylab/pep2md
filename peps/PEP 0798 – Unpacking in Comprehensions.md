@@ -6,7 +6,7 @@ author:
 - Erik Demaine <edemaine@mit.edu>
 sponsor: Jelle Zijlstra <jelle.zijlstra at gmail.com>
 discussions_to: https://discuss.python.org/t/99435
-status: Accepted
+status: Final
 type: Standards Track
 created: 19-Jul-2025
 python_version: '3.15'
@@ -15,11 +15,18 @@ post_history:
 - '`22-Jun-2025 <https://discuss.python.org/t/pre-pep-unpacking-in-comprehensions/96362>`__'
 - '`19-Jul-2025 <https://discuss.python.org/t/pep-798-unpacking-in-comprehensions/99435>`__'
 resolution: '`03-Nov-2025 <https://discuss.python.org/t/pep-798-unpacking-in-comprehensions/99435/60>`__'
-python_status: Accepted
+python_status: Final
 url: https://peps.python.org/pep-0798/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0798.rst
-source_commit: 15f2b58b1d8218cca0549a9f3d8ec7df9ba3147c
+source_commit: b26c2815978c82952ad92045361c403f21b7bfbb
 ---
+
+::: canonical-doc
+`Displays for lists, sets and dictionaries <comprehensions>`{.interpreted-text
+role="external+py3.15:ref"},
+`Dictionary displays <dict>`{.interpreted-text
+role="external+py3.15:ref"}
+:::
 
 # Abstract
 
