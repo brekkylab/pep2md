@@ -11,7 +11,7 @@ python_version: '3.13'
 python_status: Active
 url: https://peps.python.org/pep-0719/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0719.rst
-source_commit: 96e977c393b5dc648d69619f0f5e73db299e373d
+source_commit: 04c88055a1a1eb1a19b80a3fd41deb36983bcd7e
 ---
 
 # Abstract
@@ -70,10 +70,10 @@ Actual:
 - 3.13.11: Friday, 2025-12-05
 - 3.13.12: Tuesday, 2026-02-03
 - 3.13.13: Tuesday, 2026-04-07
+- 3.13.14: Wednesday, 2026-06-10
 
 Expected:
 
-- 3.13.14: Tuesday, 2026-06-09
 - 3.13.15: Tuesday, 2026-08-04
 - 3.13.16: Tuesday, 2026-10-06 (Final regular bugfix release with binary
   installers)
