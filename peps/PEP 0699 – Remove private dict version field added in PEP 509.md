@@ -4,7 +4,7 @@ title: Remove private dict version field added in PEP 509
 author:
 - Ken Jin <kenjin@python.org>
 discussions_to: https://discuss.python.org/t/pep-699-remove-private-dict-version-field-added-in-pep-509/19724
-status: Accepted
+status: Final
 type: Standards Track
 created: 03-Oct-2022
 python_version: '3.12'
@@ -12,10 +12,10 @@ post_history:
 - '`05-Oct-2022 <https://discuss.python.org/t/pep-699-remove-private-dict-version-field-added-in-pep-509/19724>`__'
 replaces: '509'
 resolution: https://discuss.python.org/t/pep-699-remove-private-dict-version-field-added-in-pep-509/19724/13
-python_status: Accepted
+python_status: Final
 url: https://peps.python.org/pep-0699/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0699.rst
-source_commit: 7aecbdad9a62f8a8378ae929480ca3dde17d59f7
+source_commit: 86c007e3e8e14d1c836beff9b1401eb9c5d3b35e
 ---
 
 # Abstract

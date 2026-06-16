@@ -8,17 +8,17 @@ author:
 - Dustin Ingram <di@python.org>
 pep_delegate: Brett Cannon <brett@python.org>
 discussions_to: https://discuss.python.org/t/pep-691-json-based-simple-api-for-python-package-indexes/15553
-status: Accepted
+status: Final
 type: Standards Track
 topic: Packaging
 created: 04-May-2022
 post_history:
 - '`05-May-2022 <https://discuss.python.org/t/pep-691-json-based-simple-api-for-python-package-indexes/15553>`__'
 resolution: https://discuss.python.org/t/pep-691-json-based-simple-api-for-python-package-indexes/15553/70
-python_status: Accepted
+python_status: Final
 url: https://peps.python.org/pep-0691/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0691.rst
-source_commit: 6852ab63ac493b19b2a55ade2c79d8d5d8ad3cf4
+source_commit: a7c83bfb143bb7e13117a9d78e4f00f14403787d
 ---
 
 ::: canonical-pypa-spec

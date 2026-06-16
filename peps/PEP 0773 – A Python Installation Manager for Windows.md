@@ -4,7 +4,7 @@ title: A Python Installation Manager for Windows
 author:
 - Steve Dower
 discussions_to: https://discuss.python.org/t/77900/
-status: Accepted
+status: Final
 type: Standards Track
 topic: Release
 created: 21-Jan-2025
@@ -13,11 +13,15 @@ post_history:
 - '`21-Jan-2025 <https://discuss.python.org/t/77900/>`__'
 replaces: 397, 486
 resolution: '`25-Apr-2025 <https://discuss.python.org/t/77900/180>`__'
-python_status: Accepted
+python_status: Final
 url: https://peps.python.org/pep-0773/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0773.rst
-source_commit: 0173908fa78a45816ed4448cbe310ac7fd962d09
+source_commit: 9331087e7f4ef04ac10ba94b9afffa3e2f1fd4b2
 ---
+
+::: canonical-doc
+[Python Releases for Windows](https://www.python.org/downloads/windows/)
+:::
 
 # Abstract
 

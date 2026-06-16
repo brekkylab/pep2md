@@ -5,7 +5,7 @@ author:
 - Erlend Egeberg Aasland <erlend@python.org>
 - Petr Viktorin <encukou@gmail.com>
 discussions_to: https://discuss.python.org/t/14824
-status: Accepted
+status: Final
 type: Standards Track
 requires:
 - '489'
@@ -17,10 +17,10 @@ post_history:
 - '`04-Apr-2022 <https://discuss.python.org/t/14824>`__'
 - '`11-Apr-2022 <https://mail.python.org/archives/list/python-dev@python.org/thread/B3HYQIE4Z5WBJCC3FUZJZHXLM32I4BZA/>`__'
 resolution: https://discuss.python.org/t/14824/4
-python_status: Accepted
+python_status: Final
 url: https://peps.python.org/pep-0687/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0687.rst
-source_commit: 06c6f1bc3d5abb04dbb46d00ff75bc46c5f8ddcf
+source_commit: c0238e375cacac64730eb2c1ac38c10692504176
 ---
 
 # Abstract

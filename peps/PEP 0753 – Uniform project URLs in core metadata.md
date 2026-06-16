@@ -7,7 +7,7 @@ author:
 sponsor: Barry Warsaw <barry at python.org>
 pep_delegate: Paul Moore <p.f.moore at gmail.com>
 discussions_to: https://discuss.python.org/t/pep-753-uniform-urls-in-core-metadata/62792
-status: Accepted
+status: Final
 type: Standards Track
 topic: Packaging
 created: 29-Aug-2024
@@ -15,10 +15,10 @@ post_history:
 - '`26-Aug-2024 <https://discuss.python.org/t/core-metadata-should-home-page-and-download-url-be-deprecated/62037>`__'
 - '`03-Sep-2024 <https://discuss.python.org/t/pep-753-uniform-urls-in-core-metadata/62792>`__'
 resolution: '`10-Oct-2024 <https://discuss.python.org/t/62792/30>`__'
-python_status: Accepted
+python_status: Final
 url: https://peps.python.org/pep-0753/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0753.rst
-source_commit: 2bb39241397455b1e59074677ddb32d4d4c3df4c
+source_commit: 0cc02c2ace77ba03e1c1afb6227410ffab7452dc
 ---
 
 ::: canonical-pypa-spec

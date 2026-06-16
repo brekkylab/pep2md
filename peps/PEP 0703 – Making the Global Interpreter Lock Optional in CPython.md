@@ -5,7 +5,7 @@ author:
 - Sam Gross <colesbury at gmail.com>
 sponsor: Łukasz Langa <lukasz at python.org>
 discussions_to: https://discuss.python.org/t/22606
-status: Accepted
+status: Final
 type: Standards Track
 created: 09-Jan-2023
 python_version: '3.13'
@@ -13,10 +13,10 @@ post_history:
 - '`09-Jan-2023 <https://discuss.python.org/t/22606>`__'
 - '`04-May-2023 <https://discuss.python.org/t/26503>`__'
 resolution: '`24-Oct-2023 <https://discuss.python.org/t/pep-703-making-the-global-interpreter-lock-optional-in-cpython-acceptance/37075>`__'
-python_status: Accepted
+python_status: Final
 url: https://peps.python.org/pep-0703/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0703.rst
-source_commit: a7c7eb4efd15d2f9c2e06624efe71639d5d0d183
+source_commit: 98b12df3cdc5e9df9eb37b60a5275be52b4ceb6e
 ---
 
 :::: note
@@ -30,6 +30,10 @@ back any changes that turn out to be too disruptive -- which includes
 potentially rolling back all of PEP 703 entirely if necessary (however
 unlikely or undesirable we expect that to be).
 ::::
+
+::: canonical-doc
+`freethreading-python-howto`{.interpreted-text role="ref"}
+:::
 
 # Abstract
 

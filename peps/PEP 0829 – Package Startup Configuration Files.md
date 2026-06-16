@@ -4,7 +4,7 @@ title: Package Startup Configuration Files
 author:
 - Barry Warsaw <barry@python.org>
 discussions_to: https://discuss.python.org/t/pep-829-structured-startup-configuration-via-site-toml-files/106789
-status: Accepted
+status: Final
 type: Standards Track
 created: 31-Mar-2026
 python_version: '3.15'
@@ -13,11 +13,15 @@ post_history:
 - '`13-Apr-2026 <https://discuss.python.org/t/pep-829-structured-startup-configuration-files/106789/69>`__'
 - '`15-Apr-2026 <https://discuss.python.org/t/pep-829-structured-startup-configuration-files/106789/99>`__'
 resolution: '`24-Apr-2026 <https://discuss.python.org/t/pep-829-structured-startup-configuration-files/106789/112>`__'
-python_status: Accepted
+python_status: Final
 url: https://peps.python.org/pep-0829/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0829.rst
-source_commit: 1fc732f79690cf123336be9309cc482cbbeb2b9e
+source_commit: cf8cda95a59b924002541f4009fd9381a6ed5837
 ---
+
+::: canonical-doc
+`site-start-files`{.interpreted-text role="ref"}
+:::
 
 # Abstract
 

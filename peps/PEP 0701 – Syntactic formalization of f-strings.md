@@ -7,18 +7,22 @@ author:
 - Lysandros Nikolaou <lisandrosnik@gmail.com>
 - Marta Gómez Macías <cyberwitch@google.com>
 discussions_to: https://discuss.python.org/t/pep-701-syntactic-formalization-of-f-strings/22046
-status: Accepted
+status: Final
 type: Standards Track
 created: 15-Nov-2022
 python_version: '3.12'
 post_history:
 - '`19-Dec-2022 <https://discuss.python.org/t/pep-701-syntactic-formalization-of-f-strings/22046>`__'
 resolution: '`14-Mar-2023 <https://discuss.python.org/t/pep-701-syntactic-formalization-of-f-strings/22046/119>`__'
-python_status: Accepted
+python_status: Final
 url: https://peps.python.org/pep-0701/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0701.rst
-source_commit: 3a6f81b3855cd468eb48d27170bb800c487f7386
+source_commit: fdd88f95a0aeb3b5daed346d2bf36db221cb9130
 ---
+
+::: canonical-doc
+`f-strings`{.interpreted-text role="ref"}
+:::
 
 # Abstract
 

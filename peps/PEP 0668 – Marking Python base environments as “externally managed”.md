@@ -12,17 +12,17 @@ author:
 - Pradyun Gedam <pradyunsg@gmail.com>
 pep_delegate: Paul Moore <p.f.moore@gmail.com>
 discussions_to: https://discuss.python.org/t/10302
-status: Accepted
+status: Final
 type: Standards Track
 topic: Packaging
 created: 18-May-2021
 post_history:
 - 28-May-2021
 resolution: https://discuss.python.org/t/10302/44
-python_status: Accepted
+python_status: Final
 url: https://peps.python.org/pep-0668/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0668.rst
-source_commit: 739d543c89e3decd93fb2555fa6d83eb8354600e
+source_commit: d53dceb81f8f2265abbcac415ad246505dab7fd7
 ---
 
 ::: canonical-pypa-spec

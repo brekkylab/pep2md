@@ -5,7 +5,7 @@ author:
 - Zixuan James Li <p359101898@gmail.com>
 sponsor: Jelle Zijlstra <jelle.zijlstra@gmail.com>
 discussions_to: https://discuss.python.org/t/pep-728-typeddict-with-typed-extra-items/45443
-status: Accepted
+status: Final
 type: Standards Track
 topic: Typing
 created: 12-Sep-2023
@@ -13,11 +13,15 @@ python_version: '3.15'
 post_history:
 - '`09-Feb-2024 <https://discuss.python.org/t/pep-728-typeddict-with-typed-extra-items/45443>`__'
 resolution: '`15-Aug-2025 <https://discuss.python.org/t/pep-728-typeddict-with-typed-extra-items/45443/159>`__'
-python_status: Accepted
+python_status: Final
 url: https://peps.python.org/pep-0728/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0728.rst
-source_commit: 0d2bd3a2c3759a358aef6ae2996c1f4cca72027b
+source_commit: 313f84c267f151dee33799ed9866b0f509a52866
 ---
+
+::: canonical-doc
+`~typing.TypedDict`{.interpreted-text role="class"}
+:::
 
 # Abstract
 

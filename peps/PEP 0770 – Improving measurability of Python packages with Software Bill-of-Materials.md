@@ -6,7 +6,7 @@ author:
 sponsor: Brett Cannon <brett@python.org>
 pep_delegate: Brett Cannon <brett@python.org>
 discussions_to: https://discuss.python.org/t/76308
-status: Accepted
+status: Final
 type: Standards Track
 topic: Packaging
 created: 02-Jan-2025
@@ -14,14 +14,15 @@ post_history:
 - '`05-Nov-2024 <https://discuss.python.org/t/70261>`__'
 - '`06-Jan-2025 <https://discuss.python.org/t/76308>`__'
 resolution: '`11-Apr-2025 <https://discuss.python.org/t/76308/112>`__'
-python_status: Accepted
+python_status: Final
 url: https://peps.python.org/pep-0770/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0770.rst
-source_commit: 4ec94b2682771915ec8c6c78e92a08af58e4108a
+source_commit: 420981ae8df9a3a6faa23c23b77a506a60dda8cf
 ---
 
 ::: canonical-pypa-spec
-<https://packaging.python.org/en/latest/specifications/binary-distribution-format/#the-dist-info-sboms-directory>
+[The .dist-info/sboms/
+directory](https://packaging.python.org/en/latest/specifications/binary-distribution-format/#the-dist-info-sboms-directory)
 :::
 
 # Abstract
