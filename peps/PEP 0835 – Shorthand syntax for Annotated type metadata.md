@@ -4,7 +4,7 @@ title: Shorthand syntax for Annotated type metadata
 author:
 - Till Varoquaux <till.varoquaux@gmail.com>
 sponsor: Ivan Levkivskyi <levkivskyi@gmail.com>
-discussions_to: https://discuss.python.org/t/106888
+discussions_to: https://discuss.python.org/t/pep-835-shorthand-syntax-for-annotated-type-metadata/107795
 status: Draft
 type: Standards Track
 topic: Typing
@@ -12,10 +12,11 @@ created: 12-Jun-2026
 python_version: '3.16'
 post_history:
 - '`19-Apr-2026 <https://discuss.python.org/t/shorthand-syntax-for-annotated-type-metadata/106888>`__'
+- '`18-Jun-2026 <https://discuss.python.org/t/pep-835-shorthand-syntax-for-annotated-type-metadata/107795>`__'
 python_status: Draft
 url: https://peps.python.org/pep-0835/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0835.rst
-source_commit: b706e1cc8e5db1f3a9a24937dc9b9682d27aa95e
+source_commit: d15f0a3302a5c5e089823283904b40ad334c4125
 ---
 
 # Abstract
