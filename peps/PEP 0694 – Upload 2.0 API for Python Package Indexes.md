@@ -18,10 +18,11 @@ post_history:
 - '`06-Aug-2025 <https://discuss.python.org/t/pep-694-pypi-upload-api-2-0-round-2/101483>`__'
 - '`27-Sep-2025 <https://discuss.python.org/t/pep-694-pypi-upload-api-2-0-round-2/101483/31>`__'
 - '`07-Dec-2025 <https://discuss.python.org/t/pep-694-pypi-upload-api-2-0-round-2/101483/35>`__'
+- '`26-Jun-2026 <https://discuss.python.org/t/pep-694-pypi-upload-api-2-0-round-3/107923>`__'
 python_status: Draft
 url: https://peps.python.org/pep-0694/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0694.rst
-source_commit: 2a9ac30bdbb8ace227a030cd6c4c002507887df7
+source_commit: 351f29be66759be1b0eef80ab64a709a447b928d
 ---
 
 # Abstract
@@ -30,22 +31,21 @@ This PEP proposes an extensible API for uploading files to a Python
 package index such as PyPI. Along with standardization, the upload API
 provides additional useful features such as support for:
 
-- a publishing session, which can be used to simultaneously publish all
-  wheels in a package release;
+- a publishing session, which can be used to simultaneously and
+  atomically publish all artifacts (wheels, sdists) in a package
+  release;
 - \"staging\" a release, which can be used to test uploads before
   publicly publishing them, without the need for
   [test.pypi.org](https://test.pypi.org/);
 - artifacts which can be overwritten and replaced, until a session is
   published;
 - detailed status on the state of artifact uploads;
-- new project creation without requiring the uploading of an artifact.
+- new project creation without requiring the uploading of an artifact;
 - a protocol to extend the supported upload mechanisms in the future
   without requiring a full PEP; these can be standardized and
-  recommended for all indexes, or be index-specific;
+  recommended for all indexes, or be index-specific.
 
-Once this new upload API is adopted, the existing legacy API can be
-deprecated, however this PEP does not propose a deprecation schedule for
-the legacy API.
+This PEP does not propose a deprecation schedule for the legacy API.
 
 # Rationale
 
@@ -64,8 +64,8 @@ In addition, there are a number of major issues with the legacy API:
   for the upload itself, and while the index processes the uploaded file
   to determine success or failure.
 - It does not support any mechanism for parallelizing or resuming an
-  upload. With the largest default file size on PyPI being around 1GB in
-  size, requiring the entire upload to complete successfully means
+  upload. With the largest default file size on PyPI being around 1GiB
+  in size, requiring the entire upload to complete successfully means
   bandwidth is wasted when such uploads experience a network
   interruption while the request is in progress.
 - The atomic unit of operation is a single file. This is problematic
@@ -84,18 +84,18 @@ In addition, there are a number of major issues with the legacy API:
   this metadata is famously unreliable, most installers instead choose
   to download the entire file and read the metadata from there.
 - There is no mechanism for allowing an index to do any sort of sanity
-  checks before bandwidth gets expended on an upload. Many cases of
-  invalid metadata or incorrect permissions could be checked prior to
-  uploading files.
+  checks before bandwidth gets expended on an upload. Many error
+  conditions, such as incorrect permissions or quota exhaustion could be
+  checked prior to uploading files.
 - There is no support for \"staging\" a release prior to publishing it
   to the index.
 - Creation of new projects requires the uploading of at least one file,
-  leading to \"stub\" uploads to claim a project namespace.
+  leading to \"stub\" uploads to claim a project name, wasting space.
 
 The new upload API proposed in this PEP provides ways to solve all of
 these problems, either directly or through an extensible approach,
 allowing servers to implement features such as resumable and parallel
-uploads. This upload API this PEP proposes provides better and more
+uploads. The upload API this PEP proposes provides better and more
 standardized error reporting, a more robust release testing experience,
 and atomic and simultaneous publishing of all release artifacts.
 
@@ -155,17 +155,8 @@ same way.
 
 # Upload 2.0 API Specification {#spec}
 
-This PEP traces the root cause of most of the issues with the existing
-API to be roughly two things:
-
-- The metadata is submitted alongside the file, rather than being parsed
-  from the file itself.[^2]
-- It supports only a single request, using only form data, that either
-  succeeds or fails, and all actions are atomic within that single
-  request.
-
-To address these issues, this PEP proposes a multi-request workflow,
-which at a high level involves these steps:
+This PEP proposes a multi-request workflow, which at a high level
+involves these steps:
 
 1.  Initiate a
     `publishing session <publishing-session>`{.interpreted-text
@@ -224,9 +215,9 @@ client requests **MUST** match the `Content-Type` header for major
 version.
 
 Unlike `691`{.interpreted-text role="pep"}, this PEP does not change the
-existing *legacy* `1.0` upload API in any way, so servers are required
-to host the new API described in this PEP at a different endpoint than
-the existing upload API.
+existing legacy `1.0` upload API in any way, so servers are required to
+host the new API described in this PEP at a different endpoint than the
+existing upload API.
 
 Since JSON is the only defined request format defined in this PEP, all
 non-file-upload requests defined in this PEP **MUST** include a
@@ -265,7 +256,7 @@ the root endpoint could be `https://upload.example.com/`, or
 
 The choice of the root endpoint is left up to the index operator.
 
-## Authentication for Upload 2.0 API
+## Authentication and Authorization {#authentication}
 
 All endpoints in this specification **MUST** use standard HTTP
 authentication mechanisms as defined in `7235`{.interpreted-text
@@ -281,6 +272,46 @@ Authentication follows the standard HTTP pattern:
 
 The specific authentication schemes (e.g., Bearer, Basic, Digest) are
 determined by the index operator.
+
+Authentication establishes the principal making a request. Authorization
+determines whether that principal may act on a particular session. All
+session endpoints defined in this specification (i.e. the URLs returned
+under the `links` key when a
+`publishing session <publishing-session-response>`{.interpreted-text
+role="ref"} or `file upload
+session <file-upload-session-response>`{.interpreted-text role="ref"} is
+created) **MUST** be authorized against the project\'s upload
+permissions. Specifically, a server **MUST** verify, contemporaneously
+on each request, that the authenticated principal is currently
+authorized to upload to the project named by the session, and **MUST**
+respond with `403 Forbidden` if it is not.
+
+Because this check is performed independently on each request, a session
+is **not** tied to the exact credentials that created it:
+
+- A principal that is granted upload permission after a session is
+  opened may immediately participate in that session.
+- A principal whose upload permission is revoked while a session is open
+  **MUST** be denied with a `403 Forbidden` on any subsequent request,
+  even if that principal created the session.
+
+This denial is evaluated per request and is not \"sticky\": if a
+principal\'s permission is later restored, its subsequent requests are
+authorized again. An index **MAY** apply a stricter policy, but this
+specification does not require one.
+
+Servers **MUST** perform this authorization check on at least every
+request that creates, modifies, completes, extends, cancels, or
+publishes a publishing session or file upload session. For upload
+mechanisms that transfer a file across more than one request (for
+example, chunked or multipart mechanisms), servers **SHOULD** authorize
+each such request.
+
+The unguessable `stage preview URL <staged-preview>`{.interpreted-text
+role="ref"} is a separate capability and is deliberately **not**
+governed by this authorization check; it grants read-only preview access
+to any client that holds the token, so that (for example) a CI job can
+install-test a staged release without project upload credentials.
 
 ## Errors {#session-errors}
 
@@ -362,7 +393,7 @@ The request includes the following top-level keys:
 `meta` (**required**)
 
 :   Describes information about the payload itself. Currently, the only
-    defined sub-key is `api-version` the value of which must be the
+    required sub-key is `api-version` the value of which must be the
     string `"2.0"`. Optional sub-keys can define
     `index-specific behavior <index-specific-metadata>`{.interpreted-text
     role="ref"}.
@@ -399,13 +430,24 @@ protocols, *until* the stage is published. If this first-release stage
 gets canceled, then the index **SHOULD** delete the project record, as
 if it were never uploaded.
 
-The session is owned by the user that created it, and all subsequent
-requests **MUST** be performed with the same credentials, otherwise a
-`403 Forbidden` will be returned on those subsequent requests.
+A publishing session is **not** bound to the specific credentials that
+created it. Instead, every request against the session **MUST** be
+performed by an authenticated principal that is authorized to upload to
+the project at the time of that request, as described in
+`authentication`{.interpreted-text role="ref"}. A request from a
+principal that is not, or is no longer, so authorized **MUST** receive a
+`403 Forbidden`.
+
+For a first-release session on a project that does not yet exist, there
+are no existing project upload permissions to evaluate; the index
+instead authorizes the request according to its own name-registration
+policy, and **SHOULD** treat the creating principal (and, where
+applicable, an organization it acts on behalf of) as authorized for the
+lifetime of the session.
 
 ### Optional Index-specific Metadata {#index-specific-metadata}
 
-Index can optionally define their own metadata for index-specific
+Indexes can optionally define their own metadata for index-specific
 behavior. The metadata key **MUST** begin with an underscore, with the
 following value easily and uniquely identifying the index. For example,
 PyPI could allow for projects to be created in an [organization
@@ -418,7 +460,7 @@ section:
   "meta": {
     "api-version": "2.0",
     "_pypi.org": {
-        "organization": "my-main-org"
+        "organization": "my-org"
     }
   },
   "name": "foo",
@@ -428,8 +470,8 @@ section:
 
 This is only an example. This PEP does not define or reserve any
 index-specific keys or metadata; that is left up to the index to specify
-and document. The semantics (e.g. whether bogus keys or values result in
-an error or are ignored) of the index-specific metadata is also
+and document. The semantics (e.g. whether invalid keys or values result
+in an error or are ignored) of the index-specific metadata is also
 undefined here.
 
 #### Response Body {#publishing-session-response}
@@ -445,11 +487,13 @@ The successful response includes the following content:
     "stage": "...",
     "upload": "...",
     "session": "...",
+    "publish": "...",
+    "extend": "...",
   },
   "mechanisms": ["http-post-bytes"],
   "session-token": "<token-string>",
-  "expires-at": "2025-08-01T12:00:00Z",
-  "status": "pending",
+  "expires-at": "2030-08-01T12:00:00Z",
+  "status": "open",
   "files": {},
   "notices": [
     "a notice to display to the user"
@@ -494,15 +538,17 @@ the success response has the following keys:
     remain active until at least this time unless the client itself has
     canceled or published the session. Servers **MAY** choose to extend
     this expiration time, but should never move it earlier. Clients can
-    query the
-    `session status <publishing-session-status>`{.interpreted-text
-    role="ref"} to get the current expiration time of the session.
+    query the `session status
+    <publishing-session-status>`{.interpreted-text role="ref"} to get
+    the current expiration time of the session, and may request an
+    `extension <publishing-session-extension>`{.interpreted-text
+    role="ref"}.
 
 `status`
 
-:   A string that contains one of `pending`, `published`, `error`, or
-    `canceled`, representing the overall
-    `status of the session <publishing-session-status>`{.interpreted-text
+:   A string that contains one of `open`, `processing`, `published`,
+    `error`, or `canceled`, representing the overall
+    `status of the session <publishing-session-states>`{.interpreted-text
     role="ref"}.
 
 `files`
@@ -522,15 +568,29 @@ the success response has the following keys:
 #### Multiple Session Creation Requests {#publishing-session-multiple}
 
 If a second attempt to create a session is received for the same
-name-version pair while a session for that pair is in the `pending`,
-`processing`, or `complete` state, then a new session is *not* created.
-Instead, the server **MUST** respond with a `409 Conflict` and **MUST**
-include a `Location` header that points to the
+name-version pair while an existing session for that pair is in a
+non-terminal state \-- that is, `open`, `processing`, or `error` (see
+`publishing session states <publishing-session-states>`{.interpreted-text
+role="ref"}) \-- then a new session is *not* created. Instead, the
+server **MUST** respond with a `409 Conflict` and **MUST** include a
+`Location` header that points to the
 `session status URL <publishing-session-status>`{.interpreted-text
-role="ref"}.
+role="ref"}. Like every other session request, such a request **MUST**
+be performed by a principal authorized to upload to the project (see
+`authentication`{.interpreted-text role="ref"}); a request from an
+unauthorized principal **MUST** receive a `403 Forbidden` instead, which
+takes precedence over the `409 Conflict` so that the existence of the
+in-progress session is not disclosed. An authorized principal receives
+the `409 Conflict` and `Location` header and may use the referenced
+session; this is how multiple authorized publishers (for example,
+distinct Trusted Publishing workflows) can contribute to the same
+session.
 
-For sessions in the `error` or `canceled` state, a new session is
-created with same `201 Created` response and payload, except that the
+Otherwise \-- for example, when the name-version pair has no session in
+a non-terminal state, either because the previous session for that pair
+has reached a terminal `published` or `canceled` state, or because no
+session has ever been created for it \-- a new session is created with
+the same `201 Created` response and payload, except that the
 `publishing session status URL <publishing-session-status>`{.interpreted-text
 role="ref"}, `session-token`, and `links.stage` values **MUST** be
 different.
@@ -542,16 +602,24 @@ valid:
 
 `session`
 
-:   The endpoint where actions for this session can be performed,
-    including
-    `publishing this session <publishing-session-completion>`{.interpreted-text
-    role="ref"},
-    `canceling and discarding the session <publishing-session-cancellation>`{.interpreted-text
-    role="ref"},
+:   The endpoint where the session resource can be accessed for
     `querying the current session status <publishing-session-status>`{.interpreted-text
-    role="ref"}, and
+    role="ref"} (via `GET`) and
+    `canceling and discarding the session <publishing-session-cancellation>`{.interpreted-text
+    role="ref"} (via `DELETE`).
+
+`publish`
+
+:   The endpoint for
+    `publishing this session <publishing-session-completion>`{.interpreted-text
+    role="ref"} (via `POST`).
+
+`extend`
+
+:   The endpoint for
     `requesting an extension of the session lifetime <publishing-session-extension>`{.interpreted-text
-    role="ref"} (*if* the server supports it).
+    role="ref"} (via `POST`). If the server does not support session
+    extensions, this key **MUST** be omitted.
 
 `upload`
 
@@ -607,10 +675,136 @@ in this session to a sub-mapping with the following keys:
     session key, except that these notices are specific to the
     referenced file.
 
+### Publishing Session States
+
+A publishing session is always in exactly one of the following states,
+reported by the `status` key of the
+`session status response <publishing-session-response>`{.interpreted-text
+role="ref"}:
+
+![State diagram for a publishing session.  From the initial state the session enters \`\`open\`\`.  From
+\`\`open\`\` a publish request either completes immediately (\`\`201\`\`) to the terminal \`\`published\`\` state,
+is accepted for deferred processing (\`\`202\`\`) into \`\`processing\`\`, or fails synchronously
+(\`\`4xx\`\`/\`\`5xx\`\`) and stays \`\`open\`\`; \`\`open\`\` can also be canceled (\`\`DELETE\`\`) to the terminal
+\`\`canceled\`\` state.  \`\`processing\`\` resolves to \`\`published\`\` on success or to \`\`error\`\` on failure.
+From \`\`error\`\` the client can retry publishing \-- which behaves like publishing from \`\`open\`\` \-- or
+cancel to \`\`canceled\`\`.  Both \`\`open\`\` and \`\`error\`\` host file upload sessions.  Canceling during
+\`\`processing\`\` is rejected with \`\`409\`\`.](pep-0694/publishing-session-states.drawio.svg){.invert-in-dark-mode
+.invert-in-dark-modealign-center}
+
+The textual description of each state and a complete transition table
+follow.
+
+`open`
+
+:   The session is accepting changes. Files can be
+    `uploaded <file-upload-session>`{.interpreted-text role="ref"},
+    replaced, and
+    `deleted <file-upload-session-cancellation>`{.interpreted-text
+    role="ref"}; the session can be `previewed
+    <staged-preview>`{.interpreted-text role="ref"} and
+    `extended <publishing-session-extension>`{.interpreted-text
+    role="ref"}; and it can be
+    `published <publishing-session-completion>`{.interpreted-text
+    role="ref"} or `canceled
+    <publishing-session-cancellation>`{.interpreted-text role="ref"}. A
+    newly created session starts in this state.
+
+`processing`
+
+:   The client has requested publication and the server accepted the
+    request for deferred processing, returning a `202 Accepted` (see
+    `publishing-session-completion`{.interpreted-text role="ref"}). The
+    session is no longer accepting changes while the server validates
+    and processes it. This is a transitional state; the client polls the
+    `session status <publishing-session-status>`{.interpreted-text
+    role="ref"} until it resolves to `published` or `error`.
+
+`published` (**terminal**)
+
+:   The session\'s files have been published and are publicly available.
+    No further changes are possible.
+
+`error`
+
+:   The most recent deferred publish attempt failed. The session is
+    **fully editable again** \-- it permits exactly the same operations
+    as `open`, and differs from `open` *only* in that it records that
+    the last publish attempt failed. The human-readable reason **MUST**
+    be reported in the session\'s `notices` (and, where the failure is
+    attributable to a particular file, in that file\'s `notices`). From
+    this state the client can address the problem and
+    `publish <publishing-session-completion>`{.interpreted-text
+    role="ref"} again, or `cancel
+    <publishing-session-cancellation>`{.interpreted-text role="ref"} the
+    session.
+
+`canceled` (**terminal**)
+
+:   The session was canceled and its staged data discarded. No further
+    changes are possible.
+
+Both `open` and `error` are editable states that permit the identical
+set of operations; a client **MUST NOT** treat an `error` session as
+closed or read-only. The only difference between them is that `error`
+additionally records that the previous deferred publish request failed.
+
+Because `published` and `canceled` are terminal, reaching either one
+frees the name-version pair so that a
+`subsequent session <publishing-session-multiple>`{.interpreted-text
+role="ref"} may be created for it, for example, to add wheels for
+additional platforms to an already-published release.
+
+The transitions between these states are:
+
+  --------------------------------------------------------------------------------------------------------
+  From           Event                               To
+  -------------- ----------------------------------- -----------------------------------------------------
+  *(none)*       Session created                     `open`
+
+  `open`         A file is uploaded, replaced, or    `open`
+                 deleted                             
+
+  `open`         Publish request completed           `published`
+                 immediately (`201 Created`)         
+
+  `open`         Publish request accepted for        `processing`
+                 deferred processing                 
+                 (`202 Accepted`)                    
+
+  `open` or      Publish request fails synchronously unchanged (the error is returned to the caller)
+  `error`                                            
+
+  `open` or      Session canceled (`DELETE`)         `canceled`
+  `error`                                            
+
+  `processing`   Deferred processing succeeds        `published`
+
+  `processing`   Deferred processing fails           `error`
+
+  `processing`   Cancellation requested              rejected with `409 Conflict` (see
+                                                     `publishing-session-cancellation`{.interpreted-text
+                                                     role="ref"})
+
+  `error`        A file is uploaded, replaced, or    `error`
+                 deleted                             
+
+  `error`        Publish retried                     `processing` or `published`
+  --------------------------------------------------------------------------------------------------------
+
+A *synchronous* publish failure (i.e. one the server determines within
+the publish request itself) is returned to the caller as an
+`error response <session-errors>`{.interpreted-text role="ref"} and
+leaves the session in its current editable state (`open` stays `open`;
+`error` stays `error`). The `error` *state* is reached only when a
+publish that was accepted for deferred processing subsequently fails,
+because in that case the failure cannot be returned to the caller
+directly and the client discovers it by polling.
+
 ### Complete a Publishing Session {#publishing-session-completion}
 
 To complete a session and publish the files that have been included in
-it, a client issues a `POST` request to the `session`
+it, a client issues a `POST` request to the `publish`
 `link <publishing-session-links>`{.interpreted-text role="ref"} given in
 the
 `session creation response body <publishing-session-response>`{.interpreted-text
@@ -622,34 +816,55 @@ The request looks like:
 {
   "meta": {
     "api-version": "2.0"
-  },
-  "action": "publish",
+  }
 }
 ```
 
 If the server is able to immediately complete the publishing session, it
-may do so and return a `201 Created` response. If it is unable to
-immediately complete the publishing session (for instance, if it needs
-to do validation that may take longer than reasonable in a single HTTP
-request), then it may return a `202 Accepted` response.
+may do so and return a `201 Created` response, moving the session to the
+terminal `status <publishing-session-states>`{.interpreted-text
+role="ref"} `published`. If it is unable to immediately complete the
+publishing session (for instance, if it needs to do validation that may
+take longer than reasonable in a single HTTP request), then it may
+return a `202 Accepted` response and move the session to the
+`processing` state.
 
 The server **MUST** include a `Location` header in the response pointing
 back to the `Publishing
 Session status <publishing-session-status>`{.interpreted-text
 role="ref"} URL, which can be used to query the current session status.
 If the server returned a `202 Accepted`, polling that URL can be used to
-watch for session status changes.
+watch for the session status to change: deferred processing resolves to
+either `published` on success or `error` on failure. When it resolves to
+`error`, the session remains editable and the reason is reported in the
+session\'s `notices`, as described in
+`publishing-session-states`{.interpreted-text role="ref"}.
+
+A publish attempt that fails *synchronously* (i.e. within the publish
+request itself) is returned to the client as an
+`error response <session-errors>`{.interpreted-text role="ref"} and
+leaves the session in its current editable state; it does **not** move
+the session to `error`.
 
 ### Publishing Session Cancellation
 
 To cancel a publishing session, a client issues a `DELETE` request to
-the `session` `link <publishing-session-links>`{.interpreted-text
-role="ref"} given in the
+the `session` `link
+<publishing-session-links>`{.interpreted-text role="ref"} given in the
 `session creation response body <publishing-session-response>`{.interpreted-text
-role="ref"}. The server then marks the session as canceled, and
+role="ref"}. The server then marks the session as `canceled`, and
 **SHOULD** purge any data that was uploaded as part of that session.
 Future attempts to access that session URL or any of the publishing
 session URLs **MUST** return a `404 Not Found`.
+
+Cancellation is only permitted while the session is
+`open or in the error state
+<publishing-session-states>`{.interpreted-text role="ref"}. If the
+session is in the `processing` state (i.e. because a deferred publishing
+request is already being processed) the server **MUST** reject the
+cancellation with a `409 Conflict`, since publication may already be in
+progress. The client can instead wait for processing to resolve; if it
+resolves to `error`, the session can then be canceled.
 
 To prevent dangling sessions, servers may also choose to cancel
 timed-out sessions on their own accord. It is recommended that servers
@@ -679,8 +894,9 @@ changes to `status`, `expires-at`, or `files` reflected.
 Servers **MAY** allow clients to extend sessions, but the overall
 lifetime and number of extensions allowed is left to the server. To
 extend a session, a client issues a `POST` request to the
-`links.session <publishing-session-links>`{.interpreted-text role="ref"}
-URL (same as above, also the `Location` header).
+`links.extend <publishing-session-links>`{.interpreted-text role="ref"}
+URL. If the server does not support session extensions, the
+`links.extend` key will not be present in the response.
 
 The request looks like:
 
@@ -689,7 +905,6 @@ The request looks like:
   "meta": {
     "api-version": "2.0"
   },
-  "action": "extend",
   "extend-for": 3600
 }
 ```
@@ -725,10 +940,10 @@ role="ref"}. Indexes which don\'t support staged previews **MUST NOT**
 include these in their responses.
 
 The `session-token` is a short token which could be used as a
-convenience for installation tool UX, if they want to support staged
-previews via a command line switch, e.g.
-`$TOOL install --staging $SESSION_TOKEN`. The `links.stage` key gives
-the full URL to the stage, which could be used in the CLI, e.g.
+convenience for installation tool UX. For example, `pip` could add a
+`--stage $SESSION_TOKEN` flag as a convenience for installing from a
+staged preview. The `links.stage` key gives the full URL to the stage,
+which can be used with installers today, e.g.
 `pip install --extra-index-url $STAGE_URL`. Both the session token and
 URL **MUST** be cryptographically unguessable, but the algorithm for
 generating the token is left to the index. The stage URL **MUST** be
@@ -757,7 +972,6 @@ To initiate a file upload, a client first sends a `POST` request to the
   "filename": "foo-1.0.tar.gz",
   "size": 1000,
   "hashes": {"sha256": "...", "blake2b": "..."},
-  "metadata": "...",
   "mechanism": "http-post-bytes"
 }
 ```
@@ -780,7 +994,7 @@ additional keys:
 
 `size` (**required**)
 
-:   The size in bytes of the file being uploaded.
+:   The final total size in bytes of the file being uploaded.
 
 `hashes` (**required**)
 
@@ -790,7 +1004,7 @@ additional keys:
 
     By default, any hash algorithm available in
     [hashlib](https://docs.python.org/3/library/hashlib.html) can be
-    used as a key for the hashes dictionary[^3]. At least one secure
+    used as a key for the hashes dictionary[^2]. At least one secure
     algorithm from `hashlib.algorithms_guaranteed` **MUST** always be
     included. This PEP specifically recommends `sha256`.
 
@@ -808,18 +1022,20 @@ additional keys:
     upcoming mechanism that is available for use on a \"pre-release\"
     basis.
 
-`metadata` (**optional**)
-
-:   If given, this is a string value containing the file\'s [core
-    metadata](https://packaging.python.org/en/latest/specifications/core-metadata/).
-
 Servers **MAY** use the data provided in this request to do some sanity
 checking prior to allowing the file to be uploaded. These checks may
 include, but are not limited to:
 
 - checking if the `filename` already exists in a published release;
-- checking if the `size` would exceed any project or file quota;
-- checking if the contents of the `metadata`, if provided, are valid.
+- checking if the `size` would exceed any project or file quota.
+
+A publishing session **MAY** be created for a `name` and `version` that
+has already been published, for example to add wheels for additional
+platforms to an existing release. However, because published artifacts
+are immutable, if the `filename` in this request matches a file that has
+already been published for this release, the server **MUST** reject the
+request with a `409 Conflict` and **MUST NOT** overwrite the published
+file.
 
 If the server determines that upload should proceed, it will return a
 `202 Accepted` response, with the response body below. The
@@ -841,10 +1057,12 @@ The successful response includes the following:
     "api-version": "2.0"
   },
   "links": {
-    "file-upload-session": "..."
+    "file-upload-session": "...",
+    "complete": "...",
+    "extend": "..."
   },
   "status": "pending",
-  "expires-at": "2025-08-01T13:00:00Z",
+  "expires-at": "2030-08-01T13:00:00Z",
   "mechanism": {
     "identifier": "http-post-bytes",
     "file_url": "...",
@@ -869,8 +1087,9 @@ the success response has the following keys:
 `status`
 
 :   A string with valid values `pending`, `processing`, `complete`,
-    `error`, and `canceled` indicating the current state of the file
-    upload session.
+    `error`, and `canceled` indicating the current
+    `state of the file upload session <file-upload-session-states>`{.interpreted-text
+    role="ref"}.
 
 `expires-at`
 
@@ -897,32 +1116,164 @@ valid:
 
 `file-upload-session`
 
-:   The endpoint where actions for this file-upload-session can be
-    performed. including `completing a
-    file upload session <file-upload-session-completion>`{.interpreted-text
-    role="ref"}, `canceling and discarding the file upload
-    session <file-upload-session-cancellation>`{.interpreted-text
-    role="ref"}, `querying the current file upload session status
-    <file-upload-session-status>`{.interpreted-text role="ref"}, and
+:   The endpoint where the file upload session resource can be accessed
+    for `querying the
+    current file upload session status <file-upload-session-status>`{.interpreted-text
+    role="ref"} (via `GET`) and
+    `canceling and discarding the file upload session <file-upload-session-cancellation>`{.interpreted-text
+    role="ref"} (via `DELETE`).
+
+`complete`
+
+:   The endpoint for
+    `completing a file upload session <file-upload-session-completion>`{.interpreted-text
+    role="ref"} (via `POST`).
+
+`extend`
+
+:   The endpoint for
     `requesting an extension of the file upload session lifetime
-    <file-upload-session-extension>`{.interpreted-text role="ref"} (*if*
-    the server supports it).
+    <file-upload-session-extension>`{.interpreted-text role="ref"} (via
+    `POST`). If the server does not support file upload session
+    extensions, this key **MUST** be omitted.
+
+### File Upload Session States
+
+A file upload session is always in exactly one of the following states,
+reported by the `status` key of the
+`file upload session status response <file-upload-session-response>`{.interpreted-text
+role="ref"}. The same value is reflected for the file in the `files`
+mapping of the `publishing session status
+<publishing-session-files>`{.interpreted-text role="ref"}.
+
+![State diagram for a file upload session.  From the initial state the session enters \`\`pending\`\`,
+during which the negotiated upload mechanism executes.  From \`\`pending\`\` completing the upload either
+succeeds immediately (\`\`201\`\`) to \`\`complete\`\`, is accepted for deferred processing (\`\`202\`\`) into
+\`\`processing\`\`, or fails synchronously (\`\`4xx\`\`/\`\`5xx\`\`) to \`\`error\`\`; \`\`pending\`\` can also be
+canceled (\`\`DELETE\`\`) to the terminal \`\`canceled\`\` state.  \`\`processing\`\` resolves to \`\`complete\`\` on
+success or to \`\`error\`\` on failure.  Both \`\`complete\`\` and \`\`error\`\` can be deleted (\`\`DELETE\`\`) to
+\`\`canceled\`\`.  Canceling during \`\`processing\`\` is rejected with \`\`409\`\`.](pep-0694/file-upload-session-states.drawio.svg){.invert-in-dark-mode
+.invert-in-dark-modealign-center}
+
+The textual description of each state and a complete transition table
+follow.
+
+`pending`
+
+:   The file upload session has been created and the negotiated
+    `upload mechanism
+    <file-upload-mechanisms>`{.interpreted-text role="ref"} is being
+    executed; the file\'s bytes are in transit or not yet fully
+    transferred. A newly created session starts in this state and
+    remains in it until the client `completes
+    <file-upload-session-completion>`{.interpreted-text role="ref"} or
+    `cancels <file-upload-session-cancellation>`{.interpreted-text
+    role="ref"} the upload. A file whose upload is still `pending`
+    cannot be `replaced <replacing-files>`{.interpreted-text
+    role="ref"}.
+
+`processing`
+
+:   The client has requested completion and the server accepted the
+    request for deferred processing, returning a `202 Accepted` (see
+    `file-upload-session-completion`{.interpreted-text role="ref"}).
+    This is a transitional state; the client polls the
+    `file upload session status <file-upload-session-status>`{.interpreted-text
+    role="ref"}, respecting the `Retry-After` header, until it resolves
+    to `complete` or `error`.
+
+`complete`
+
+:   The file has been fully uploaded, validated, and accepted into the
+    publishing session. The file can still be
+    `deleted <file-upload-session-cancellation>`{.interpreted-text
+    role="ref"}, which removes it from the publishing session and moves
+    this session to `canceled`.
+
+`error`
+
+:   The upload failed and the file is **not** in a usable state. Unlike
+    a `publishing session in the
+    error state <publishing-session-states>`{.interpreted-text
+    role="ref"}, a file upload session cannot be repaired in place: the
+    client **MUST**
+    `cancel or delete <file-upload-session-cancellation>`{.interpreted-text
+    role="ref"} the file and, if it still wants to upload it, begin an
+    entirely new file upload session. A file upload session enters
+    `error` whenever a completion attempt fails \-- whether the server
+    detects the failure synchronously within the `complete` request, or
+    asynchronously while the session is `processing`.
+
+`canceled` (**terminal**)
+
+:   The session was canceled (an in-progress upload) or its completed
+    file was deleted. The session resource and its associated upload
+    mechanisms **MUST NOT** be assumed reusable; recovering or replacing
+    the file requires a new file upload session.
+
+Only `canceled` is terminal. Both `complete` and `error` still permit a
+`DELETE` (which moves the session to `canceled`); from `error`, deletion
+is the only forward action.
+
+The transitions between these states are:
+
+  ---------------------------------------------------------------------------------------------------------
+  From           Event                               To
+  -------------- ----------------------------------- ------------------------------------------------------
+  *(none)*       File upload session created         `pending`
+                 (`202 Accepted`)                    
+
+  `pending`      Upload mechanism executes (bytes    `pending`
+                 transferred)                        
+
+  `pending`      Completion request completed        `complete`
+                 immediately (`201 Created`)         
+
+  `pending`      Completion request accepted for     `processing`
+                 deferred processing                 
+                 (`202 Accepted`)                    
+
+  `pending`      Completion request fails            `error`
+                 synchronously                       
+
+  `pending`      Cancellation requested (`DELETE`)   `canceled`
+
+  `processing`   Deferred processing succeeds        `complete`
+
+  `processing`   Deferred processing fails           `error`
+
+  `processing`   Cancellation requested              rejected with `409 Conflict` (see
+                                                     `file-upload-session-cancellation`{.interpreted-text
+                                                     role="ref"})
+
+  `complete`     File deleted (`DELETE`)             `canceled`
+
+  `error`        File deleted (`DELETE`)             `canceled`
+  ---------------------------------------------------------------------------------------------------------
+
+Unlike a publishing session, where a synchronous publish failure leaves
+the session editable and only a *deferred* failure reaches the `error`
+state, a file upload session treats *any* completion failure as
+unrecoverable for that file, because a partially or incorrectly uploaded
+file cannot be edited in place. Both a synchronous and a deferred
+completion failure therefore move the session to `error`, from which the
+client deletes the file and starts over.
 
 ### Complete a File Upload Session {#file-upload-session-completion}
 
 To complete a file upload session, which indicates that the file upload
 mechanism has been executed and did not produce an error, a client
-issues a `POST` to the `file-upload-session` link in the file upload
-session creation response body.
+issues a `POST` to the `complete` `link
+<file-upload-session-links>`{.interpreted-text role="ref"} in the file
+upload session creation response body.
 
-The requests looks like:
+The request looks like:
 
 ``` json
 {
   "meta": {
     "api-version": "2.0"
-  },
-  "action": "complete",
+  }
 }
 ```
 
@@ -944,6 +1295,15 @@ URL to watch for the status to change. If the server responds with a
 watch for the status to change. Clients **SHOULD** respect the
 `Retry-After` header value of the file upload session status response.
 
+If a completion attempt fails \-- synchronously (in which case the
+server also returns an `error response
+<session-errors>`{.interpreted-text role="ref"}) or asynchronously while
+the session is `processing` \-- the session moves to the
+`error state <file-upload-session-states>`{.interpreted-text
+role="ref"}, from which the client must `cancel or delete
+<file-upload-session-cancellation>`{.interpreted-text role="ref"} the
+file and start a new file upload session to retry.
+
 ### Cancellation and Deletion {#file-upload-session-cancellation}
 
 A client can cancel an in-progress file upload session, or delete a file
@@ -955,15 +1315,24 @@ role="ref"} of the file they want to delete.
 
 A successful deletion request **MUST** respond with a `204 No Content`.
 
+A `DELETE` is permitted while the session is `pending` (canceling an
+in-progress upload), `complete` (deleting an uploaded file), or `error`
+(discarding a failed upload). If the session is in the `processing`
+state \-- that is, a deferred completion is already underway \-- the
+server **MUST** reject the `DELETE` with a `409 Conflict`, since the
+outcome is already being decided. The client can instead wait for
+processing to resolve and then delete the file if needed.
+
 Once canceled or deleted, a client **MUST NOT** assume that the previous
 file upload session resource or associated file upload mechanisms can be
 reused.
 
-### Replacing a Partially or Fully Uploaded File
+### Replacing a Partially or Fully Uploaded File {#replacing-files}
 
 To replace a session file, the file upload **MUST** have been previously
-completed, canceled, or deleted. It is not possible to replace a file if
-the upload for that file is in-progress.
+completed, canceled, or deleted. A file whose upload is still
+in-progress cannot be replaced; if a client attempts to do so, the
+server **MUST** return a `409 Conflict`.
 
 To replace a session file, clients should
 `cancel and delete the in-progress upload
@@ -989,9 +1358,11 @@ session creation response, except with any changes `status` and
 Servers **MAY** allow clients to extend file upload sessions, but the
 overall lifetime and number of extensions allowed is left to the server.
 To extend a file upload session, a client issues a `POST` request to the
-`links.file-upload-session` URL from the
-`file upload session creation response
-<file-upload-session-response>`{.interpreted-text role="ref"}.
+`extend` `link <file-upload-session-links>`{.interpreted-text
+role="ref"} from the `file upload session creation response
+<file-upload-session-response>`{.interpreted-text role="ref"}. If the
+server does not support file upload session extensions, the
+`links.extend` key will not be present in the response.
 
 The request looks like:
 
@@ -1000,7 +1371,6 @@ The request looks like:
   "meta": {
     "api-version": "2.0"
   },
-  "action": "extend",
   "extend-for": 3600
 }
 ```
@@ -1019,7 +1389,7 @@ seconds, it **MUST** still return a success response, and the
 `expires-at` key will simply reflect the current expiration time of the
 session.
 
-## Stage Previews {#staged-preview}
+## Staged Previews {#staged-preview}
 
 The ability to preview staged releases before they are published is an
 important feature of this PEP, enabling an additional level of last-mile
@@ -1068,9 +1438,8 @@ of the Upload 2.0 protocol endpoints.
 
 A client executes this mechanism by submitting a `POST` request to the
 `file_url` returned in the `http-post-bytes` map of the `mechanism` map
-of the
-`file upload session creation response body <file-upload-session-response>`{.interpreted-text
-role="ref"} like:
+of the `file upload session creation response body
+<file-upload-session-response>`{.interpreted-text role="ref"} like:
 
 ``` text
 Content-Type: application/octet-stream
@@ -1084,9 +1453,8 @@ inclusion of an `attestations_url` key in the `http-post-bytes` map of
 the `mechanism` map of the
 `file upload session creation response body <file-upload-session-response>`{.interpreted-text
 role="ref"}. Attestations **MUST** be uploaded to the `attestations_url`
-before
-`file upload session completion <file-upload-session-completion>`{.interpreted-text
-role="ref"}.
+before `file upload session completion
+<file-upload-session-completion>`{.interpreted-text role="ref"}.
 
 To upload an attestation, a client submits a `POST` request to the
 `attestations_url` containing a JSON array of
@@ -1142,12 +1510,338 @@ If a server intends to precisely match the behavior of another server\'s
 implementation, it **MAY** respond with that implementation\'s file
 upload mechanism name.
 
+# Recommendations for Client Implementers {#client-recommendations}
+
+This section is non-normative and provides guidance for client tool
+authors implementing the Upload 2.0 protocol. These recommendations are
+suggestions based on the expected usage patterns of the protocol; client
+authors are free to implement alternative approaches that best suit
+their users\' needs.
+
+## General Workflow
+
+A typical upload workflow using the Upload 2.0 protocol follows these
+steps:
+
+1.  Create a
+    `publishing session <publishing-session-create>`{.interpreted-text
+    role="ref"} for the project name and version.
+2.  For each artifact (sdist, wheels),
+    `create a file upload session <file-upload-session>`{.interpreted-text
+    role="ref"}, execute the negotiated upload mechanism, and
+    `complete the file upload session
+    <file-upload-session-completion>`{.interpreted-text role="ref"}.
+3.  Optionally, if the index supports
+    `stage previews <staged-preview>`{.interpreted-text role="ref"}, use
+    the `links.stage` URL to test the release before publishing.
+4.  `Publish the session <publishing-session-completion>`{.interpreted-text
+    role="ref"} to make the release public, or
+    `cancel it <publishing-session-cancellation>`{.interpreted-text
+    role="ref"} if issues are discovered.
+
+Clients **SHOULD** handle failures gracefully at each step. If an error
+occurs during file upload, the client should
+`cancel the file upload session <file-upload-session-cancellation>`{.interpreted-text
+role="ref"}. If an unrecoverable error occurs at any point, the client
+should `cancel the publishing session
+<publishing-session-cancellation>`{.interpreted-text role="ref"} to
+clean up server-side resources.
+
+### Parallel Uploads
+
+Clients **MAY** upload multiple files in parallel by creating and
+executing multiple file upload sessions concurrently within the same
+publishing session. This can significantly improve upload times for
+releases with many wheel variants. However, clients should be prepared
+for servers that do not support parallel uploads and may return
+`409 Conflict` if parallel uploads are attempted.
+
+### Multiple Sessions
+
+Clients can decide whether they should create and manage a single
+session, multiple sessions in series, or multiple sessions in parallel,
+depending on the mix of artifacts being uploaded. Since publishing
+sessions are linked to a specific name-version identifier, if a single
+client command intends to upload several different name-version
+artifacts, each one must be in a separate publishing session.
+
+For example, `twine upload foo-1.1.tar.gz foo-2.0.tar.gz bar-2.0.tar.gz`
+would require three separate publishing sessions, however, if each sdist
+were also accompanied by wheels matching its name and version, three
+publishing sessions would still suffice. Clients should be able to
+manage all of this under-the-hood.
+
+### Session Management
+
+Clients should monitor the `expires-at` timestamp in session responses.
+For long-running uploads (e.g., large files on slow connections),
+clients may need to `request session extensions
+<publishing-session-extension>`{.interpreted-text role="ref"} if the
+`links.extend` endpoint is available. If the server does not support
+extensions (indicated by the absence of `links.extend`), clients should
+warn users when uploads may exceed the session lifetime.
+
+## Suggested Command-Line Interfaces
+
+The following examples illustrate how existing tools might expose the
+Upload 2.0 protocol to users. These are suggestions only; actual
+implementations may vary.
+
+### twine
+
+[twine](https://twine.readthedocs.io/) currently provides a simple
+`twine upload dist/*` command. The Upload 2.0 protocol could be exposed
+through additional options:
+
+`twine upload dist/*`
+
+:   Maintains backward compatibility. Uses the Upload 2.0 protocol if
+    available, falling back to the legacy protocol if not. Creates a
+    session, uploads all files, and publishes immediately.
+
+`twine upload --stage dist/*`
+
+:   Uses the Upload 2.0 protocol to create a session and upload files,
+    but does not publish. This is useful even when the index does not
+    support stage preview URLs, as it still provides the atomic release
+    semantics of Upload 2.0. If the index supports stage previews,
+    prints the `links.stage` URL for testing. Prints a session
+    identifier that can be used with subsequent commands. This session
+    identifier is local to the client and is mapped internally to the
+    in-progress server session.
+
+`twine session publish <session-id>`
+
+:   Publishes a previously staged session.
+
+`twine session cancel <session-id>`
+
+:   Cancels a staged session and discards all uploaded files.
+
+`twine session status <session-id>`
+
+:   Queries and displays the current status of a session.
+
+### uv
+
+[uv](https://docs.astral.sh/uv/) could provide similar functionality
+with additional integration:
+
+`uv publish dist/*`
+
+:   Creates a session, uploads all files, and publishes. May leverage
+    parallel uploads for faster publishing of multiple wheels.
+
+`uv publish --stage dist/*`
+
+:   Uploads without publishing. Like twine, this is valuable even
+    without stage preview support. Prints a session identifier that can
+    be used with the `uv session` subcommands.
+
+`uv publish --test-install dist/*`
+
+:   If the index supports stage previews, uploads files, installs the
+    package from the stage URL into a temporary virtual environment,
+    optionally runs a smoke test command, and only publishes if
+    successful. This provides an integrated \"upload, test, publish\"
+    workflow.
+
+`uv session publish <session-id>`
+
+:   Publishes a previously staged session.
+
+`uv session cancel <session-id>`
+
+:   Cancels a staged session and discards all uploaded files.
+
+`uv session status <session-id>`
+
+:   Queries and displays the current status of a session.
+
+### GitHub Actions
+
+The
+[pypa/gh-action-pypi-publish](https://github.com/pypa/gh-action-pypi-publish)
+action could leverage staged releases to enable powerful CI/CD
+workflows. A multi-job workflow might look like:
+
+``` yaml
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    outputs:
+      stage-url: ${{ steps.upload.outputs.stage-url }}
+      session-id: ${{ steps.upload.outputs.session-id }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - id: upload
+        uses: pypa/gh-action-pypi-publish@v2
+        with:
+          stage: true  # Upload but don't publish
+
+  test:
+    needs: upload
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v5
+      - name: Test staged release
+        run: |
+          pip install --extra-index-url "${{ needs.upload.outputs.stage-url }}" my-package
+          python -c "import my_package; my_package.smoke_test()"
+
+  publish:
+    needs: [upload, test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: pypa/gh-action-pypi-publish@v2
+        with:
+          publish-session: ${{ needs.upload.outputs.session-id }}
+```
+
+This pattern allows the actual PyPI artifacts to be tested in a
+realistic installation scenario before being published. If the test job
+fails, the workflow can include a cleanup job to cancel the session:
+
+``` yaml
+cancel-on-failure:
+  needs: [upload, test]
+  if: failure()
+  runs-on: ubuntu-latest
+  steps:
+    - uses: pypa/gh-action-pypi-publish@v2
+      with:
+        cancel-session: ${{ needs.upload.outputs.session-id }}
+```
+
+Even when the index does not support stage preview URLs, the staged
+upload pattern is still valuable as it ensures atomic releases: either
+all artifacts are published together, or none are.
+
+## Error Handling
+
+Clients should implement robust error handling for the multi-step upload
+process:
+
+**File upload failures**: If a file upload fails (network error,
+validation error, etc.), the client should
+`cancel that file upload session <file-upload-session-cancellation>`{.interpreted-text
+role="ref"} before retrying. The client may then create a new file
+upload session for the same filename.
+
+**Partial upload recovery**: If some files have been successfully
+uploaded but others fail, the client has options:
+
+- Cancel the entire publishing session and start over.
+- Cancel only the failed file upload sessions and retry those files.
+- If using `--stage` mode, leave the session open for manual
+  intervention.
+
+**Session expiration**: If a session expires during upload, the client
+must create a new publishing session and re-upload all files. Clients
+should monitor `expires-at` and warn users proactively.
+
+**Publishing failures**: If the publish request fails, the session
+remains in its current state. The client can query the session status to
+determine the cause and retry the publish operation.
+
+**Graceful cancellation**: When a user interrupts an upload (e.g.,
+Ctrl+C), clients should attempt to cancel the publishing session to
+avoid leaving orphaned sessions on the server.
+
+## Legacy API Fallback
+
+During the transition period, clients **SHOULD** support both the Upload
+2.0 and legacy protocols. A suggested approach:
+
+1.  Attempt to use Upload 2.0 by checking for the 2.0 endpoint or using
+    content negotiation.
+2.  If the server does not support Upload 2.0 (e.g., returns `404` or
+    `406`), fall back to the legacy protocol.
+3.  Provide a command-line option to force a specific protocol version
+    if needed for debugging or compatibility.
+
+# Security Implications
+
+## Name squatting potential
+
+Does PEP 694 make it easier to (maliciously) register project names,
+i.e. to name- or typo-squat? The authors do not believe so. With the
+legacy API, it\'s trivially easy to create and upload a dummy package to
+register a project name. This PEP does not effectively change that
+equation either way, nor does it aim to. That said, indexes such as PyPI
+could impose additional limitations on project registration activities,
+such as rate limiting either the legacy API or Upload 2.0 API for empty
+packages or sessions. An index such as PyPI which supports organizations
+or `752`{.interpreted-text role="pep"}-style implicit namespaces, could
+implement different rate limiting rules for different actors. Such
+implementations are left as index-specific policy decisions.
+
+## Session authorization
+
+Session access is authorized contemporaneously rather than being bound
+to the credentials that created the session (see
+`authentication`{.interpreted-text role="ref"}). Indexes **MUST**
+re-validate authorization on each session request \-- including artifact
+uploads, file upload session completion, session extension requests, and
+publishing \-- so that a principal that loses upload permission while a
+session is open is denied on its subsequent requests, and a principal
+that gains permission may join an open session.
+
+This model has two consequences worth calling out. First, because every
+mutating operation is authorized uniformly, any principal currently
+authorized to upload to the project may add to, cancel, or publish
+another principal\'s open session. The blast radius is limited to the
+unpublished staging session, since published artifacts are immutable and
+publishing is atomic. Second, the
+`stage preview URL <staged-preview>`{.interpreted-text role="ref"} is a
+capability that is *not* gated by upload permission, so a principal
+whose permission is revoked mid-session \-- but who has already obtained
+the stage URL \-- retains read-only preview access to the staged files
+until the session is published or canceled. This is a narrow and
+accepted limitation; an index that considers it a concern can mitigate
+it by canceling the affected session, or by limiting session lifetimes
+and extensions.
+
+## Malware hosting potential
+
+Staged releases, while useful for testing and embargoes, do provide some
+potential for larger scale hosting of malware which isn\'t detectable by
+third party external scanning tools, because staged artifacts are only
+visible to clients which hold the stage token/url. It\'s not clear how
+much proactive malware scanning is actually going on today with indexes
+such as PyPI, so it\'s unclear whether the (optional) staging feature is
+much of an additional malware vector. Indexes should likely do some
+amount of proactive malware scanning on all artifacts, regardless of the
+protocol used to upload them. Because of the multi-step protocol
+proposed in this PEP, indexes could share session links or uploaded
+staged files to trusted third party security partners who could assist
+in scanning.
+
+Indexes can also mitigate the problem by putting limits on session
+extensions, which might differ between projects depending on the user or
+(in the case of PyPI) organization which owns the project. Indexes can
+refuse to extend sessions, and they can use this to limit the
+availability of packages with unverified contents.
+
+Considering the testing and embargoed use cases may lead to different
+session expiry choices. Testing a release can have a relatively short
+session lifespan, e.g. on the order of hours. Embargoed sessions may
+need to be extended for several days or a few weeks. An index such as
+PyPI could use any number of criteria to determine the total lifetime of
+any particular session, such as whether the credentials are a user or an
+organization. An index could even support
+`index-specific-metadata`{.interpreted-text role="ref"} to decide
+whether the testing or embargoed use case is being employed.
+
 # FAQ
 
-## Does this mean PyPI is planning to drop support for the existing upload API?
+## Does this mean PyPI is planning to drop support for the legacy upload API?
 
 At this time PyPI does not have any specific plans to drop support for
-the existing upload API.
+the legacy upload API.
 
 Unlike with `691`{.interpreted-text role="pep"} there are significant
 benefits to doing so, so it is likely that support for the legacy upload
@@ -1176,6 +1870,67 @@ new project, however the index could define
 role="ref"} to, for example, allow an organization of which the
 publisher is a member, to own the new project.
 
+## Why is the project name required when creating a publishing session?
+
+The project name is required at session creation because index
+permissions are fundamentally tied to project ownership. Users have
+roles and permissions on specific projects, and these permissions must
+be verified before any uploads can proceed.
+
+Requiring the project name upfront provides several benefits:
+
+**Immediate permission validation**: The server can verify that the
+authenticated user has upload permission for the project at session
+creation time, failing fast with a clear error rather than discovering
+permission issues after files have been uploaded.
+
+**Simplified error handling**: If a session could span multiple
+projects, a permission failure on one project mid-upload would leave the
+session in a complex partial state. With a single project per session,
+permission errors are unambiguous.
+
+**Trusted Publisher compatibility**: Indexes like PyPI support [Trusted
+Publishers](https://docs.pypi.org/trusted-publishers/) where OIDC tokens
+are scoped to specific projects. A single-project session aligns
+naturally with this authentication model.
+
+**Quota enforcement**: Projects may have different upload quotas or size
+limits. Validating these constraints upfront is simpler when the project
+is known at session creation.
+
+**Atomic release semantics**: A publishing session represents an atomic
+release of a single project version. Allowing multiple projects would
+fundamentally change this model and complicate the definition of what
+\"publish\" means for a session.
+
+## Why is the version required when creating a publishing session?
+
+The version is required at session creation to establish a validation
+contract before any file uploads begin. Since artifact filenames encode
+the version (per the
+[sdist](https://packaging.python.org/en/latest/specifications/source-distribution-format/#source-distribution-file-name)
+and
+[wheel](https://packaging.python.org/en/latest/specifications/binary-distribution-format/#file-name-convention)
+filename specifications), the server can validate that all uploaded
+files match the declared version.
+
+This design enables deterministic behavior with
+`parallel uploads <client-recommendations>`{.interpreted-text
+role="ref"}. If the version were optional and inferred from the first
+uploaded file, a race condition would occur when multiple files are
+uploaded in parallel: whichever upload the server processes first would
+\"win\" and establish the version, causing other uploads with mismatched
+versions to fail non-deterministically.
+
+By requiring the version upfront, all parallel uploads validate against
+the same declared version. A file with a mismatched version always
+fails, regardless of upload timing or order.
+
+For `name registration <publishing-session-create>`{.interpreted-text
+role="ref"} where no artifacts are uploaded, the version can be any
+valid placeholder (e.g., `"0.0.0a0"`) since it is ignored when no files
+are included in the session.
+
 # Open Questions
 
 ## Extensions to the Upload 2.0 Protocol
@@ -1197,6 +1952,64 @@ as experience is gained operating Upload 2.0.
 
 # Change History
 
+- [26-Jun-2026](https://discuss.python.org/t/pep-694-pypi-upload-api-2-0-round-3/107923)
+  - Session actions now use dedicated endpoint links instead of an
+    `action` key in request bodies. Publishing sessions add
+    `links.publish` and `links.extend`; file upload sessions add
+    `links.complete` and `links.extend`. The `links.session` and
+    `links.file-upload-session` endpoints are now used only for `GET`
+    (status) and `DELETE` (cancel) operations.
+  - Add non-normative
+    `Recommendations for Client Implementers <client-recommendations>`{.interpreted-text
+    role="ref"} section with suggested UX patterns for tools like twine,
+    uv, and GitHub Actions.
+  - Add FAQ entries explaining why project name and version are required
+    at session creation.
+  - Add a `security-implications`{.interpreted-text role="ref"} section.
+  - Specify that attempting to replace an in-progress file upload
+    returns a `409 Conflict`.
+  - Specify that uploading a file matching one already published for an
+    existing release returns a `409 Conflict`, since published artifacts
+    are immutable.
+  - Clarify the wording of the **Multiple Sessions** client
+    recommendation example.
+  - Relax session access from the exact creating credentials to any
+    principal authorized to upload to the project, evaluated
+    contemporaneously on each request. Adds an **Authentication and
+    Authorization** model, handles permission changes mid-session,
+    supports rotating Trusted Publishing tokens and multiple publishers
+    contributing to one session, and notes the related security
+    implications.
+  - Remove the optional `metadata` key from the file upload session
+    creation request. The uploaded file is the authoritative source of
+    metadata, which the index extracts from the file itself.
+  - Define an explicit publishing-session state machine. Rename the
+    session-level `pending` status to `open`, add a transitional
+    `processing` status for deferred (`202 Accepted`) publishing, and
+    document the `error` status as a still-editable state that records a
+    failed deferred publish (with the reason reported in `notices`). Add
+    a **Publishing Session States** section with state descriptions and
+    a transition table, specify that a synchronous publish failure
+    leaves the session editable rather than entering `error`, and
+    require the server to reject cancellation with a `409 Conflict`
+    while a session is `processing`. Key the **Multiple Session Creation
+    Requests** rule off any non-terminal state rather than `pending`.
+  - Document the file upload session state machine with a **File Upload
+    Session States** section and transition table. Specify that any
+    completion failure \-- synchronous or deferred \-- moves the session
+    to `error`, that an `error` file cannot be repaired in place (the
+    client cancels or deletes it and starts a new file upload session),
+    and that the server **MUST** reject a `DELETE` with a `409 Conflict`
+    while a session is `processing`.
+  - Add state transition diagrams to the **Publishing Session States**
+    and **File Upload Session States** sections, alongside the existing
+    transition tables.
+  - Make the suggested `twine` and `uv` command-line interfaces
+    consistent: group the staged-session operations under a `session`
+    subcommand (`session publish`/`session cancel`/`session status`),
+    give `uv` the same staged-session follow-ups and session-id output
+    as `twine`, and align the GitHub Action\'s `stage` input with the
+    `--stage` flag.
 - [07-Dec-2025](https://discuss.python.org/t/pep-694-pypi-upload-api-2-0-round-2/101483/35)
   - Error responses conform to the `9457`{.interpreted-text role="rfc"}
     format.
@@ -1249,10 +2062,6 @@ CC0-1.0-Universal license, whichever is more permissive.
 [^1]: Obsolete `:action` values `submit`, `submit_pkg_info`, and
     `doc_upload` are no longer supported
 
-[^2]: This would be fine if used as a pre-check, but the parallel
-    metadata should be validated against the actual `METADATA` or
-    similar files within the distribution.
-
-[^3]: Specifically any hash algorithm name that [can be passed
+[^2]: Specifically any hash algorithm name that [can be passed
     to](https://docs.python.org/3/library/hashlib.html#hashlib.new)
     `hashlib.new()` and which does not require additional parameters.
