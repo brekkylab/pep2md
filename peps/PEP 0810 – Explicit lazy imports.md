@@ -10,18 +10,22 @@ author:
 - Noah Kim <noahbkim@gmail.com>
 - Tim Stumbaugh <me@tjstum.com>
 discussions_to: https://discuss.python.org/t/104131
-status: Accepted
+status: Final
 type: Standards Track
 created: 02-Oct-2025
 python_version: '3.15'
 post_history:
 - '`03-Oct-2025 <https://discuss.python.org/t/104131>`__'
 resolution: '`03-Nov-2025 <https://discuss.python.org/t/pep-810-explicit-lazy-imports/104131/466>`__'
-python_status: Accepted
+python_status: Final
 url: https://peps.python.org/pep-0810/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0810.rst
-source_commit: ebafbc2db0a7d7849e761661a19f7a43b1f2897f
+source_commit: d9e73eea2c1346113bccff710eb76afc6c0aa1cf
 ---
+
+::: canonical-doc
+`lazy-imports`{.interpreted-text role="external+py3.15:ref"}
+:::
 
 # Abstract
 

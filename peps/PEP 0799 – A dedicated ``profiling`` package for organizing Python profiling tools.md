@@ -5,18 +5,22 @@ author:
 - Pablo Galindo Salgado <pablogsal@python.org>
 - László Kiss Kollár <kiss.kollar.laszlo@gmail.com>
 discussions_to: https://discuss.python.org/t/pep-799-a-dedicated-profilers-package-for-organizing-python-profiling-tool/100898
-status: Accepted
+status: Final
 type: Standards Track
 created: 21-Jul-2025
 python_version: '3.15'
 post_history:
 - '`01-Aug-2025 <https://discuss.python.org/t/pep-799-a-dedicated-profilers-package-for-organizing-python-profiling-tool/100898>`__'
 resolution: '`21-Aug-2025 <https://discuss.python.org/t/pep-799-a-dedicated-profilers-package-for-organizing-python-profiling-tool/100898/21>`__'
-python_status: Accepted
+python_status: Final
 url: https://peps.python.org/pep-0799/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0799.rst
-source_commit: b941420f147b8ae7f561454b625d736b1b64332a
+source_commit: 0ba1d48da05ee652fe6bb72ea4eea1cc34aa59a3
 ---
+
+::: canonical-doc
+`profiling`{.interpreted-text role="external+py3.15:mod"}
+:::
 
 # Abstract
 
