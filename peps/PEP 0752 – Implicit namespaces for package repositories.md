@@ -17,7 +17,7 @@ post_history:
 python_status: Draft
 url: https://peps.python.org/pep-0752/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0752.rst
-source_commit: 2f33c5438f046fa8d33eeb9ac9e06594e57518c9
+source_commit: faacdcc76da9f35ef37a470b7ce08dc48d38485c
 ---
 
 # Abstract
@@ -31,14 +31,11 @@ prefixes for future uploads.
 # Motivation
 
 The current ecosystem lacks a way for projects with many packages to
-signal a verified pattern of ownership. Such projects fall into two
-categories.
-
-The first category is projects[^1] that want complete control over their
-namespace. A few examples:
+signal a verified pattern of ownership, who desire complete control over
+their namespace for safety and branding reasons. A few examples:
 
 - Major cloud providers like Amazon, Google and Microsoft have a common
-  prefix for each feature\'s corresponding package[^2]. For example,
+  prefix for each feature\'s corresponding package[^1]. For example,
   most of Google\'s packages are prefixed by `google-cloud-` e.g.
   `google-cloud-compute` for [using virtual
   machines](https://cloud.google.com/products/compute).
@@ -56,24 +53,13 @@ namespace. A few examples:
   programmatically author, schedule and monitor workflows. It has
   providers, where each provider package is prefixed by
   `apache-airflow-providers-`.
-
-The second category is projects[^3] that want to share their namespace
-such that some packages are officially maintained and third-party
-developers are encouraged to participate by publishing their own. Some
-examples:
-
-- [Project Jupyter](https://jupyter.org) is devoted to the development
-  of tooling for sharing interactive documents. They support
-  [extensions](https://jupyterlab.readthedocs.io/en/stable/user/extensions.html)
-  which in most cases (and in all cases for officially maintained
-  extensions) are prefixed by `jupyter-`.
-- [Django](https://www.djangoproject.com) is one of the most widely used
-  web frameworks in existence. They have the concept of [reusable
-  apps](https://docs.djangoproject.com/en/5.1/intro/reusable-apps/),
-  which are commonly installed via [third-party
-  packages](https://djangopackages.org) that implement a subset of
-  functionality to extend Django-based websites. These packages are by
-  convention prefixed by `django-` or `dj-`.
+- [Typeshed](https://github.com/python/typeshed) is a community effort
+  to maintain type stubs for various packages. The stub packages they
+  maintain mirror the package name they target and are prefixed by
+  `types-`. For example, the package `requests` has a stub that users
+  would depend on called `types-requests`. Unofficial stubs are not
+  supposed to use the `types-` prefix and are expected to use a `-stubs`
+  suffix instead.
 
 Such projects are uniquely vulnerable to name-squatting attacks which
 can ultimately result in [dependency
@@ -86,38 +72,31 @@ official integration. It takes a nontrivial amount of time to deliver
 such an integration due to roadmap prioritization and the time required
 for implementation. It would be impossible to reserve the name of every
 potential package so in the interim an attacker may create a package
-that appears legitimate which would execute malicious code at runtime.
-Not only are users more likely to install such packages but doing so
-taints the perception of the entire project.
+that appears legitimate which would execute malicious code (like secret
+exfiltration) at runtime. Not only are users more likely to install such
+packages but doing so taints the perception of the entire project.
+Community projects like Apache Airflow have also [experienced
+this](https://discuss.python.org/t/63192/80).
 
 Although `708`{.interpreted-text role="pep"} attempts to address this
 attack vector, it is specifically about the case of multiple
 repositories being considered during dependency resolution and does not
 offer any protection to the aforementioned use cases.
 
-Namespacing also would drastically reduce the incidence of
-[typosquatting](https://en.wikipedia.org/wiki/Typosquatting) because
-typos would have to be in the prefix itself which is
-[normalized](#naming) and likely to be a short, well-known identifier
-like `aws-`. In recent years, typosquatting has become a popular attack
-vector [^4].
-
-The [current
+In recent years,
+[typosquatting](https://en.wikipedia.org/wiki/Typosquatting) has become
+a popular attack vector[^2]. The [current
 protection](https://github.com/pypi/warehouse/blob/8615326918a180eb2652753743eac8e74f96a90b/warehouse/migrations/versions/d18d443f89f0_ultranormalize_name_function.py#L29-L42)
-against typosquatting used by PyPI is to normalize similar characters
-but that is insufficient for these use cases.
+against this used by PyPI is to normalize similar characters but that is
+insufficient for these use cases. Namespacing would drastically reduce
+the incidence of typosquatting:
 
-Another problem that namespacing would solve is the issue of choosing
-new names for packages following the agreed patterns of naming. Often
-(this is the case for Apache Airflow for example), there are public
-discussions that precede the decision to create a new package. The
-decision is based on the agreed name and follow the pattern of the
-existing packages. If more package names are considered during the
-discussion, all the names have to be reserved via a PyPI interface
-before the discussion is public, otherwise the names can be taken by
-other users. This has happened in the past as explained in the
-associated
-[discussion](https://discuss.python.org/t/pep-752-implicit-namespaces-for-package-repositories/63192/80).
+- Typos would have to be in the prefix itself which is
+  [normalized](#naming) and likely to be a short, well-known identifier
+  like `aws-`.
+- An index may require namespaces to be applied for and approved,
+  reducing the likelihood of typosquatting of such events.
+- An attacker would be unable to squat a name that includes a namespace.
 
 # Rationale
 
@@ -173,24 +152,14 @@ NOT\", \"SHOULD\", \"SHOULD NOT\", \"RECOMMENDED\", \"MAY\", and
 \"OPTIONAL\" in this document are to be interpreted as described in
 `2119`{.interpreted-text role="rfc"}.
 
-Organization
+Owner
 
-:   [Organizations](#orgs) are entities that own projects and have
-    various users associated with them.
+:   Owners are entities that are allowed to upload certain package
+    names.
 
 Grant
 
 :   A grant is a reservation of a namespace for a package repository.
-
-Open Namespace
-
-:   An [open](#open-namespaces) namespace allows for uploads from any
-    project owner.
-
-Restricted Namespace
-
-:   A restricted namespace only allows uploads from an owner of the
-    namespace.
 
 Parent Namespace
 
@@ -199,22 +168,10 @@ Parent Namespace
 
 Child Namespace
 
-:   A namespace\'s child refers to the namespace with additional
-    trailing hyphenated components e.g. `foo-bar` is a valid child of
-    `foo` as is `foo-bar-baz`.
+:   A namespace\'s child refers to the namespace with a single trailing
+    hyphenated component e.g. `foo-bar` is a valid child of `foo`.
 
 # Specification
-
-## Organizations {#orgs}
-
-Any package repository that allows for the creation of projects (e.g.
-non-mirrors) MAY offer the concept of organizations[^5]. Organizations
-are entities that own projects and have various users associated with
-them.
-
-Organizations MAY reserve one or more namespaces. Such reservations
-neither confer ownership nor grant special privileges to existing
-projects.
 
 ## Naming
 
@@ -228,8 +185,7 @@ internally e.g. `foo.bar` would become `foo-bar`.
 
 A namespace grant bestows ownership over the following:
 
-1.  A project matching the namespace itself such as the placeholder
-    package [microsoft](https://pypi.org/project/microsoft/).
+1.  A project that exactly matches the namespace itself.
 2.  Projects that start with the namespace followed by a hyphen. For
     example, the namespace `foo` would match the normalized project name
     `foo-bar` but not the project name `foobar`.
@@ -237,81 +193,73 @@ A namespace grant bestows ownership over the following:
 Package name matching acts upon the [normalized](#naming) namespace.
 
 Namespaces are per-package repository and SHALL NOT be shared between
-repositories. For example, if PyPI has a namespace `microsoft` that is
-owned by the company Microsoft, packages starting with `microsoft-` that
-come from other non-PyPI mirror repositories do not confer the same
-level of trust.
+repositories. For example, if PyPI has a namespace `acme` that is owned
+by the company Acme, packages starting with `acme-` that come from other
+non-PyPI mirror repositories do not confer the same level of trust.
 
-Grants MUST NOT overlap. For example, if there is an existing grant for
-`foo-bar` then a new grant for `foo` would be forbidden. An overlap is
-determined by comparing the [normalized](#naming) proposed namespace
-with the normalized namespace of every existing root grant. Every
-comparison must append a hyphen to the end of the proposed and existing
-namespace. An overlap is detected when any existing namespace starts
-with the proposed namespace.
+Grants MUST NOT overlap ownership. For example, if there is an existing
+grant for `foo-bar` then a new grant for `foo` would only be possible
+for the owner of the former. An overlap is determined by comparing the
+[normalized](#naming) proposed namespace with the normalized namespace
+of every existing root grant. Every comparison must append a hyphen to
+the end of the proposed and existing namespace. An overlap is detected
+when any existing namespace starts with the proposed namespace.
+
+Repositories SHOULD impose a depth limit on the number of hyphens in a
+namespace. For example, if the depth limit is `1` then the namespace
+`foo-bar` would be allowed but `foo-bar-baz` could not be granted.
+
+Policies for granting and managing namespaces are not discussed here as
+they are specific to each index. The proposed namespace policy for PyPI
+is described in `755`{.interpreted-text role="pep"}.
 
 ## Uploads
 
-If the name of a package being uploaded matches a reserved namespace and
-either of the following criteria are true:
+Uploads MUST fail with a
+`409 Conflict <9110#name-409-conflict>`{.interpreted-text role="rfc"}
+HTTP status code if the name of a package being uploaded matches a
+reserved namespace and the project owner does not have an active grant
+for the namespace.
 
-- The project does not yet exist.
-- The project is not owned by an organization with an active grant for
-  the namespace.
-
-Then the upload MUST fail with a 403 HTTP status code.
-
-## Open Namespaces
-
-The owner of a grant may choose to allow others the ability to release
-new projects with the associated namespace. Doing so MUST allow
-[uploads](##REF##uploads) for new projects matching the namespace from
-any user.
-
-It is possible for the owner of a namespace to both make it open and
-allow other organizations to use the grant. In this case, the authorized
-organizations have no special permissions and are equivalent to an open
-grant without ownership.
-
-## Hidden Grants
-
-Repositories MAY create hidden grants that are not visible to the public
-which prevent their namespaces from being claimed by others. Such grants
-MUST NOT be [open](#open-namespaces) and SHOULD NOT be exposed in the
-[API](#repository-metadata).
-
-Hidden grants are useful for repositories that wish to enforce upload
-restrictions without the need to expose the namespace to the public.
+Repositories SHOULD have an exception to this rule for projects that
+existed before the namespace was reserved.
 
 ## Repository Metadata
 
 The `JSON API <691>`{.interpreted-text role="pep"} version will be
-incremented from `1.2` to `1.3`. The following API changes MUST be
+incremented from `1.4` to `1.5`. The following API changes MUST be
 implemented by repositories that support this PEP. Repositories that do
 not support this PEP MUST NOT implement these changes so that consumers
 of the API are able to determine whether the repository supports this
 PEP.
+
+The following API changes would allow installers to offer users extra
+[security policies](#security-implications).
 
 ### Project Detail
 
 The `project detail <691#project-detail>`{.interpreted-text role="pep"}
 response will be modified as follows.
 
-The `namespace` key MUST be `null` if the project does not match an
+The `namespaces` key MUST be `null` if the project does not match an
 active namespace grant. If the project does match a namespace grant, the
-value MUST be a mapping with the following keys:
+value MUST be an array of mappings representing each matching namespace.
+Every mapping MUST have the following keys:
 
-- `prefix`: This is the associated [normalized](#naming) namespace e.g.
-  `foo-bar`. If the owner of the project owns multiple matching grants
-  then this MUST be the namespace with the most number of characters.
-  For example, if the project name matched both `foo-bar` and
-  `foo-bar-baz` then this key would be the latter.
-- `authorized`: This is a boolean and will be true if the project owner
-  is an organization and is one of the current owners of the grant. This
-  is useful for tools that wish to make a distinction between official
-  and community packages.
-- `open`: This is a boolean indicating whether the namespace is
-  [open](#open-namespaces).
+- `name`: This is the associated [normalized](#naming) namespace e.g.
+  `foo-bar`.
+- `owned`: This is a boolean and will be true if the project owner is
+  one of the current owners of the grant. This will only be false if the
+  project existed before the namespace was reserved and the repository
+  [allows](#uploads) continued uploads.
+
+### Namespace List
+
+The format of this URL is `/namespaces`.
+
+The response MUST be an array of mappings representing each reserved
+namespace. Every mapping MUST have a `name` key that is the
+[normalized](#naming) namespace e.g. `foo-bar`.
 
 ### Namespace Detail
 
@@ -319,29 +267,25 @@ The format of this URL is `/namespace/<namespace>` where `<namespace>`
 is the [normalized](#naming) namespace. For example, the URL for the
 namespace `foo.bar` would be `/namespace/foo-bar`.
 
-The response will be a mapping with the following keys:
+The response MUST be a mapping with the following keys:
 
-- `prefix`: This is the [normalized](#naming) version of the namespace
+- `name`: This is the [normalized](#naming) version of the namespace
   e.g. `foo-bar`.
-- `owner`: This is the organization that is responsible for the
-  namespace.
-- `open`: This is a boolean indicating whether the namespace is
-  [open](#open-namespaces).
 - `parent`: This is the parent namespace if it exists. For example, if
   the namespace is `foo-bar` and there is an active grant for `foo`,
   then this would be `"foo"`. If there is no parent then this key will
   be `null`.
-- `children`: This is an array of any child namespaces. For example, if
-  the namespace is `foo` and there are active grants for `foo-bar` and
-  `foo-bar-baz` then this would be `["foo-bar", "foo-bar-baz"]`.
+- `children`: This is an array of direct child namespaces. For example,
+  if the namespace is `foo` and there are active grants for `foo-bar`
+  and `foo-bar-baz` then this would be `["foo-bar"]`.
+
+The mapping MAY have an `owner` key that refers to the current owner of
+the namespace.
 
 ## Grant Removal
 
 When a reserved namespace becomes unclaimed, repositories MUST set the
-`namespace` key to `null` in the [API](#project-detail).
-
-Namespaces that were previously claimed but are now not SHOULD be
-eligible for claiming again by any organization.
+`namespaces` key to `null` in the [API](#project-detail).
 
 # Community Buy-in
 
@@ -363,26 +307,30 @@ for this PEP (with a link to the discussion):
 
 # Backwards Compatibility
 
-There are no intrinsic concerns because there is still a flat namespace
-and installers need no modification. Additionally, many projects have
-already chosen to signal a shared purpose with a prefix like [typeshed
-has
+There are no intrinsic concerns because projects continue to use
+existing naming semantics. Projects with or without a namespace are
+indistinguishable from the perspective of the user. Installers need no
+modification.
+
+Additionally, many projects have already chosen to signal a shared
+purpose with a prefix like [typeshed has
 done](https://github.com/python/typeshed/issues/2491#issuecomment-578456045).
 
 # Security Implications
 
-- There is an opportunity to build on top of `740`{.interpreted-text
-  role="pep"} and `480`{.interpreted-text role="pep"} so that one could
-  prove cryptographically that a specific release came from an owner of
-  the associated namespace. This PEP makes no effort to describe how
-  this will happen other than that work is planned for the future.
+Installers could support enabling a security policy that would only
+allow packages that match a specific set of namespaces and whose owner
+has an active grant for the namespace.
 
 # How to Teach This
 
-For consumers of packages we will document how metadata is exposed in
-the [API](#repository-metadata) and potentially in future note tooling
-that supports utilizing namespaces to provide extra security guarantees
-during installation.
+We will update the [PyPUG
+documentation](https://packaging.python.org/en/latest/specifications/simple-repository-api/)
+to describe the new [metadata](#repository-metadata) that is returned by
+the API.
+
+In future we could also note tooling that supports utilizing namespaces
+to provide extra security guarantees during installation.
 
 # Reference Implementation
 
@@ -391,7 +339,7 @@ A complete reference implementation of this PEP is available in [PR
 
 # Rejected Ideas
 
-## Granting Reservations to Users
+## Explicit Non-User Ownership
 
 As package repositories have a flat namespace, allowing any user to
 reserve a namespace would be untenable not just because there would be
@@ -400,13 +348,12 @@ resource](https://en.wikipedia.org/wiki/Tragedy_of_the_commons), but
 also because no repository has enough human operators to manage the
 vetting of an arbitrary number of users.
 
-## Artifact-level Namespace Association {#artifact-level-association}
-
-An earlier version of this PEP proposed that metadata be associated with
-individual artifacts at the point of release. This was rejected because
-it had the potential to cause confusion for users who would expect the
-namespace authorization guarantee to be at the project level based on
-current grants rather than the time at which a given release occurred.
+An earlier version of this PEP proposed that only
+[organizations](https://blog.pypi.org/posts/2023-04-23-introducing-pypi-organizations/)
+could reserve namespaces because of these practical considerations.
+However, this was rejected as the organization concept has not been
+specified and imposing such restrictions based on the anticipated PyPI
+implementation is unnecessary.
 
 ## Organization Scoping
 
@@ -421,10 +368,7 @@ maximize the ease of communication and this would be a regression.
 The runtime environment of Python is also not conducive to scoping.
 Whereas multiple versions of the same JavaScript package may coexist,
 Python only allows a single global namespace. Barring major changes to
-the language itself, this is nearly impossible to change. Additionally,
-users have come to expect that the package name is usually the same as
-what they would import and eliminating the flat namespace would do away
-with that convention.
+the language itself, this is nearly impossible to change.
 
 Scoping would be particularly affected by organization changes which are
 bound to happen over time. An organization may change their name due to
@@ -437,6 +381,32 @@ would require an update from every package manager, security scanner,
 IDE, etc. New packages released with the scoping would be incompatible
 with older tools and would cause confusion for users along with
 frustration from maintainers having to triage such complaints.
+
+## Artifact-level Namespace Association {#artifact-level-association}
+
+An earlier version of this PEP proposed that metadata be associated with
+individual artifacts at the point of release. This was rejected because
+it had the potential to cause confusion for users who would expect the
+namespace authorization guarantee to be at the project level based on
+current grants rather than the time at which a given release occurred.
+
+## Support HTML Simple API
+
+Exposing project-level metadata in the HTML version of the Simple API
+could happen in one of two ways.
+
+The first is exposing a `data-` attribute on the `/simple/` page that
+enumerates every project. There is no precedent for this, and installers
+generally do not use this page. Additionally, this page is often cached
+for long periods of time (24 hours in the case of PyPI).
+
+The other is to add a `data-` attribute on every artifact. This is
+suboptimal because it may introduce confusion similar to the rejected
+[artifact-level association](#artifact-level-association) idea. Another
+consideration is that in practice many private indices are implemented
+as static pages served by cloud storage backed by a CDN. In this
+scenario, every namespace change would require a mass update of all
+artifacts of matching projects.
 
 ## Encourage Dedicated Package Repositories {#dedicated-repositories}
 
@@ -462,9 +432,24 @@ is malicious on `X` and the other is malicious on `Y` then the user
 would be unable to satisfy their requirements without encountering a
 malicious package.
 
+## Open Namespaces
+
+An earlier version of this PEP proposed that the owner of a grant may
+choose to allow others the ability to release new projects with the
+associated namespace. This was removed due to insufficient motivation
+and the fact that repositories could technically satisfy such use cases
+with standard grant semantics.
+
+## Hidden Grants
+
+An earlier version of this PEP proposed that repositories could create
+hidden grants that are not visible to the public which prevent their
+namespaces from being claimed by others. This was removed due to
+insufficient motivation.
+
 ## Exclusive Reliance on Provenance Assertions {#provenance-assertions}
 
-The idea here[^6] would be to design a general purpose way for clients
+The idea here[^3] would be to design a general purpose way for clients
 to make provenance assertions to verify certain properties of
 dependencies, each with custom syntax. Some examples:
 
@@ -651,9 +636,6 @@ mind
 ([example](https://github.com/apache/airflow/discussions/41657#discussioncomment-10417439))
 and would be reluctant to change their package names.
 
-It\'s unrealistic to expect every company and project to voluntarily
-change their existing and future package names.
-
 ## Use DNS
 
 The [idea](https://discuss.python.org/t/63455) here is to add a new
@@ -681,28 +663,7 @@ None at this time.
 This document is placed in the public domain or under the
 CC0-1.0-Universal license, whichever is more permissive.
 
-[^1]: Additional examples of projects with restricted namespaces:
-
-    - [Typeshed](https://github.com/python/typeshed) is a community
-      effort to maintain type stubs for various packages. The stub
-      packages they maintain mirror the package name they target and are
-      prefixed by `types-`. For example, the package `requests` has a
-      stub that users would depend on called `types-requests`.
-      Unofficial stubs are not supposed to use the `types-` prefix and
-      are expected to use a `-stubs` suffix instead.
-    - [Sphinx](https://www.sphinx-doc.org) is a documentation framework
-      popular for large technical projects such as
-      [Swift](https://www.swift.org) and Python itself. They have the
-      concept of [extensions](##REF##_) which are prefixed by
-      `sphinxcontrib-`, many of which are maintained within a [dedicated
-      organization](https://github.com/sphinx-contrib).
-    - [Apache Airflow](https://airflow.apache.org) is a platform to
-      programmatically orchestrate tasks as directed acyclic graphs
-      (DAGs). They have the concept of [plugins](##REF##_), and also
-      [providers](##REF##_) which are prefixed by
-      `apache-airflow-providers-`.
-
-[^2]: The following shows the package prefixes for the major cloud
+[^1]: The following shows the package prefixes for the major cloud
     providers:
 
     - Amazon: [aws-cdk-](https://docs.aws.amazon.com/cdk/api/v2/python/)
@@ -712,26 +673,7 @@ CC0-1.0-Universal license, whichever is more permissive.
     - Microsoft:
       [azure-](https://github.com/Azure/azure-sdk-for-python/tree/main/sdk)
 
-[^3]: Additional examples of projects with open namespaces:
-
-    - [pytest](https://docs.pytest.org) is Python\'s most popular
-      testing framework. They have the concept of [plugins](##REF##_)
-      which may be developed by anyone and by convention are prefixed by
-      `pytest-`.
-    - [MkDocs](https://www.mkdocs.org) is a documentation framework
-      based on Markdown files. They also have the concept of
-      [plugins](https://www.mkdocs.org/dev-guide/plugins/) which may be
-      developed by anyone and are usually prefixed by `mkdocs-`.
-    - [Datadog](https://www.datadoghq.com) offers observability as a
-      service. The [Datadog Agent](https://docs.datadoghq.com/agent/)
-      ships out-of-the-box with [official
-      integrations](https://github.com/DataDog/integrations-core) for
-      many products, like various databases and web servers, which are
-      distributed as Python packages that are prefixed by `datadog-`.
-      There is support for creating [third-party integrations](##REF##_)
-      which customers may run.
-
-[^4]: Examples of typosquatting attacks targeting Python users:
+[^2]: Examples of typosquatting attacks targeting Python users:
 
     - `django-` namespace was squatted, among other packages, leading to
       a
@@ -745,12 +687,7 @@ CC0-1.0-Universal license, whichever is more permissive.
       among other packages. Notice how packages with a known prefix are
       much more prone to successful attacks.
     - `typing-` namespace was
-      [squatted](https://zero.checkmarx.com/malicious-pypi-user-strikes-again-with-typosquatting-starjacking-and-unpacks-tailor-made-malware-b12669cefaa5)
-      and this would be useful to prevent as a [hidden
-      grant](##REF##hidden-grants).
+      [squatted](https://zero.checkmarx.com/malicious-pypi-user-strikes-again-with-typosquatting-starjacking-and-unpacks-tailor-made-malware-b12669cefaa5).
 
-[^5]: As an example, PyPI\'s concept of organizations is described
-    [here](https://blog.pypi.org/posts/2023-04-23-introducing-pypi-organizations/).
-
-[^6]: [Detailed write-up](https://discuss.python.org/t/64679) of the
+[^3]: [Detailed write-up](https://discuss.python.org/t/64679) of the
     potential for provenance assertions.
