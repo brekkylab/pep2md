@@ -22,7 +22,7 @@ post_history:
 python_status: Draft
 url: https://peps.python.org/pep-0694/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0694.rst
-source_commit: 351f29be66759be1b0eef80ab64a709a447b928d
+source_commit: de05700f085320c010ac1b8ea60c250518dc6d63
 ---
 
 # Abstract
@@ -846,16 +846,102 @@ request itself) is returned to the client as an
 leaves the session in its current editable state; it does **not** move
 the session to `error`.
 
+### Atomic Publication and Conflicts {#publishing-session-atomicity}
+
+Publishing a session is atomic with respect to the release\'s filename
+namespace. Because published artifacts are immutable, the index **MUST**
+guarantee that it never publishes two files with the same name for the
+same release, even in the presence of concurrent uploads arriving
+through this API or the legacy API.
+
+The point-in-time conflict check performed when a
+`file upload session is created <file-upload-session>`{.interpreted-text
+role="ref"} is best-effort: it reflects the published state at the
+moment of that request and does **not** guarantee the file will still be
+conflict-free at publish time, since the published state of the release
+can change while a session is open. For example, a file with the same
+name may be published through the legacy API, or through a subsequent
+session for the same, already-published `name` and `version`. The
+authoritative conflict check is therefore performed atomically at
+publish time.
+
+**Filename reservation.** When a client requests publication, the server
+**MUST** atomically reserve the filenames of all files in the session
+within the target release, and hold that reservation for the duration of
+the publish:
+
+- While the reservation is held, any other attempt to upload a file with
+  one of those filenames to the same release \-- whether through this
+  API or the legacy API \-- **MUST** be rejected with a `409 Conflict`,
+  exactly as if the file were already published. The index **MUST**
+  enforce this regardless of which upload path the conflicting request
+  arrives through; this is a requirement on the index\'s shared
+  published-filename namespace and does not otherwise modify the legacy
+  API.
+- The reservation governs conflict detection only; the reserved files
+  remain `staged <staged-preview>`{.interpreted-text role="ref"} and
+  **MUST NOT** become publicly visible until the publish succeeds.
+- If the publish succeeds, the reservation converts to permanent
+  publication. If it fails \-- synchronously, leaving the session
+  editable, or during deferred `processing`, moving it to the `error`
+  state \-- the server **MUST** release the reservation, making those
+  filenames available again.
+
+A still-`open` session does **not** reserve its filenames; the
+reservation is acquired only when publication is requested. For an
+immediate (`201 Created`) publish the reservation is held only for the
+duration of the single request and is effectively unobservable. The
+requirement is meaningful mainly for deferred (`202 Accepted` then
+`processing`) publishes, where there is a real window between the index
+validating one staged artifact and committing the rest.
+
+This closes that window at a deliberate, conservative cost: a concurrent
+upload **MAY** receive a `409 Conflict` during a publish that ultimately
+fails, and then succeed on retry once the reservation is released. The
+index never publishes two files with the same name, at the cost of
+occasionally rejecting a concurrent upload that a later retry would
+allow.
+
+**Reporting a publish-time conflict.** When the index detects a conflict
+while publishing \-- whether a filename collision as above, or another
+precondition that held when the session was created but no longer holds,
+such as an exhausted quota or a revoked permission \-- it reports the
+failure according to the
+`publishing session state machine <publishing-session-states>`{.interpreted-text
+role="ref"}:
+
+- If the server is completing the publish synchronously, it **MUST**
+  return an `error response
+  <session-errors>`{.interpreted-text role="ref"} \-- a `409 Conflict`
+  for a filename collision \-- identifying the conflicting file(s), and
+  leave the session in its current editable state.
+- If the server accepted the publish for deferred processing and detects
+  the conflict during `processing`, it **MUST** move the session to the
+  `error` state and report the conflicting file(s) in the session\'s
+  `notices` (and, where the failure is attributable to a particular
+  file, in that file\'s `notices`).
+
+In either case the client may delete or replace the offending file, or
+otherwise resolve the conflict, and publish again, or
+`cancel <publishing-session-cancellation>`{.interpreted-text role="ref"}
+the session.
+
 ### Publishing Session Cancellation
 
 To cancel a publishing session, a client issues a `DELETE` request to
 the `session` `link
 <publishing-session-links>`{.interpreted-text role="ref"} given in the
 `session creation response body <publishing-session-response>`{.interpreted-text
-role="ref"}. The server then marks the session as `canceled`, and
+role="ref"}. The server then marks the session as `canceled` and
 **SHOULD** purge any data that was uploaded as part of that session.
-Future attempts to access that session URL or any of the publishing
-session URLs **MUST** return a `404 Not Found`.
+Once that data is purged, the session\'s action and data-bearing URLs
+\-- `links.upload`, `links.publish`, `links.extend`, `links.stage`, and
+the individual file URLs \-- **SHOULD** become unavailable and **MAY**
+return `404 Not Found`. The session status URL (`links.session`) is
+instead retained as described in
+`publishing-session-retention`{.interpreted-text role="ref"}: it
+continues to report the `canceled` status for an index-specific period
+before it too **MAY** return `404 Not Found`.
 
 Cancellation is only permitted while the session is
 `open or in the error state
@@ -888,6 +974,38 @@ The server will respond to this `GET` request with the same
 <publishing-session-response>`{.interpreted-text role="ref"}, that they
 got when they initially created the publishing session, except with any
 changes to `status`, `expires-at`, or `files` reflected.
+
+### Session Status Retention {#publishing-session-retention}
+
+A session status URL is not guaranteed to remain valid indefinitely.
+Once a session reaches a terminal state \-- `published` or `canceled`
+\-- the server **SHOULD** continue to serve its `status URL
+<publishing-session-status>`{.interpreted-text role="ref"}, reporting
+the terminal `status`, for an index-specific retention period, so that
+clients can reliably observe the final outcome of a session they did not
+watch to completion. After that retention period elapses, the server
+**MAY** return `404 Not Found` for the status URL. The length of the
+retention period is left to the index, but **SHOULD** be long enough to
+let a client that initiated or contributed to the session learn its
+outcome.
+
+This retention applies only to the session *status*; the data-bearing
+and action URLs for a terminated session (for example `links.stage` and
+the individual file URLs) may become unavailable as soon as their
+underlying data is no longer needed, as described for
+`cancellation <publishing-session-cancellation>`{.interpreted-text
+role="ref"}.
+
+Clients **MUST** be prepared for a session status URL to return
+`404 Not Found` once the session has terminated and its retention period
+has elapsed. A `404` on a previously valid session status URL is not in
+itself an error; clients **SHOULD** treat it as indicating that the
+session no longer exists. Note that once a terminated session has been
+purged, a request to
+`create a new session <publishing-session-multiple>`{.interpreted-text
+role="ref"} for the same `name` and `version` will succeed with a
+`201 Created` rather than returning the `409 Conflict` that a still-live
+session would have produced.
 
 ### Publishing Session Extension
 
@@ -1035,7 +1153,10 @@ platforms to an existing release. However, because published artifacts
 are immutable, if the `filename` in this request matches a file that has
 already been published for this release, the server **MUST** reject the
 request with a `409 Conflict` and **MUST NOT** overwrite the published
-file.
+file. This check is best-effort and reflects the published state at the
+time of the request; the authoritative, atomic conflict check is
+performed at publish time, as described in
+`publishing-session-atomicity`{.interpreted-text role="ref"}.
 
 If the server determines that upload should proceed, it will return a
 `202 Accepted` response, with the response body below. The
@@ -1352,6 +1473,20 @@ The client can query status of the file upload session by issuing a
 server responds to this request with the same payload as the file upload
 session creation response, except with any changes `status` and
 `expires-at` reflected.
+
+A file upload session has no existence independent of the publishing
+session it belongs to, and its status URL is retained accordingly. While
+the parent publishing session is in a non-terminal state, the server
+**SHOULD** keep each of its file upload session status URLs valid,
+reporting the file upload session\'s current `status` \-- including a
+terminal `canceled` \-- so that a client can observe the outcome of any
+file it uploaded. Once the parent publishing session itself terminates,
+its file upload session URLs are retained no longer than the parent\'s
+own `status URL <publishing-session-retention>`{.interpreted-text
+role="ref"} and **MAY** return `404 Not Found` thereafter. As with
+cancellation, the data-bearing and mechanism portions of these URLs may
+become unavailable as soon as the underlying file data is purged,
+independent of the status URL.
 
 ### File Upload Session Extension
 
@@ -1763,7 +1898,7 @@ During the transition period, clients **SHOULD** support both the Upload
 3.  Provide a command-line option to force a specific protocol version
     if needed for debugging or compatibility.
 
-# Security Implications
+# Security Implications {#pep694-security-implications}
 
 ## Name squatting potential
 
@@ -1903,6 +2038,21 @@ release of a single project version. Allowing multiple projects would
 fundamentally change this model and complicate the definition of what
 \"publish\" means for a session.
 
+Even with the single-project restriction, this PEP still improves
+multi-project releases. A client releasing several projects at once can
+fully `stage <staged-preview>`{.interpreted-text role="ref"} every
+project \-- creating a publishing session per project and uploading all
+of its artifacts \-- before a final step runs through and
+`publishes <publishing-session-completion>`{.interpreted-text
+role="ref"} each one. This gives the whole set a \"stage everything,
+then publish\" workflow, even though each publish is still per-project
+and atomic on its own.
+
+The single-project session also lays a foundation that a future
+\"publish multiple projects\" operation could build on as a separate
+endpoint, coordinating the publication of several already-staged
+sessions, without changing the per-session model defined here.
+
 ## Why is the version required when creating a publishing session?
 
 The version is required at session creation to establish a validation
@@ -1952,6 +2102,35 @@ as experience is gained operating Upload 2.0.
 
 # Change History
 
+- TBD
+  - Add an **Atomic Publication and Conflicts** section. Specify that
+    publication is atomic with respect to the release\'s filename
+    namespace: the server reserves the session\'s filenames for the
+    duration of a publish so that concurrent uploads (including through
+    the legacy API) receive a `409 Conflict`, and releases the
+    reservation if the publish fails. Clarify that the conflict check at
+    file upload session creation is best-effort and that the
+    authoritative check happens atomically at publish time, reported
+    synchronously as a `409 Conflict` or, for a deferred publish, by
+    moving the session to the `error` state with the reason in
+    `notices`.
+  - Add a **Session Status Retention** section. Specify that after a
+    session reaches a terminal (`published` or `canceled`) state, the
+    server **SHOULD** keep serving its status URL reporting the terminal
+    status for an index-specific retention period, after which it
+    **MAY** return `404 Not Found`, and that clients must be prepared
+    for such a `404`. Reconcile the cancellation rules accordingly: the
+    data-bearing and action URLs may become unavailable once purged,
+    while the status URL is retained. Tie file upload session status URL
+    retention to the parent publishing session: while the parent is
+    non-terminal the server **SHOULD** keep its file upload session
+    status URLs valid, and once the parent terminates they are retained
+    no longer than the parent\'s status URL.
+  - Expand the \"Why is the project name required\" FAQ to note that
+    single-project sessions still improve multi-project releases (all
+    projects can be fully staged before a final step publishes each one)
+    and lay a foundation for a possible future \"publish multiple
+    projects\" endpoint.
 - [26-Jun-2026](https://discuss.python.org/t/pep-694-pypi-upload-api-2-0-round-3/107923)
   - Session actions now use dedicated endpoint links instead of an
     `action` key in request bodies. Publishing sessions add
@@ -1965,7 +2144,8 @@ as experience is gained operating Upload 2.0.
     uv, and GitHub Actions.
   - Add FAQ entries explaining why project name and version are required
     at session creation.
-  - Add a `security-implications`{.interpreted-text role="ref"} section.
+  - Add a `pep694-security-implications`{.interpreted-text role="ref"}
+    section.
   - Specify that attempting to replace an in-progress file upload
     returns a `409 Conflict`.
   - Specify that uploading a file matching one already published for an

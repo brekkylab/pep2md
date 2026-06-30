@@ -7,17 +7,18 @@ author:
 sponsor: Barry Warsaw <barry@python.org>
 pep_delegate: Dustin Ingram <di@python.org>
 discussions_to: https://discuss.python.org/t/63192
-status: Draft
+status: Accepted
 type: Standards Track
 topic: Packaging
 created: 13-Aug-2024
 post_history:
 - '`18-Aug-2024 <https://discuss.python.org/t/61227>`__'
 - '`07-Sep-2024 <https://discuss.python.org/t/63192>`__'
-python_status: Draft
+resolution: '`29-Jun-2026 <https://discuss.python.org/t/63192/96>`__'
+python_status: Accepted
 url: https://peps.python.org/pep-0752/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0752.rst
-source_commit: faacdcc76da9f35ef37a470b7ce08dc48d38485c
+source_commit: 4b5ce9225f5c2dc31fbaa2960b956792c78e143f
 ---
 
 # Abstract
@@ -234,7 +235,7 @@ of the API are able to determine whether the repository supports this
 PEP.
 
 The following API changes would allow installers to offer users extra
-[security policies](#security-implications).
+[security policies](#pep752-security-implications).
 
 ### Project Detail
 
@@ -316,7 +317,7 @@ Additionally, many projects have already chosen to signal a shared
 purpose with a prefix like [typeshed has
 done](https://github.com/python/typeshed/issues/2491#issuecomment-578456045).
 
-# Security Implications
+# Security Implications {#pep752-security-implications}
 
 Installers could support enabling a security policy that would only
 allow packages that match a specific set of namespaces and whose owner
