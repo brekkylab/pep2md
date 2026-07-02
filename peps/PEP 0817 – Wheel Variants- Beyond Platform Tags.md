@@ -23,7 +23,7 @@ post_history:
 python_status: Draft
 url: https://peps.python.org/pep-0817/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0817.rst
-source_commit: b49509bd3bffde417304fd85ce56fd464e2925f4
+source_commit: a6b2a9afe35b40c0e493212150becdf000905509
 ---
 
 # Abstract
@@ -146,7 +146,11 @@ packages that approximate \"variants\" through separate package indexes
 with custom URLs. We will use the example of PyTorch, while the problem,
 the workarounds, and the impact on users also apply to other packages.
 
-![](pep-0817/pytorch_variant_selector.png){alt="A grid-based selector for PyTorch versions. Individual rows provide the choice of PyTorch Build (stable or nightly), operating system (Linux, Mac, Windows), package (Pip, LibTorch, Source), language (Python, C++ / Java), and Compute Platform (CUDA 12.6, CUDA 12.8, CUDA 13.0, ROCM 6.4, CPU). Below these rows, the pip install command for the selected variant is provided, utilizing the --index-url parameter. The PyTorch install selector (https://pytorch.org/get-started/locally/, captured 22-Aug-2025)"}
+<figure class="invert-in-dark-mode">
+<img src="pep-0817/pytorch_variant_selector.png"
+class="invert-in-dark-mode"
+alt="A grid-based selector for PyTorch versions. Individual rows provide the choice of PyTorch Build (stable or nightly), operating system (Linux, Mac, Windows), package (Pip, LibTorch, Source), language (Python, C++ / Java), and Compute Platform (CUDA 12.6, CUDA 12.8, CUDA 13.0, ROCM 6.4, CPU). Below these rows, the pip install command for the selected variant is provided, utilizing the --index-url parameter. The PyTorch install selector (https://pytorch.org/get-started/locally/, captured 22-Aug-2025)" />
+</figure>
 
 PyTorch uses a combination of index URLs per accelerator type and local
 version segments as accelerator tag (such as `+cu130`, `+rocm6.4` or
@@ -616,7 +620,7 @@ possible is desirable. When more fine-grained control is desired, slots
 are used in conjunction with USE flags. For example, `llvm_slot_{major}`
 flags are used to select a LLVM major version to build against.
 
-# Rationale
+# Overview and rationale
 
 ## Wheel variant glossary
 
@@ -698,15 +702,15 @@ maintainer or queried at wheel build time from an AoT plugin.
 
 Both kinds of plugins are usually implemented as Python packages which
 implement the [provider plugin API](#provider-plugin-api), but they may
-also be vendored or reimplemented by installers to improve security, as
-outlined in [Providers](#providers). Plugin packages may be installed in
-isolated or non-isolated environments. In particular, all plugins may be
-returned by the `get_requires_for_build_wheel()` hook of a
-`517`{.interpreted-text role="pep"} backend, and therefore installed
-along with other build dependencies. For this reason, it is important
-that plugin packages do not narrowly pin dependencies, as that could
-prevent different packages from being installed simultaneously in the
-same environment.
+also be vendored or reimplemented by installers to improve user
+experience, as outlined in [Providers](#providers). Plugin packages may
+be installed in isolated or non-isolated environments. In particular,
+all plugins may be returned by the `get_requires_for_build_wheel()` hook
+of a `517`{.interpreted-text role="pep"} backend, and therefore
+installed along with other build dependencies. For this reason, it is
+important that plugin packages do not narrowly pin dependencies, as that
+could prevent different packages from being installed simultaneously in
+the same environment.
 
 Metadata governing variant support is defined in `pyproject.toml` file,
 and it is copied into `variant.json` file in wheels, as explored in
@@ -981,6 +985,128 @@ Given the complexity of the problem, this extension is made entirely
 optional. This implies that any packages using it need to provide
 non-variant wheels as well.
 
+## Suggested implementation logic for a packaging tool
+
+### Installing a package from an index
+
+<figure class="invert-in-dark-mode">
+<img src="pep-0817/conceptual_diagram_installers.png"
+class="invert-in-dark-mode"
+alt="A diagram showing installing a package including variant wheel building. It is split into three columns: Developer, Installer and Install-time providers. The diagram starts with Develop initiating package install. The subsequent steps involve installer, in order: resolver selects package version; determine if release has variant wheels. If there are no variant wheels, jump to installing package and report success. If the version has variant wheels, check user&#39;s variant preferences. In parallel, download JSON from index, then extract variant provider configuration. If it uses AoT providers only, converge to determine optimal variant immediately. If it requires install-time providers, the further path depends on whether non-vendored providers are included. If they are not, query install-time providers immediately and converge to determine optimal variant. If non-vendored providers are included, they are installed if not present in env and then queried. Querying providers involves an exchange of data with different providers (in the diagram, &quot;provider 1&quot; and &quot;provider 2&quot; are given as examples), each filtering and ordering supported configurations for the current environment. All the variant paths converge on determining optimal variant, which is following by installing package and reporting success. A conceptual diagram of installing a wheel." />
+</figure>
+
+When asked to install a version of a package from an index, the proposed
+tool behavior would be to:
+
+1.  Query the remote index for the desired package.
+2.  Select an initial match for a package version meeting the version
+    constraints, as usual (this does not need to take variant metadata
+    into account).
+3.  Filter available wheels based on Platform Compatibility Tags.
+4.  Determine if any of the remaining wheels are variant wheels. If not,
+    proceed as with non-variant wheels.
+5.  If any wheels feature variant labels, download the index-level
+    variant metadata file, `{name}-{version}-variants.json`. If this
+    file is missing, assume all variant wheels are incompatible and
+    proceed as with non-variant wheels.
+6.  Map the variant labels into sets of variant properties using the
+    index-level variant metadata file. If any of the labels present in
+    wheel filenames are missing in the file, assume that the respective
+    wheels are incompatible.
+7.  Obtain the ordered lists of supported variant properties using
+    providers specified in the index-level variant metadata file:
+    - for the enabled AoT providers, obtain them from static property
+      data in the index-level variant metadata file.
+    - for the enabled install-time providers:
+      - if the user provided static compatibility information, use that.
+      - otherwise, if the provider is vendored or reimplemented, query
+        it in implementation-specific manner.
+      - otherwise, if the Python provider package is considered secure
+        (either by the installer or via explicit user opt-in), install
+        it in an isolated environment, and query it via the plugin API.
+      - if none of the above applies, do not run the provider and either
+        consider the variant properties incompatible, or fail the
+        installation.
+    - for the disabled providers (e.g. opt-in providers that were not
+      enabled by the user, providers excluded via environment markers),
+      assume that all variant properties in the namespace are
+      incompatible.
+8.  Filter and order variants based on the lists of supported
+    properties, and select the most preferred variant. If no variant
+    wheel matched, use the non-variant wheels by their rules.
+9.  If multiple wheels for a given version share the same variant label,
+    order them by Platform compatibility tags and build number, and
+    select the best wheel.
+
+### Installing a local wheel
+
+When asked to install a local wheel file, the tool\'s proposed behavior
+would be to:
+
+1.  If no variant label is present in the filename, proceed as with
+    non-variant wheels.
+2.  Verify the wheel compatibility via Platform compatibility tags.
+3.  Read variant metadata from `*.dist-info/variant.json` inside the
+    wheel file.
+4.  Obtain the ordered lists of supported variant properties, as when
+    [installing a package from an
+    index](#installing-a-package-from-an-index).
+5.  Verify the wheel compatibility via supported properties.
+
+### Building a variant wheel
+
+In order to build a variant wheel, the build backend needs to receive a
+list of variant properties and a variant label. The recommended way to
+do that is to use backend-defined keys in the `config_settings`
+dictionary passed to the build backend hooks.
+
+When building a variant wheel, the proposed behavior for the build
+backend would be to:
+
+1.  Read variant provider metadata from `pyproject.toml`.
+2.  Verify that all namespaces specified in the user-defined variant
+    properties have a corresponding provider in the metadata.
+3.  In the `get_requires_for_build_wheel()` hook, return variant
+    provider plugin packages along with other build dependencies.
+4.  In the `build_wheel()` hook, query the provider plugins
+    `get_all_configs()` function to obtain all valid property keys and
+    values. Use it to verify that the specified properties are correct.
+5.  Convert the variant metadata from `pyproject.toml` to JSON, append
+    the mapping from variant label to variant properties and write the
+    result into the wheel\'s `*.dist-info/variant.json` file.
+6.  Build the wheel as usual, except for including the
+    `*.dist-info/variant.json` and the variant label in the filename.
+
+### Publishing variant wheels on an index
+
+Variant wheels are uploaded to an index just like regular wheels. There
+are two possible approaches to publishing the index-level
+`{name}-{version}-variants.json` file for every package version: it can
+either be prepared and uploaded by the user, or it can be generated
+automatically by the index.
+
+The file should not be changed once it is published, as clients may have
+already cached it or locked to the existing hash. For this reason, if
+the index is responsible for generating the file, it should use some
+mechanism to defer publishing it until the release is fully uploaded
+(for example, `694`{.interpreted-text role="pep"}).
+
+To generate the `{name}-{version}-variants.json` file:
+
+1.  For the first variant wheel for a given package version, copy the
+    data from its `*.dist-info/variant.json` file.
+2.  For subsequent wheels, merge the data from their
+    `*.dist-info/variant.json` files into the existing data:
+    - disjoint keys of `providers`, `static-properties` and `variants`
+      dictionaries are merge together
+    - common keys of these dictionaries must have exactly the same value
+    - `default-priorities.namespace` list can be replaced if the new
+      value starts with the old value
+    - `default-priorities.feature` and `default-priorities.value` keys
+      can be added if they were not present in the previous
+      `default-priorities.namespace` value
+    - other keys must have exactly the same value
+
 ## Example use cases
 
 ### PyTorch CPU/GPU variants
@@ -1116,14 +1242,20 @@ user consent.
 
 The [Providers](#providers) section of the specification provides
 further suggestions that aim to improve both security and the user
-experience. It is expected that a limited subset of popular provider
-plugins will be either vendored by the installer, eliminating the use of
-packages external to the tool altogether, or pinned to specific
-versions, providing the same level of code auditing as the tools
-themselves. This will lead to the majority of packages focusing on these
-specific plugins. External plugins requiring explicit opt-in should be
-rare, minimizing the workflow disruption and reducing the risk that
-users blanket-allow all plugins.
+experience. Particularly, it is expected that the most popular provider
+plugins will be available out of the box, and a dedicated team of
+maintainers (initially including a subset of the PEP authors) will be
+responsible for inspecting them for security risks and vetting the
+plugins as safe to use. Installers will be able to either use a
+published allowlist, vendor specific provider plugin versions,
+reimplement them or use them as a Python library at their leisure.
+
+This will lead to the majority of packages focusing on these specific
+plugins, rather than implementing competing solutions. Plugins requiring
+explicit opt-in should be rare, and primarily affect expert users. This
+is important to make variant usage secure-by-default. Furthermore, the
+frequent disruption of workflows incentivises users to blanket-allow all
+plugins (security fatigue).
 
 Furthermore, the specification permits using static configuration as
 input to skip running plugins altogether.
@@ -1233,17 +1365,20 @@ nvidia :: sm_arch :: 110_real
 ## Providers
 
 When installing or resolving variant wheels, installers SHOULD query the
-variant provider to verify whether a given wheel\'s properties are
+variant providers to verify whether a given wheel\'s properties are
 compatible with the system and to select the best variant through
 [variant ordering](#variant-ordering). However, they MAY provide an
 option to omit the verification and install a specified variant
 explicitly.
 
 Providers can be marked as install-time or ahead-of-time. For
-install-time providers, installers MUST use the provider package or an
-equivalent reimplementation to query variant property compatibility. For
-ahead-of-time providers, they MUST use the static metadata embedded in
-the wheel instead.
+install-time providers, installers MUST either query the provider for
+variant property compatibility, or use user-provided compatibility
+information. Installers MAY vendor or reimplement specific providers.
+The format of user-provided information is left implementation-defined.
+
+For ahead-of-time providers, they MUST use the static metadata embedded
+in the wheel instead.
 
 Providers can be marked as optional. If a provider is marked optional,
 then the installer MUST NOT query said provider by default, and instead
@@ -1258,19 +1393,17 @@ MUST NOT use any providers whose markers do not match, and instead
 assume that their properties are incompatible.
 
 All the tools that need to query variant providers and are run in a
-security-sensitive context, MUST NOT install or run code from any
-untrusted package for variant resolution without explicit user opt-in.
+security-sensitive context, MUST NOT install or run provider packages,
+unless they can determine the particular provider package version to be
+trusted. The exact mechanism used to do that is implementation-specific.
+However, installers SHOULD ensure that the most commonly used providers
+can be securely used without an explicit user opt-in.
+
+When installing provider packages, tools SHOULD use an isolated virtual
+environment.
+
 Install-time provider packages SHOULD take measures to guard against
 supply chain attacks, for example by vendoring all dependencies.
-
-It is RECOMMENDED that said tools vendor, reimplement or lock the most
-commonly used plugins to specific wheels. For plugins and their
-dependencies that are neither reimplemented, vendored nor otherwise
-vetted, a trust-on-first-use mechanism for every version is RECOMMENDED.
-In interactive sessions, the tool can explicitly ask the user for
-approval. In non-interactive sessions, the approval can be given using
-command-line interface options. It is important that the user is
-informed of the risk before giving such an approval.
 
 For a consistent experience between tools, variant wheels SHOULD be
 supported by default. Tools MAY provide an option to only use
@@ -1595,6 +1728,16 @@ the file, though careful merging is possible, as long as no conflicting
 information is introduced, and the resolution results within a subset of
 variants do not change.
 
+The index MAY generate the index level variant metadata file
+automatically from uploaded wheel metadata. If that is the case, the
+file SHOULD NOT be published until it is final, and once published, it
+SHOULD NOT change, as clients MAY cache it.
+
+If the file is not generated automatically, the index MUST permit
+package maintainers to upload it. Once the variant level metadata file
+is uploaded, the package maintainers SHOULD NOT upload new variants for
+the version in question.
+
 The `foo-1.2.3-variants.json` corresponding to the package with two
 wheel variants, one of them listed in the previous example, would look
 like:
@@ -1855,6 +1998,9 @@ by tools needing them. In the latter case, the resulting
 reimplementation does not need to follow the API defined in this
 section.
 
+Plugin packages may be run in an isolated environment. They MUST NOT
+make decisions based on installed packages.
+
 A plugin implemented as Python package exposes two kinds of objects at a
 specified API endpoint:
 
@@ -2018,6 +2164,9 @@ The plugin interface MUST provide the following functions:
 The value returned by `get_supported_configs()` MUST be a subset of the
 feature names and values returned by `get_all_configs()` (modulo
 ordering).
+
+The value returned by `get_supported_configs()` MAY be cached throughout
+multiple packages in a single install session.
 
 ### Example implementation
 
@@ -2335,6 +2484,40 @@ uses.
 
 # Rejected ideas
 
+## Variants being entirely or transitionally opt-in
+
+In discussing the security concerns, proposals were made to make variant
+provider usage entirely opt-in, either permanently, or at least
+initially to facilitate further testing. While such approaches may alter
+who takes responsibility of vetting the provider code, and hence the
+maintenance effort or number of packages/maintainers that need to be
+trusted, they are not suitable as long-term solutions.
+
+Most importantly, the opt-in mechanism would lead to far worse user
+experience out-of-the-box. For variant-enabled packages, the default
+experience would be installing a suboptimal or outright broken variant.
+It should be noted that variant-enabled packages may not only be
+installed directly, but also as dependencies of other packages.
+Therefore, for optimal user experience, all packages that are
+variant-enabled or that feature dependencies that are variant-enabled,
+would have to document appropriate installer-specific mechanisms for
+enabling the respective provider plugins.
+
+The proliferation of this experience could have two significant
+outcomes. The inability to make variants work out of the box for users
+could lead to package maintainers refraining from using them, and
+instead sticking to the earlier workarounds. What\'s even worse, it
+could also lead to users eventually naively configuring their installers
+to enable all variant providers unconditionally, effectively rendering
+the provider usage opt-out for a large number of users, enabling all
+kinds of supply chain attacks described in the [security
+implications](#security-implications) section.
+
+The authors would like to emphasize that security cannot be achieved at
+the cost of severely impaired user experience. Instead, the PEP attempts
+to strike a balance by introducing a centrally maintained and vetted
+pool of trusted providers.
+
 ## An approach without provider plugins
 
 The support for additional variant properties could technically be
@@ -2414,3 +2597,34 @@ Smith, Geoffrey Thomas, Henry Schreiner, Jeff Daily, Jeremy Tanner,
 Jithun Nair, Keith Kraus, Leo Fang, Mike McCarty, Nikita Shulga, Paul
 Ganssle, Philip Hyunsu Cho, Robert Maynard, Vyas Ramasubramani, and
 Zanie Blue.
+
+# Change history
+
+- 18-Mar-2026
+  - Added high-level outlines of suggested implementation logic per type
+    of packaging tool, and a diagram for installer behavior.
+  - Deemphasized vendoring providers in installers. While it is still
+    permitted as an implementation choice, it is not presented as the
+    recommended solution to improve security anymore.
+  - Made a centrally maintained allowlist the primary solution for
+    enabling providers by default. Such an allowlist would be maintained
+    by a dedicated team, starting with a subset of the PEP authors.
+  - Clarified the specification to permit using user-provided
+    compatibility information in place of provider queries.
+  - Removed unnecessary UX suggestions regarding the opt-in mechanism.
+  - Clarified that the index level variant metadata file can be
+    generated by the index itself, or uploaded by the package maintainer
+    if index does not support that.
+  - Added a recommendation that no new variants are introduced once the
+    index level variant metadata file is published.
+  - Added an explicit recommendation that variant provider packages are
+    run in an isolated environment.
+  - Clarified that the value returned by `get_supported_configs()` may
+    be cached.
+  - Emphasized the risks of a full scale opt-in approach.
+  - Updated the GROMACS plot to respect dark theme.
+
+# Copyright
+
+This document is placed in the public domain or under the
+CC0-1.0-Universal license, whichever is more permissive.
