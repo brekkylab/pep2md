@@ -15,7 +15,7 @@ post_history:
 python_status: Draft
 url: https://peps.python.org/pep-0828/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0828.rst
-source_commit: a335167a292146e5b86a76b1cd275718248654cb
+source_commit: 3cbddd3efd1ac8cbd6c66bbc7fa2870c7106c306
 ---
 
 # Abstract
@@ -355,15 +355,47 @@ generator methods and asynchronous generator methods:
 `~agen.aclose`{.interpreted-text role="meth"} to
 `~generator.close`{.interpreted-text role="meth"}.
 
-For example, asynchronous exceptions could be injected into synchronous
-generators:
+It\'s trivial for anyone that needs to delegate to a subgenerator to
+write the wrapper class to upgrade a synchronous
+`~collections.abc.Iterable`{.interpreted-text role="class"} or
+`~collections.abc.Generator`{.interpreted-text role="class"} to an async
+one before calling `async yield from`.
 
 ``` python
+class AsAsyncIterator:
+    def __init__(self, wrapped):
+        self._wrapped = iter(wrapped)
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        try:
+            return self._wrapped.__next__()
+        except StopIteration as e:
+            raise StopAsyncIteration(e.value) from e
+
+
+class AsAsyncGenerator(AsAsyncIterator):
+    async def asend(self, value):
+        try:
+            return self._wrapped.send(value)
+        except StopIteration as e:
+            raise StopAsyncIteration(e.value) from e
+
+    async def athrow(self, exc):
+        try:
+            return self._wrapped.throw(exc)
+        except StopIteration as e:
+            raise StopAsyncIteration(e.value) from e
+
+    async def aclose(self):
+        return self._wrapped.close()
+
+
 async def agen():
-    async with asyncio.timeout(3):
-        # If the timeout fails, then an asyncio.TimeoutError would be raised
-        # in a *synchronous* generator!
-        yield from subgen()
+    async yield from AsAsyncIterator([1, 2, 3])
+    async yield from AsAsyncGenerator(subgen())
 ```
 
 To quote Brandt Bucher (paraphrased):

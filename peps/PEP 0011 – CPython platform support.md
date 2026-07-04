@@ -16,7 +16,7 @@ post_history:
 python_status: Active
 url: https://peps.python.org/pep-0011/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0011.rst
-source_commit: 28a3c6b7d34b8fd9e82b55a25eef45ebfd8bf229
+source_commit: 4a32c0164e02901a0ac1ef50fd8448ed08625eca
 ---
 
 # Abstract
@@ -167,17 +167,19 @@ maintenance branches.
 Unsupported code that *does* cause a maintenance burden, or obstructs
 general improvements, may be rejected or removed from the code base
 without a deprecation process. Core team members that do this
-intentionally are encouraged to notify people listed in the [Platforms
-experts list](https://devguide.python.org/core-team/experts/#platforms)
-in the CPython contributor\'s guide, to review any submitted fixes (if
+intentionally are encouraged to notify people listed in the [Ports and
+contacts
+list](https://devguide.python.org/developer-workflow/porting/#ports-and-contacts)
+in the Python developer\'s guide, to review any submitted fixes (if
 unobtrusive), and to consider adding configuration or extension
 capabilities necessary for workarounds.
 
 People interested in unsupported platforms may add themselves to the
-[Platforms experts
-list](https://devguide.python.org/core-team/experts/#platforms) to
-request that they be notified on issues related to \"their\" platform.
-There is, however, no formal guarantee that they *will* be notified.
+[Ports and contacts
+list](https://devguide.python.org/developer-workflow/porting/#ports-and-contacts)
+to request that they be notified on issues related to \"their\"
+platform. There is, however, no formal guarantee that they *will* be
+notified.
 
 Platforms not listed in this PEP may also be supported by the wider
 Python community in other ways. If your desired platform is not listed
