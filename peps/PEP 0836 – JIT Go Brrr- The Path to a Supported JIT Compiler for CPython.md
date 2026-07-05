@@ -15,7 +15,7 @@ post_history:
 python_status: Draft
 url: https://peps.python.org/pep-0836/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0836.rst
-source_commit: b8a627d559f852dfa3b30feb0ab551d607abd667
+source_commit: bdd2517d1625c01465462a49cb0539a3eb78c5e2
 ---
 
 # Abstract
@@ -68,7 +68,12 @@ next 2.5 years:
     maintenance, teachability, debugging, etc. The first implementation
     should be minimal, may initially use more memory or perform slightly
     worse, and may be rolled back to the current tracing frontend if the
-    approach does not meet the project\'s goals in the first year.
+    approach does not meet the project\'s goals in the first year. The
+    rest of the JIT (intermediate representation, middle-end/optimizer,
+    and Copy and Patch backend), remain almost completely unchanged from
+    CPython 3.15. **In other words, only what the JIT selects to compile
+    is evolving from traces to methods, nothing else is changing from
+    CPython 3.15.**.
   - `Make the JIT compatible with free-threading <836-free-threading>`{.interpreted-text
     role="ref"}. We believe that this is important to prioritize early
     on in the next phase of the JIT as free-threading adoption is
@@ -395,21 +400,22 @@ the method frontend are as follows:
   higher JIT tier (which requires another JIT bolted on top) or
   inter-trace knowledge.
 
-The following is the reference design. It is subject to change as the
-code evolves:
+The following is the reference design for the evolved frontend. It is
+subject to change as the code evolves:
 
-- **Uop IR.** The benefits for this are explained in previous sections.
+- **Compile one or more methods at a time.** This is self-explanatory in
+  the name.
 - **Some Single Static Assignment (SSA) form properties over the
-  stack.** This does not mean we need to rewrite our IR to SSA form, but
-  rather, the optimizer should have some SSA properties. We believe this
-  aligns more closely with other compilers (e.g. Cinder, PyPy, Chrome\'s
-  V8, CRuby\'s YJIT/ZJIT), and makes understanding *how* to optimize in
-  the JIT easier and more powerful. The current JIT optimizer already
-  nearly supports this, and only requires minimal changes to have SSA
-  properties. An IR with proper stack discipline already has many useful
-  properties that are analogous to SSA form. SSA form will basically
-  come for free for stack variables.
-- **A simple way to represent high-level constructs.** We have an
+  stack.** The current CPython 3.15 JIT optimizer already nearly
+  supports this, and only requires minimal changes to have SSA
+  properties. The CPython 3.15 Uop IR also already has many useful
+  properties that are analogous to SSA form. We want to introduce a few
+  more SSA properties to the Uop IR. We believe this aligns more closely
+  with other compilers (e.g. Cinder, PyPy, Chrome\'s V8, CRuby\'s
+  YJIT/ZJIT), and makes understanding *how* to optimize in the JIT
+  easier and more powerful.
+- **A simple way to represent high-level constructs.** To represent
+  high-level control-flow in the method frontend, we have an
   implementation that forms *regions* (groups of basic blocks), inspired
   by the similarly named concept in MLIR (an LLVM project). Rather than
   degenerating programs to single basic blocks pointing to each other,
@@ -419,15 +425,16 @@ code evolves:
   generator/coroutine/loop/etc. (high-level construct) analysis and
   optimizations.
 
-With all of the above, most optimizations in the JIT can be implemented
-as local rewrites. This is again, inspired by certain properties of
-other runtimes\' intermediate representations. Our goal is to make the
-JIT more traditional and teachable, without sacrificing what we can
-optimize. We do acknowledge that a method JIT requires joining
-control-flow. However, we believe this is not a large conceptual
-overhead, as a tracing JIT already requires teaching the concept of
-joining control-flow once anything other than the most basic
-optimizations are implemented.
+**In other words, apart from growing support for analyzing methods,
+nothing has changed from CPython 3.15.** With all of the above, most
+optimizations in the JIT can be implemented as local rewrites. This is
+again, inspired by certain properties of other runtimes\' intermediate
+representations. Our goal is to make the JIT more traditional and
+teachable, without sacrificing what we can optimize. We do acknowledge
+that a method JIT requires joining control-flow. However, we believe
+this is not a large conceptual overhead, as a tracing JIT already
+requires teaching the concept of joining control-flow once anything
+other than the most basic optimizations are implemented.
 
 In terms of what code we need to achieve this frontend, most of the
 infrastructure required is already present. The main code modifications
@@ -562,13 +569,12 @@ more percentage points on pyperformance. For example:
   is a source of slowdown on architectures where atomics are more
   expensive.
 
-**We believe that the right framing here is not the JIT \*or\*
-free-threading, but rather, the JIT \*and\* free-threading**. We
-understand the JIT may initially lose some performance opportunities
-from free-threading\'s semantics. However, both the JIT and
-free-threading have much to gain. The JIT can recover all of
-free-threading\'s single-threaded performance losses and maybe even
-more.
+**We believe that the right framing here is not the JIT or
+free-threading, but rather, the JIT and free-threading**. We understand
+the JIT may initially lose some performance opportunities from
+free-threading\'s semantics. However, both the JIT and free-threading
+have much to gain. The JIT can recover all of free-threading\'s
+single-threaded performance losses and maybe even more.
 
 ## A Better JIT Distribution Story {#836-distribution}
 
@@ -608,17 +614,17 @@ The JIT will continue supporting out-of-process profilers/debuggers that
 require Python frames. We understand that frame elision (inlining) is a
 promising optimization. However, completely eliding frames in the JIT
 would break third party tools. We will take care to negotiate and
-provide alternative methods for Python frame unwinders the required
-information to recover the elided frame, such as storing metadata for
-the elided frame. Furthermore, tools that inspect the Python stack may
-need to symbolize the JIT C shim frame (i.e., relate it to a Python
-function call). In this case, all necessary information to support these
-tools will be provided in the CPython runtime, either through executor
-objects or elsewhere, and also in the debug offsets for these tools to
-support making sense of a callstack with JIT frames. For this, we may
-consult with maintainers of popular Python frame unwinding applications.
-As a general rule: if something works with the JIT off, we should do
-everything we can to make sure it also works (or has usable
+provide alternative methods for Python frame unwinders to have the
+information required to recover the elided frame, such as storing
+metadata for the elided frame. Furthermore, tools that inspect the
+Python stack may need to symbolize the JIT C shim frame (i.e., relate it
+to a Python function call). In this case, all necessary information to
+support these tools will be provided in the CPython runtime, either
+through executor objects or elsewhere, and also in the debug offsets for
+these tools to support making sense of a callstack with JIT frames. For
+this, we may consult with maintainers of popular Python frame unwinding
+applications. As a general rule: if something works with the JIT off, we
+should do everything we can to make sure it also works (or has usable
 alternatives) with the JIT on, and not break genuinely useful
 observability and debugging features in the name of raw performance.
 
