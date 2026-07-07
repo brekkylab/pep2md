@@ -15,7 +15,7 @@ post_history:
 python_status: Draft
 url: https://peps.python.org/pep-0828/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0828.rst
-source_commit: 3cbddd3efd1ac8cbd6c66bbc7fa2870c7106c306
+source_commit: dfaf0b48fa27ca1e061d01b595558b665c8dedc0
 ---
 
 # Abstract
@@ -372,6 +372,8 @@ class AsAsyncIterator:
     async def __anext__(self):
         try:
             return self._wrapped.__next__()
+        except StopAsyncIteration as e:
+            raise RuntimeError("async generator raised StopAsyncIteration") from e
         except StopIteration as e:
             raise StopAsyncIteration(e.value) from e
 
@@ -380,17 +382,24 @@ class AsAsyncGenerator(AsAsyncIterator):
     async def asend(self, value):
         try:
             return self._wrapped.send(value)
+        except StopAsyncIteration as e:
+            raise RuntimeError("async generator raised StopAsyncIteration") from e
         except StopIteration as e:
             raise StopAsyncIteration(e.value) from e
 
     async def athrow(self, exc):
         try:
             return self._wrapped.throw(exc)
+        except StopAsyncIteration as e:
+            raise RuntimeError("async generator raised StopAsyncIteration") from e
         except StopIteration as e:
             raise StopAsyncIteration(e.value) from e
 
     async def aclose(self):
-        return self._wrapped.close()
+        try:
+            return self._wrapped.close()
+        except StopAsyncIteration as e:
+            raise RuntimeError("async generator raised StopAsyncIteration") from e
 
 
 async def agen():
