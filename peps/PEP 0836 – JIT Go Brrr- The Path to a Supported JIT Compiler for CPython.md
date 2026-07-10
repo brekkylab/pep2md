@@ -15,7 +15,7 @@ post_history:
 python_status: Draft
 url: https://peps.python.org/pep-0836/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0836.rst
-source_commit: bdd2517d1625c01465462a49cb0539a3eb78c5e2
+source_commit: 4a6957369d7ab781b7cd171026533bba9792eacb
 ---
 
 # Abstract
@@ -73,7 +73,7 @@ next 2.5 years:
     and Copy and Patch backend), remain almost completely unchanged from
     CPython 3.15. **In other words, only what the JIT selects to compile
     is evolving from traces to methods, nothing else is changing from
-    CPython 3.15.**.
+    CPython 3.15.**
   - `Make the JIT compatible with free-threading <836-free-threading>`{.interpreted-text
     role="ref"}. We believe that this is important to prioritize early
     on in the next phase of the JIT as free-threading adoption is
@@ -174,9 +174,8 @@ LLVM build-time requirement for stencil generation.
 
 The JIT has garnered many excellent community contributors, and this has
 picked up momentum in recent months. We are extremely grateful to these
-volunteers. A sizable and active community now exists today, as
-evidenced by the contributor list in CPython 3.15\'s
-`What's New entry for the JIT
+volunteers. A sizable and active community exists today, as evidenced by
+the contributor list in CPython 3.15\'s `What's New entry for the JIT
 <whatsnew315-jit>`{.interpreted-text role="ref"}. The JIT team has
 learnt important lessons to attract new contributors, such as making
 approachable work units in the public issue tracker, and mentorship.

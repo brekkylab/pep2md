@@ -4,17 +4,18 @@ title: Shared Object Proxies
 author:
 - Peter Bierma <peter@python.org>
 discussions_to: https://discuss.python.org/t/105709
-status: Draft
+status: Rejected
 type: Standards Track
 created: 08-Aug-2025
 python_version: '3.16'
 post_history:
 - '`01-Jul-2025 <https://discuss.python.org/t/97306>`__'
 - '`13-Jan-2026 <https://discuss.python.org/t/105709>`__'
-python_status: Draft
+resolution: '`08-Jul-2026 <https://discuss.python.org/t/105709/35>`__'
+python_status: Rejected
 url: https://peps.python.org/pep-0797/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0797.rst
-source_commit: 72ecb99168b390651f64e547275a73327dbd26d3
+source_commit: 13f4430e19e0e3f225df30a52fafc6307802c34d
 ---
 
 # Abstract
