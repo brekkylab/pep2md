@@ -23,7 +23,7 @@ resolution: https://discuss.python.org/t/pep-621-round-3/5472/109
 python_status: Final
 url: https://peps.python.org/pep-0621/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0621.rst
-source_commit: 5f8718006b6db3e1691d15f0b5a45cb3cd7f18f1
+source_commit: 9b3ea85b68f3850f24512f78b96d198fa596508e
 ---
 
 ::: canonical-pypa-spec
@@ -228,7 +228,7 @@ Otherwise tools MUST raise an error for unsupported content-types.
 - [Core
   metadata](https://packaging.python.org/specifications/core-metadata/):
   `Requires-Python`
-  ([link](https://packaging.python.org/specifications/core-metadata/#summary))
+  ([link](https://packaging.python.org/specifications/core-metadata/#requires-python))
 - Synonyms
   - [Flit](https://flit.readthedocs.io/): `requires-python`
     ([link](https://flit.readthedocs.io/en/latest/pyproject_toml.html#metadata-section))
