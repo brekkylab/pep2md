@@ -16,7 +16,7 @@ post_history:
 python_status: Draft
 url: https://peps.python.org/pep-0827/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0827.rst
-source_commit: 3f4bf714c3a36f617614e3ca9fc1e686598ae3a4
+source_commit: bf3200325bfef7426c0ee2b8d93495bc5ddabb75
 ---
 
 # Abstract
@@ -371,27 +371,31 @@ function param:
     class Param[
         N: str | None,
         T,
-        K: ParamKind = Literal["positional_or_keyword"],
+        K: ParamKind = Literal[ParamKind.POSITIONAL_OR_KEYWORD],
         D = typing.Never,
     ]:
         pass
 
-    ParamKind = typing.Literal[
-        "*", "**", "keyword", "positional", "positional_or_keyword"
-    ]
+    class ParamKind(enum.IntEnum):
+        POSITIONAL_ONLY = 0
+        POSITIONAL_OR_KEYWORD = 1
+        VAR_POSITIONAL = 2
+        KEYWORD_ONLY = 3
+        VAR_KEYWORD = 4
 
-    type PosParam[T] = Param[None, T, Literal["positional"]]
-    type PosDefaultParam[T] = Param[None, T, Literal["positional"], T]
-    type DefaultParam[N: str, T] = Param[N, T, Literal["positional_or_keyword"], T]
-    type NamedParam[N: str, T] = Param[N, T, Literal["keyword"]]
-    type NamedDefaultParam[N: str, T] = Param[N, T, Literal["keyword"], T]
-    type ArgsParam[T] = Param[None, T, Literal["*"]]
-    type KwargsParam[T] = Param[None, T, Literal["**"]]
+    type PosParam[T] = Param[None, T, Literal[ParamKind.POSITIONAL_ONLY]]
+    type PosDefaultParam[T] = Param[None, T, Literal[ParamKind.POSITIONAL_ONLY], T]
+    type DefaultParam[N: str, T] = Param[N, T, Literal[ParamKind.POSITIONAL_OR_KEYWORD], T]
+    type NamedParam[N: str, T] = Param[N, T, Literal[ParamKind.KEYWORD_ONLY]]
+    type NamedDefaultParam[N: str, T] = Param[N, T, Literal[ParamKind.KEYWORD_ONLY], T]
+    type ArgsParam[T] = Param[None, T, Literal[ParamKind.VAR_POSITIONAL]]
+    type KwargsParam[T] = Param[None, T, Literal[ParamKind.VAR_KEYWORD]]
 
 The argument `K`, of type `ParamKind`, represents the parameter kind of
 the parameter, and defaults to the ordinary
-`Literal["positional_or_keyword"]`. It is an error to create `Callable`
-with a `Param` containing multiple kinds unioned together.
+`Literal[ParamKind.POSITIONAL_OR_KEYWORD]`. `ParamKind` mirrors
+`inspect._ParameterKind`. It is an error to create `Callable` with a
+`Param` containing multiple kinds unioned together.
 
 The argument `D` carries the type of the parameter\'s default, if one
 exists, and is `Never` otherwise. When the default value is a literal
@@ -428,13 +432,13 @@ as:
 
     Callable[
         Params[
-            Param[Literal["a"], int, Literal["positional"]],
+            Param[Literal["a"], int, Literal[ParamKind.POSITIONAL_ONLY]],
             Param[Literal["b"], int],
-            Param[Literal["c"], int, Literal["positional_or_keyword"], Literal[0]],
-            Param[None, int, Literal["*"]],
-            Param[Literal["d"], int, Literal["keyword"]],
-            Param[Literal["e"], int, Literal["keyword"], Literal[0]],
-            Param[None, int, Literal["**"]],
+            Param[Literal["c"], int, Literal[ParamKind.POSITIONAL_OR_KEYWORD], Literal[0]],
+            Param[None, int, Literal[ParamKind.VAR_POSITIONAL]],
+            Param[Literal["d"], int, Literal[ParamKind.KEYWORD_ONLY]],
+            Param[Literal["e"], int, Literal[ParamKind.KEYWORD_ONLY], Literal[0]],
+            Param[None, int, Literal[ParamKind.VAR_KEYWORD]],
         ],
         int,
     ]
@@ -1042,7 +1046,7 @@ iterating over all attributes.
                         p.name,
                         p.type,
                         # All arguments are keyword-only
-                        Literal["keyword"],
+                        Literal[ParamKind.KEYWORD_ONLY],
                         # GetDefault is Never when there's no default, so use it
                         # directly as D.
                         GetDefault[p.init],
@@ -1752,12 +1756,6 @@ simulated in other ways.
   arguments be configurable in the `TypedDict` serving as the bound
   somehow? If `readonly` had been added as a parameter to `TypedDict` we
   would use that, but it wasn\'t.
-
-- `Extended Callables <pep827-extended-callables-prereq>`{.interpreted-text
-  role="ref"}: Currently the qualifiers are short strings for code
-  brevity, but an alternate approach would be to mirror
-  `inspect.Signature` more directly, and have an enum with names like
-  `ParamKind.POSITIONAL_OR_KEYWORD`. Would that be better?
 
 - `Members <pep827-members>`{.interpreted-text role="ref"}: Should
   `Members` return all methods, even those without annotations? We
