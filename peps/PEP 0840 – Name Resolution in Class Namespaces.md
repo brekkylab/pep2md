@@ -1,16 +1,20 @@
 ---
-pep: 837
+pep: 840
 title: Name Resolution in Class Namespaces
 author:
 - Jeremy Hylton <jeremy@python.org>
+- Guido van Rossum <guido@python.org>
+discussions_to: https://discuss.python.org/t/pep-840-name-resolution-in-class-namespaces/108166
 status: Draft
 type: Standards Track
 created: 15-Jul-2026
 python_version: '3.16'
+post_history:
+- '`16-Jul-2026 <https://discuss.python.org/t/pep-840-name-resolution-in-class-namespaces/108166>`__'
 python_status: Draft
-url: https://peps.python.org/pep-0837/
-source_path: https://github.com/python/peps/blob/main/peps/pep-0837.rst
-source_commit: 81ee1feaba8415befaf78b2fcafe229e9329161f
+url: https://peps.python.org/pep-0840/
+source_path: https://github.com/python/peps/blob/main/peps/pep-0840.rst
+source_commit: 5a565231da67114b17a12c96ac8dbeb1d754159b
 ---
 
 # Abstract
@@ -19,7 +23,7 @@ There is a long-standing inconsistency in the way variable names are
 resolved in classes. Several alternatives to resolve this inconsistency
 are discussed.
 
-# Movtivation
+# Motivation
 
 Name resolution in a class namespace uses a partial dynamic lookup. A
 name can be either local or global depending on whether an assignment to
