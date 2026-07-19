@@ -15,7 +15,7 @@ post_history:
 python_status: Draft
 url: https://peps.python.org/pep-0828/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0828.rst
-source_commit: dfaf0b48fa27ca1e061d01b595558b665c8dedc0
+source_commit: 1958f7f58d3a0729e0835ef8fad862902666e9fc
 ---
 
 # Abstract
@@ -23,7 +23,7 @@ source_commit: dfaf0b48fa27ca1e061d01b595558b665c8dedc0
 This PEP introduces support for `yield from <yield>`{.interpreted-text
 role="keyword"} in an
 `asynchronous generator function <asynchronous-generator-functions>`{.interpreted-text
-role="ref"} through a new `async yield from` construct:
+role="ref"}:
 
 ``` python
 async def agenerator():
@@ -32,7 +32,7 @@ async def agenerator():
     return 3
 
 async def main():
-    result = async yield from agenerator()
+    result = yield from agenerator()
     assert result == 3
 ```
 
@@ -45,8 +45,7 @@ suffixed with \"function\". This is not to be confused with an
 is the object *returned* by an asynchronous generator.
 
 This PEP also uses the term \"subgenerator\" to refer to a generator,
-synchronous or asynchronous, that is used inside of a `yield from` or
-`async yield from` expression.
+synchronous or asynchronous, that is used inside a `yield from`.
 
 # Motivation
 
@@ -108,32 +107,17 @@ yields each item. This comes with a few drawbacks:
 
 # Specification
 
-## Syntax
-
-### Compiler changes
+## Compiler changes
 
 The compiler will no longer emit a `SyntaxError`{.interpreted-text
-role="exc"} for `return`{.interpreted-text role="keyword"} statements
-inside asynchronous generators.
-
-### Grammar changes
-
-The `yield_expr` and `simple_stmt` rules need to be updated for the new
-`async yield from` syntax:
-
-``` peg
-yield_expr[expr_ty]:
-    | 'async' 'yield' 'from' a=expression
-
-simple_stmt[stmt_ty] (memo):
-    | &('yield' | 'async') yield_stmt
-```
+role="exc"} for `return`{.interpreted-text role="keyword"} or
+`yield from` statements inside asynchronous generators.
 
 ## Changes to `StopAsyncIteration`
 
 The `StopAsyncIteration`{.interpreted-text role="class"} exception will
-gain a new `value` attribute to be used as the result of
-`async yield from` expressions.
+gain a new `value` attribute to be used as the result of `yield from`
+expressions in asynchronous generators.
 
 This attribute can be supplied by passing a positional argument to
 `StopAsyncIteration`. For example:
@@ -151,15 +135,15 @@ If no argument is supplied, `value` will be `None`.
 In the body of an asynchronous generator function, the statement
 `return expression` is roughly equivalent to
 `raise StopAsyncIteration(expression)`. However, similar to implicit
-`StopIteration` exceptions raised inside of synchronous generators, the
+`StopIteration` exceptions raised inside synchronous generators, the
 exception cannot be caught in the body of the asynchronous generator.
 
-## `async yield from` semantics
+## `yield from` semantics in an asynchronous generator
 
-The statement
+In an asynchronous generator, the statement
 
 ``` python
-RESULT = async yield from EXPR
+RESULT = yield from EXPR
 ```
 
 is roughly equivalent to the following:
@@ -206,24 +190,21 @@ else:
 
 # Rationale
 
-## Relation to `yield from`
+## Relation to synchronous generators
 
-This PEP aims to be very similar to the semantics of `yield from`, with
-the exception that asynchronous generator methods are used instead of
-synchronous generator methods when delegating. This is a very intuitive
-design and furthers symmetry with synchronous generators.
+This PEP aims to be very similar to the semantics of synchronous
+`yield from`, with the exception that asynchronous generator methods are
+used instead of synchronous generator methods when delegating. This is a
+very intuitive design and furthers symmetry with synchronous generators.
 
-## Choice of `async yield from` as the syntax
+## Choice of `yield from` as the syntax
 
-This PEP uses `async yield from` as the syntax to ensure that the
-behavior of the syntax is immediately clear to the user.
-
-However, it is acknowledged that this is somewhat verbose. There is not
-any great solution to this problem; see
-`pep-828-rejected-ideas`{.interpreted-text role="ref"} for discussion
-about proposed alternatives. In short, `async yield from` was chosen as
-the best choice of syntax because, while verbose, it is very clear and
-readable.
+This PEP uses `yield from` as the syntax, but it is acknowledged that
+this is somewhat controversial, as this is an asynchronous context
+switch without an explicit `async` or `await` marker; see
+`pep-828-rejected-ideas`{.interpreted-text role="ref"}. In short,
+`yield from` was chosen as the best choice of syntax because it is
+symmetric with synchronous generators and easy to type.
 
 # Backwards Compatibility
 
@@ -231,7 +212,7 @@ This PEP introduces a backwards-compatible syntax change.
 
 The addition of the `value` attribute to
 `StopAsyncIteration`{.interpreted-text role="exc"} is a minor semantic
-change to an existing builtin exception, but is unlikely to affect
+change to an existing built-in exception, but is unlikely to affect
 existing code in practice, as it mirrors the existing `value` attribute
 on `StopIteration`{.interpreted-text role="exc"} and does not affect any
 other behavior on `StopAsyncIteration` or the asynchronous iterator
@@ -246,10 +227,8 @@ This PEP has no known security implications.
 The details of this proposal will be located in Python\'s canonical
 documentation, as with all other language constructs. However, this PEP
 intends to be very intuitive; users should be able to naturally reach
-for `async yield from` given their own background knowledge about
-generators in Python. This can be encouraged further by suggesting
-`async yield from` in the error message when a user attempts to use
-`yield from` in an asynchronous generator.
+for `yield from` given their own background knowledge about generators
+in Python.
 
 # Reference Implementation
 
@@ -258,72 +237,72 @@ A reference implementation of this PEP can be found at
 
 # Rejected Ideas {#pep-828-rejected-ideas}
 
-## Using `yield from` to delegate to asynchronous generators
+## Using `async yield from` as the syntax
 
-Due to the verbosity of `async yield from`, it was proposed to overload
-the existing `yield from` syntax to perform asynchronous subgenerator
-delegation when used inside of an asynchronous generator.
+There are two primary counterarguments against this proposal as it is
+currently written:
 
-For example:
+1.  It adds behavior that does asynchronous work without having `async`
+    or `await` as its first non-whitespace token.
+2.  It changes the meaning of `yield from` depending on the type of
+    generator it is used in.
+
+The solution to these issues was to introduce a new `async yield from`
+statement that would perform asynchronous subgenerator delegation.
+However, this new syntax came with its own set of problems.
+
+First and foremost, `async yield from` is very verbose. There are no
+other syntax constructs in Python that use three keywords in a row.
+
+Second, there is no `async yield` as a counterpart; CPython already
+emits significantly different bytecode for `yield` statements inside
+asynchronous generators, so it\'s not far-fetched for `yield from` to do
+the same.
+
+Third, `yield` (as well as `yield from`) is, technically speaking,
+already an asynchronous context switch, because the generator will be
+suspended and can only be resumed via an `await` (on
+`~agen.asend`{.interpreted-text role="meth"}) from the caller.
+
+Finally, plain `yield from` is more symmetric and intuitive to users of
+Python. To visualize, take these two examples:
 
 ``` python
-async def asubgenerator():
+def gen():
     yield 1
-    yield 2
 
-async def agenerator():
-    yield from asubgenerator()
+async def agen():
+    yield 1
 ```
-
-This has the benefit of being more concise than `async yield from`, but
-also has a few downsides.
-
-Most importantly, this makes the asynchronous context switches necessary
-for delegation implicit, which has no precedent in Python; all syntax
-that may execute an `await` is prefixed with `async`. It has been argued
-that one of the upsides of `async`/`await` over threads is the explicit
-switch points, so hiding `await`s behind a `yield from` hurts this
-benefit.
-
-Second, many were uncomfortable with `yield from` being
-context-dependent. It felt like a potential footgun for `yield from` to
-mean something different based on the type of generator it was used in.
-In practice, this may come up in a scenario where one wants to convert a
-synchronous generator into an asynchronous generator.
-
-For example, imagine a developer is writing a function for streaming
-data to the caller:
 
 ``` python
-def stream_data():
-    yield ...
-    yield from something_else()
-    yield ...
+def gen():
+    yield from subgen()
+
+async def agen():
+    yield from asubgen()
 ```
 
-Now, imagine that the developer wants to add an `await` call somewhere
-in this function; the `yield from something_else()` statement would
-suddenly become a runtime `TypeError`{.interpreted-text role="class"}
-(as opposed to a compile-time `SyntaxError`{.interpreted-text
-role="class"}). With the current proposal, the existence of
-`async yield from` (which would ideally be included in the error
-message) would make it much clearer that `something_else` must also be
-asynchronous in order to delegate to it.
+`async yield from` would break this symmetry.
 
-Finally, this would preclude the introduction of support for synchronous
-subgenerator delegation inside asynchronous generators (see
-`pep-828-synchronous-delegation`{.interpreted-text role="ref"}), because
-the `yield from` syntax would already be overloaded. However, the author
-of this proposal does acknowledge that the issues with synchronous
-subdelegation may preclude the introduction of this anyway \-- it is not
-entirely clear whether the issues are solvable given time.
+However, all in all, the difference between `yield from` and
+`async yield from` is primarily up to the taste of the reader. Even the
+author of this PEP is not completely convinced for one way or the other.
+During discussion, the difference between `yield from` and
+`async yield from` was compared to [deciding what 0\^0 should be in
+mathematics](https://en.wikipedia.org/wiki/Zero_to_the_power_of_zero);
+it depends on the context and the point of view. The alternative was to
+not add support for delegation to asynchronous subgenerators, which was
+a lose-lose scenario for all parties involved. A decision had to be
+made, and it was clear that consensus was never going to be reached.
 
-## `async from`, `await from`, and similar spellings
+### `async from`, `await from`, and similar spellings
 
-As an alternate solution to the verbosity of `async yield from`, some
+As an alternative solution to the verbosity of `async yield from`, some
 have suggested using spellings such as `async from` in order to cut down
 on the verbosity. Unfortunately, changes in the spelling will likely
-hurt the readability of the syntax as a whole.
+hurt the readability of the syntax as a whole, and thus would not
+improve the argument for `async yield from`.
 
 The benefit of `async yield from` is that it specifies each of the three
 important parts without introducing new keywords. In particular:
@@ -339,10 +318,10 @@ spelling exists.
 
 ## Allowing delegation to synchronous subgenerators {#pep-828-synchronous-delegation}
 
-In an earlier revision of this proposal, the synchronous `yield from`
-construct was allowed in an asynchronous generator, which would delegate
-to a synchronous generator from an asynchronous one. This had a number
-of hidden issues.
+In an earlier revision of this proposal, `yield from` in an asynchronous
+generator would delegate to a synchronous generator (and
+`async yield from` was the counterpart for asynchronous subgenerator
+delegation). This had a number of hidden issues.
 
 In particular, the mixing of asynchronous frames with synchronous frames
 had a layer of complexity unfit for Python. In the implementation, there
@@ -355,7 +334,7 @@ generator methods and asynchronous generator methods:
 `~agen.aclose`{.interpreted-text role="meth"} to
 `~generator.close`{.interpreted-text role="meth"}.
 
-It\'s trivial for anyone that needs to delegate to a subgenerator to
+It\'s trivial for anyone who needs to delegate to a subgenerator to
 write the wrapper class to upgrade a synchronous
 `~collections.abc.Iterable`{.interpreted-text role="class"} or
 `~collections.abc.Generator`{.interpreted-text role="class"} to an async
@@ -403,8 +382,8 @@ class AsAsyncGenerator(AsAsyncIterator):
 
 
 async def agen():
-    async yield from AsAsyncIterator([1, 2, 3])
-    async yield from AsAsyncGenerator(subgen())
+    yield from AsAsyncIterator([1, 2, 3])
+    yield from AsAsyncGenerator(subgen())
 ```
 
 To quote Brandt Bucher (paraphrased):
@@ -429,6 +408,11 @@ Special thanks to Yury Selivanov for providing extensive feedback and
 also collecting outside opinions about the design and implementation.
 
 # Change History
+
+- 18-Jul-2026
+
+  > - Switched from `async yield from` to `yield from` as the choice of
+  >   syntax.
 
 - 26-May-2026
 
