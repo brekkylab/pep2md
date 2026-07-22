@@ -15,7 +15,7 @@ resolution: https://mail.python.org/pipermail/python-dev/2016-July/145697.html
 python_status: Active
 url: https://peps.python.org/pep-0514/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0514.rst
-source_commit: 83c4116825e161b53362502e14fc6f1b435bef93
+source_commit: 763292fea10b4d855fa3bdd43d5ac11bcd1c8ec8
 ---
 
 # Abstract
@@ -117,7 +117,7 @@ and which registration has the higher priority.
 Tools that aim to select a single installed environment from all
 registered environments based on the Company-Tag pair, such as the
 `py.exe` launcher, should always select the environment registered in
-`HKEY_CURRENT_USER` when than the matching one in `HKEY_LOCAL_MACHINE`.
+`HKEY_CURRENT_USER` instead of the matching one in `HKEY_LOCAL_MACHINE`.
 
 Conflicts between `HKEY_LOCAL_MACHINE\Software\Python` and
 `HKEY_LOCAL_MACHINE\Software\Wow6432Node\Python` should only occur when

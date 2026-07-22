@@ -4,11 +4,9 @@ title: Adding python-version to pyvenv.cfg
 author:
 - Konstantin Schütze <konstin@mailbox.org>
 sponsor: Alex Waygood <alex.waygood@gmail.com>
-pep_delegate: Paul Moore <p.f.moore@gmail.com>
 discussions_to: Pending
 status: Draft
 type: Standards Track
-topic: Packaging
 created: 15-Jul-2026
 python_version: '3.16'
 post_history:
@@ -16,7 +14,7 @@ post_history:
 python_status: Draft
 url: https://peps.python.org/pep-0838/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0838.rst
-source_commit: 39bb822d95c4d4430ac9518edc67fc870a0802a8
+source_commit: c5806626c9f6ee20de848652ccff60eb96957b00
 ---
 
 # Abstract
@@ -127,8 +125,14 @@ documentation for this field. The field is not user-facing.
 
 # Reference Implementation
 
-Reference implementations will be provided for uv, virtualenv, and
-CPython.
+Reference implementations are available for uv, virtualenv and CPython:
+
+- [uv](https://github.com/astral-sh/uv/pull/20569)
+- [virtualenv](https://github.com/pypa/virtualenv/pull/3193)
+- `venv`{.interpreted-text role="mod"} in `154378`{.interpreted-text
+  role="cpython-pr"}
+- An optional CPython startup check in `154381`{.interpreted-text
+  role="cpython-pr"}
 
 # Appendix: Existing Tool Behavior {#pep838-appendix}
 
