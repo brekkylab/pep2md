@@ -22,7 +22,7 @@ post_history:
 python_status: Draft
 url: https://peps.python.org/pep-0694/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0694.rst
-source_commit: de05700f085320c010ac1b8ea60c250518dc6d63
+source_commit: 89fc8089d96c4e6c24db1f563f60df5421829c63
 ---
 
 # Abstract
@@ -422,13 +422,19 @@ key in the
 role="ref"}.
 
 If a session is created for a project which has no previous release,
-then the index **MAY** reserve the project name before the session is
-published, however it **MUST NOT** be possible to navigate to that
-project using the \"regular\" (i.e.
-`unstaged <staged-preview>`{.interpreted-text role="ref"}) access
-protocols, *until* the stage is published. If this first-release stage
-gets canceled, then the index **SHOULD** delete the project record, as
-if it were never uploaded.
+then the index **MUST** reserve the project name when the session is
+created. This is a temporary reservation, held only for the life of the
+stage; it exists to prevent a name-claiming race condition at stage
+publication time, where two different clients each create a stage for
+the first upload of a new project, and the name would otherwise be
+claimed by whichever client happens to publish its stage first. It
+**MUST NOT** be possible to navigate to the reserved project using the
+\"regular\" (i.e. `unstaged <staged-preview>`{.interpreted-text
+role="ref"}) access protocols, *until* the stage is published, at which
+point the reservation becomes a permanent registration of the name. If
+this first-release stage gets canceled, then the index **SHOULD** delete
+the project record, as if it were never uploaded, releasing the
+reservation.
 
 A publishing session is **not** bound to the specific credentials that
 created it. Instead, every request against the session **MUST** be
@@ -2126,6 +2132,13 @@ as experience is gained operating Upload 2.0.
     non-terminal the server **SHOULD** keep its file upload session
     status URLs valid, and once the parent terminates they are retained
     no longer than the parent\'s status URL.
+  - Require (was: allow) the index to reserve the project name at
+    session creation when the session is for a project with no previous
+    release. The reservation is temporary (held only for the life of the
+    stage, becoming permanent on publication and released if the stage
+    is canceled) and exists to prevent a name-claiming race condition in
+    which two different clients each create a stage for the first upload
+    of a new project and whichever publishes first would claim the name.
   - Expand the \"Why is the project name required\" FAQ to note that
     single-project sessions still improve multi-project releases (all
     projects can be fully staged before a final step publishes each one)
