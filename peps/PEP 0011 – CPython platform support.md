@@ -16,7 +16,7 @@ post_history:
 python_status: Active
 url: https://peps.python.org/pep-0011/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0011.rst
-source_commit: 4a32c0164e02901a0ac1ef50fd8448ed08625eca
+source_commit: ea007234fa600d43a183dbb3242c1395779ba196
 ---
 
 # Abstract
@@ -99,6 +99,7 @@ first release candidate, it will be listed as unsupported in this PEP.
   Target Triple               Notes                Contacts
   --------------------------- -------------------- ------------------------------------------------------
   aarch64-unknown-linux-gnu   glibc, clang         Victor Stinner, Gregory P. Smith
+  aarch64-pc-windows-msvc                          Steve Dower, Diego Russo, Chris Eibl
   wasm32-unknown-wasip1       WASI SDK, Wasmtime   Brett Cannon, Michael Droettboom, Savannah Ostrowski
   x86_64-apple-darwin         macOS, clang         Sam Gross, Barry Warsaw, Ronald Oussoren
   x86_64-unknown-linux-gnu    glibc, clang         Victor Stinner, Gregory P. Smith
@@ -116,8 +117,6 @@ first release candidate, it will be listed as unsupported in this PEP.
 +================================+======================+======================+
 | aarch64-linux-android          |                      | Russell Keith-Magee, |
 |                                |                      | Petr Viktorin        |
-+--------------------------------+----------------------+----------------------+
-| aarch64-pc-windows-msvc        |                      | Steve Dower          |
 +--------------------------------+----------------------+----------------------+
 | arm64-apple-ios                | iOS on device        | Russell Keith-Magee, |
 |                                |                      | Ned Deily            |
