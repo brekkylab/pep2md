@@ -5,7 +5,7 @@ author:
 - Petr Viktorin <encukou@gmail.com>
 - Nathan Goldbaum <nathan.goldbaum@gmail.com>
 discussions_to: https://discuss.python.org/t/106181
-status: Accepted
+status: Final
 type: Standards Track
 requires:
 - '703'
@@ -18,11 +18,16 @@ post_history:
 - '`20-Nov-2025 <https://discuss.python.org/t/104976>`__'
 - '`16-Feb-2026 <https://discuss.python.org/t/106181>`__'
 resolution: '`30-Mar-2026 <https://discuss.python.org/t/106181/26>`__'
-python_status: Accepted
+python_status: Final
 url: https://peps.python.org/pep-0803/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0803.rst
-source_commit: 4b51e47aca0cd6bc39679837b9eaefeb0ec2f9c2
+source_commit: 36174632ec4f28cea59d340601373bf6b9198f24
 ---
+
+::: canonical-doc
+`py3.15:stable-abi`{.interpreted-text role="ref"} and
+`py3.15:abi3t-migration-howto`{.interpreted-text role="ref"}
+:::
 
 # Abstract
 
@@ -337,7 +342,7 @@ their code.
 
 Projects that cannot do this (yet) can continue using `abi3`, and
 compile the same source for specific versions of free-threaded builds.
-(Note that the APIs removed in `api3t` still are usable when compiling
+(Note that the APIs removed in `abi3t` still are usable when compiling
 for a specific version, including 3.15t.)
 
 See a Rejected Ideas sections for an alternative:
@@ -462,6 +467,10 @@ situations:
   continue to use the `Py_LIMITED_API` macro internally to select which
   APIs are available.)
 
+Also, if `Py_TARGET_ABI3T` is defined, then `Python.h` will make sure
+that `Py_GIL_DISABLED` is defined as well. Users may check this macro to
+enable free-threading-specific code like extra locking.
+
 ## Opaque PyObject
 
 `abi3t` will initially have a single difference from `abi3`: the
@@ -545,9 +554,12 @@ However, CPython will add a line of defense against outdated or
 misconfigured tools, or human mistakes, in the form of a new *module
 slot*, `Py_mod_abi`, containing basic ABI information. This information
 will be checked when a module is loaded, and incompatible extensions
-will be rejected. The specifics are left to the C API working group (see
-[capi-workgroup issue
-72](https://github.com/capi-workgroup/decisions/issues/72)).
+will be rejected. The specifics are left to the C API working group.
+(See [capi-workgroup issue
+72](https://github.com/capi-workgroup/decisions/issues/72), which was
+implemented well before this PEP was finalized. Additionally, a
+`PyABIInfo_FREETHREADING_AGNOSTIC` flag for `PyABIInfo.flags` will be
+added to signal compatibility with both `abi3` and `abi3t`.)
 
 This slot will become *mandatory* with the new export hook added in
 `793`{.interpreted-text role="pep"}. (That PEP currently says "there are
@@ -645,9 +657,9 @@ with 3.17+.
 
 It is discouraged, but possible, to compile extensions compatible with
 *only* `abi3t` (by defining only `Py_TARGET_ABI3T={v}`{.interpreted-text
-role="samp"}, building with GIL-enabled CPython, and tagging the
-resulting wheel with `abi3t` rather than `abi3.abi3t`). This will limit
-the result to free-threaded interpreters only.
+role="samp"} and tagging the resulting wheel with `abi3t` rather than
+`abi3.abi3t`). This will limit the result to free-threaded interpreters
+only.
 
 Its is also possible to build `abi3t` extensions compatible with CPython
 3.14 (or even lower versions), but this is unsupported and would require
@@ -660,9 +672,11 @@ Implementing this PEP will make it possible to build extensions that can
 be successfully loaded on free-threaded Python, but not necessarily ones
 that are thread-safe without a GIL.
 
-Limited API to allow thread-safety without a GIL \-- presumably
-`PyCriticalSection` and similar \-- will be added via the C API working
-group, or in a follow-up PEP.
+Limited API to allow thread-safety without a GIL will be added via the C
+API working group, or in a follow-up PEP. (Note:
+`PyCriticalSection`{.interpreted-text role="external+py3.15:c:type"} API
+was added to 3.15 in [C API WG issue
+100](https://github.com/capi-workgroup/decisions/issues/100).)
 
 # Backwards and Forwards Compatibility
 
@@ -780,11 +794,14 @@ This PEP combines several pieces, implemented individually:
   [python/cpython#137212](https://github.com/python/cpython/pull/137212).
 - A check for older `abi3` was implemented in GitHub pull request
   [python/cpython#137957](https://github.com/python/cpython/pull/137957).
-- For wheel tag handling in installers, a draft pull request is at
+- The `packaging` project implemented wheel tag handling in installers
+  in
   [pypa/packaging/pull#1099](https://github.com/pypa/packaging/pull/1099).
-- For build tools, several individual draft pull requests are open;
-  contact Nathan for details.
-- A porting guide is not yet written.
+- For build tools, several individual pull requests were made; contact
+  Nathan for details.
+
+After this PEP was accepted, the implementation was tracked in [CPython
+issue 146636](https://github.com/python/cpython/issues/146636).
 
 # Rejected Ideas {#pep803-rejected-ideas}
 

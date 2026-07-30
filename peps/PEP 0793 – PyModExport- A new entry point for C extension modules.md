@@ -4,7 +4,7 @@ title: 'PyModExport: A new entry point for C extension modules'
 author:
 - Petr Viktorin <encukou@gmail.com>
 discussions_to: https://discuss.python.org/t/93444
-status: Accepted
+status: Final
 type: Standards Track
 created: 23-May-2025
 python_version: '3.15'
@@ -12,11 +12,15 @@ post_history:
 - '`14-Mar-2025 <https://discuss.python.org/t/84498/>`__'
 - '`27-May-2025 <https://discuss.python.org/t/93444/>`__'
 resolution: '`23-Oct-2025 <https://discuss.python.org/t/93444/46>`__'
-python_status: Accepted
+python_status: Final
 url: https://peps.python.org/pep-0793/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0793.rst
-source_commit: 868e14945e61ea362711c285471a0e9da4f22137
+source_commit: d0000fa76be193678f3d7c47b72dcd5b85d68c16
 ---
+
+::: canonical-doc
+`py3.15:extension-modules`{.interpreted-text role="ref"}
+:::
 
 # Abstract
 
@@ -27,7 +31,7 @@ extension authors to avoid using a statically allocated `PyObject`,
 lifting the most common obstacle to making one compiled library file
 usable with both regular and free-threaded builds of CPython.
 
-To make this viable, we also specify new module slot types to replace
+To make this viable, we also specify new module slot IDs to replace
 `PyModuleDef`\'s fields, and to allow adding a *token* similar to the
 `Py_tp_token` used for type objects.
 
@@ -135,8 +139,8 @@ proposes using a slots array directly, without a wrapper struct.
 
 The `PyModuleDef_Slot` struct does have some downsides compared to fixed
 fields. We believe these are fixable, but leave that out of scope of
-this PEP (see "Improving slots in general" in the Possible Future
-Directions section).
+this PEP. (Note: this was done in `820`{.interpreted-text role="pep"},
+still in Python 3.15.)
 
 ## Tokens
 
@@ -183,6 +187,15 @@ export hook like this:
 PyModuleDef_Slot *PyModExport_<NAME>(void);
 ```
 
+:::: note
+::: title
+Note
+:::
+
+`820`{.interpreted-text role="pep"} changed the return type to
+`PySlot *`.
+::::
+
 where `<NAME>` is the name of the module. For non-ASCII names, it will
 instead look for `PyModExportU_<NAME>`, with `<NAME>` encoded as for
 existing `PyInitU_*` hooks (that is, *punycode*-encoded with hyphens
@@ -217,19 +230,20 @@ A new function will be added to create a module from an array of slots:
 PyObject *PyModule_FromSlotsAndSpec(const PyModuleDef_Slot *slots, PyObject *spec)
 ```
 
-The *slots* argument must point to an array of `PyModuleDef_Slot`
-structures, terminated by a slot with `slot=0` (typically written as
-`{0}` in C). There are no required slots, though *slots* must not be
-`NULL`. It follows that minimal input contains only the terminator slot.
-
 :::: note
 ::: title
 Note
 :::
 
-If `803`{.interpreted-text role="pep"} is accepted, the `Py_mod_abi`
-slot will be mandatory.
+`820`{.interpreted-text role="pep"} changed the first argument type to
+`PySlot *`.
 ::::
+
+The *slots* argument must point to an array of `PyModuleDef_Slot`
+structures, terminated by a slot with `slot=0` (typically written as
+`{0}` in C). The `Py_mod_abi` slot is required (see
+`803`{.interpreted-text role="pep"}); all other slots are optional. It
+follows that *slots* must not be `NULL`.
 
 The *spec* argument is a duck-typed ModuleSpec-like object, meaning that
 any attributes defined for `importlib.machinery.ModuleSpec` have
@@ -365,7 +379,7 @@ external tooling, debugging, and introspection.
 ## Bits & Pieces
 
 A `PyMODEXPORT_FUNC` macro will be added, similar to the
-`PyMODINIT_FUNC` macro but with `PyModuleDef_Slot *` as the return type.
+`PyMODINIT_FUNC` macro but with `PySlot *` as the return type.
 
 A `PyModule_GetStateSize` function will be added to retrieve the size
 set by `Py_mod_state_size` or `PyModuleDef.m_size`. Since the result may
@@ -384,6 +398,15 @@ role="ref"}.
 
 ## New API summary {#pep793-api-summary}
 
+:::: note
+::: title
+Note
+:::
+
+This summary was updated with a change from `820`{.interpreted-text
+role="pep"}.
+::::
+
 Python will load a new module export hook, with two variants:
 
 ``` c
@@ -394,7 +417,7 @@ PyModuleDef_Slot *PyModExportU_<ENCODED_NAME>(void);
 The following functions will be added:
 
 ``` c
-PyObject *PyModule_FromSlotsAndSpec(const PyModuleDef_Slot *, PyObject *spec)
+PyObject *PyModule_FromSlotsAndSpec(const PySlot *, PyObject *spec)
 int PyModule_Exec(PyObject *)
 int PyModule_GetToken(PyObject *, void**)
 PyObject *PyType_GetModuleByToken(PyTypeObject *type, const void *token)
@@ -455,6 +478,19 @@ supports.
 Here is a guide to convert an existing module to the new API, including
 some tricky edge cases. It should be moved to a HOWTO in the
 documentation.
+
+:::: note
+::: title
+Note
+:::
+
+The guide is available at
+`py3.15:abi3t-howto-modexport`{.interpreted-text role="ref"}. (It is
+part of the `abi3t` migration HOWTO since switching to `PyModExport`
+doesn\'t bring benefits in 3.15 if you don\'t also adopt `abi3t`.)
+
+This section contains the original, outdated guide.
+::::
 
 This guide is meant for hand-written modules. For code generators and
 language wrappers, the `pep793-shim`{.interpreted-text role="ref"} below
@@ -560,26 +596,34 @@ The following implementation can be copied and pasted to a project; only
 the names `PyInit_examplemodule` (twice) and `PyModExport_examplemodule`
 should need adjusting.
 
-When added to the `pep793-example`{.interpreted-text role="ref"} below
-and compiled with a non-free-threaded build of this PEP\'s reference
-implementation, the resulting extension is compatible with
-non-free-threading 3.9+ builds, in addition to a free-threading build of
-the reference implementation. (The module must be named without a
-version tag, e.g. `examplemodule.so`, and be placed on `sys.path`.)
+:::: note
+::: title
+Note
+:::
+
+This section was updated for `820`{.interpreted-text role="pep"}.
+::::
+
+When compiled together with the `pep793-example`{.interpreted-text
+role="ref"} below on a non-free-threaded build of Python 3.15, the
+resulting extension is compatible with non-free-threading 3.11+ builds,
+in addition to a free-threading build of the reference implementation.
+(The module must be named without a version tag, e.g.
+`examplemodule.so`, and be placed on `sys.path`.)
 
 Full support for creating such modules will require backports of some
 new API, and support in build/install tools. This is out of scope of
 this PEP. (In particular, the demo "cheats" by using a subset of Limited
-API 3.15 that *happens to work* on 3.9; a proper implementation would
-use Limited API 3.9 with backport shims for new API like `Py_mod_name`.)
+API 3.15 that *happens to work* on 3.11, and includes a few hacks. A
+proper implementation would use Limited API 3.11 with cleaner backport
+shims for new API like `Py_mod_name`.)
 
 This implementation places a few additional requirements on the slots
 array:
 
-- Slots that correspond to `PyModuleDef` members must come first.
+- `Py_mod_slots` and `Py_slot_subslots` are not supported.
 - A `Py_mod_name` slot is required.
-- Any `Py_mod_token` must be set to `&module_def_and_token`, defined
-  here.
+- Any `Py_mod_token` must be set to the `MOD_TOKEN` defined here.
 
 ::: {.literalinclude language="c"}
 pep-0793/shim.c
@@ -596,6 +640,14 @@ In addition to regular reference docs, the
 a new HOWTO.
 
 # Example {#pep793-example}
+
+:::: note
+::: title
+Note
+:::
+
+The example was updated for `820`{.interpreted-text role="pep"}.
+::::
 
 ::: {.literalinclude language="c"}
 pep-0793/examplemodule.c
@@ -652,6 +704,14 @@ are several issues with this approach:
 These ideas are out of scope for *this* proposal.
 
 ## Improving slots in general
+
+:::: note
+::: title
+Note
+:::
+
+This idea was implemented in `820`{.interpreted-text role="pep"}.
+::::
 
 Slots \-- and specifically the existing `PyModuleDef_Slot` \-- do have a
 few shortcomings. The most important are:

@@ -4,18 +4,22 @@ title: 'PySlot: Unified slot system for the C API'
 author:
 - Petr Viktorin <encukou@gmail.com>
 discussions_to: https://discuss.python.org/t/105552
-status: Accepted
+status: Final
 type: Standards Track
 created: 19-Dec-2025
 python_version: '3.15'
 post_history:
 - '`06-Jan-2026 <https://discuss.python.org/t/105552>`__'
 resolution: '`23-Apr-2025 <https://discuss.python.org/t/105552/24>`__'
-python_status: Accepted
+python_status: Final
 url: https://peps.python.org/pep-0820/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0820.rst
-source_commit: e7fe352c4fa9a25cf0b1116bf497f1f46135f8cb
+source_commit: c44728987da64d847a840574cda231b55cb8130d
 ---
+
+::: canonical-doc
+`py3.15:capi-slots`{.interpreted-text role="ref"}
+:::
 
 # Abstract
 
@@ -137,7 +141,7 @@ slots, which can be specified as C literals using macros, like this:
 
 ``` c
 static PySlot myClass_slots[] = {
-   PySlot_STATIC(tp_name, "mymod.MyClass"),
+   PySlot_STATIC_DATA(tp_name, "mymod.MyClass"),
    PySlot_SIZE(tp_extra_basicsize, sizeof(struct myClass)),
    PySlot_FUNC(tp_repr, myClass_repr),
    PySlot_INT64(tp_flags, Py_TPFLAGS_DEFAULT | Py_TPFLAGS_MANAGED_DICT),
@@ -254,17 +258,17 @@ new features.
 
 ## Fixed-width integers
 
-This proposal uses fixed-width integers (`uint16_t`) for slot IDs and
-flags. With the C `int` type, using more than 16 bits would not be
-portable, but it would silently work on common platforms. Using `int`
-but avoiding values over `UINT16_MAX` wastes 16 bits on common
+This proposal uses fixed-width integers for slot IDs (`uint16_t`) and
+flags (`uint64_t`). With the C `int` type, using more than 16 bits would
+not be portable, but it would silently work on common platforms. Using
+`int` but avoiding values over `UINT16_MAX` wastes 16 bits on common
 platforms.
 
 ## Memory layout
 
 On common 64-bit platforms, we can keep the size of the new struct the
 same as the existing `PyType_Slot` and `PyModuleDef_Slot`. (The existing
-struct waste 6 out of 16 bytes due to `int` portability and padding;
+structs waste 6 out of 16 bytes due to `int` portability and padding;
 this proposal puts some of those bits to use for new features.) On
 32-bit platforms, this proposal calls for the same layout as on 64-bit,
 doubling the size compared to the existing structs (from 8 bytes to 16).
@@ -413,6 +417,9 @@ zero.
   structures, then the entire array, as well as the `name` and `doc`
   strings in its elements, must be static and constant.
 
+  This flag will be required for slots that need static data
+  (`Py_mod_methods`, `Py_tp_methods`, `Py_tp_members`, `Py_tp_getset`).
+
 - `PySlot_INTPTR`: The data is stored in `sl_ptr`, and must be cast to
   the appropriate type.
 
@@ -471,7 +478,8 @@ Two more slots will allow similar nesting for existing slot structures:
 - `Py_mod_slots` for an array of `PyModuleDef_Slot`
 
 Each `PyType_Slot` in the array will be converted to
-`(PySlot){.sl_id=slot, .sl_flags=PySlot_INTPTR, .sl_ptr=func}`, and
+`(PySlot){.sl_id=slot, .sl_flags=PySlot_INTPTR, .sl_ptr=func}` (with
+`PySlot_STATIC` to `sl_flags` added for slots that require it), and
 similar with `PyModuleDef_Slot`.
 
 In the initial implementation, nesting depth will be limited to 5
@@ -585,7 +593,7 @@ is currently disallowed in documentation but allowed by the runtime:
 This PEP proposes to change API that was already released in alpha
 versions of Python 3.15. This will inconvenience early adopters of that
 API, but \-- as long as the PEP is accepted and implemented before the
-first bety \-- this change is within the letter and spirit of our
+first beta \-- this change is within the letter and spirit of our
 backwards compatibility policy.
 
 Renumbering of slots is done in a backwards-compatible way. Old values
@@ -609,8 +617,8 @@ Adjust the \"Extending and Embedding\" tutorial to use this.
 
 # Reference Implementation
 
-Draft implementation is available as [pull request #37 in the author\'s
-fork](https://github.com/encukou/cpython/pull/37).
+After this PEP was accepted, the implementation was merged in [CPython
+issue 149044](https://github.com/python/cpython/issues/149044).
 
 # Rejected Ideas
 
@@ -697,6 +705,10 @@ substantial input on this iteration of the proposal.
 
 # Change History
 
+- 17-Jun-2026
+  - Require explicit `PySlot_STATIC` flag for slots that need static
+    data.
+  - PEP marked final.
 - 24-Apr-2026
   - Limit deprecation for NULL and repeated slots to the new API.
   - PEP is accepted
