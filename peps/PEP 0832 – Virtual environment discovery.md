@@ -11,18 +11,21 @@ python_version: '3.15'
 post_history:
 - '`15-Apr-2026 <https://discuss.python.org/t/106998>`__'
 - '`23-Apr-2026 <https://discuss.python.org/t/106998/52>`__'
+- '`31-Jul-2026 <https://discuss.python.org/t/106998/148>`__'
 python_status: Draft
 url: https://peps.python.org/pep-0832/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0832.rst
-source_commit: 931c0dd3565fbb83f3be503c26dc403e9c018548
+source_commit: c9e735fbdce0091ac7e3b025426d8ccf7e1f7f90
 ---
 
 # Abstract
 
-This PEP sets out to help make the discovery of a project\'s virtual
-environment easier for tools by providing a default location as well as
-a way for a project to point to its preferred virtual environment when
-it differs from the default location.
+This PEP sets out to help make the discovery of a project\'s existing
+environments easier. By providing a default location to look for a
+virtual environment as already supported by most tools as well as an
+easy way for workflow tools to list any other environments (virtual or
+not), tools will have a way to find any and all existing environments
+for a project.
 
 # Motivation
 
@@ -30,181 +33,134 @@ Imagine you are on your Mac laptop and you double-click your desktop
 shortcut to launch Emacs (feel free to substitute \"Mac\" and \"Emacs\"
 with your preferred OS and editor, respectively). You open the directory
 for your project in Emacs. Now, how is Emacs (or any other tool for that
-matter) supposed to know where the virtual environment for your project
-is? There\'s no possible detection of an activated virtual environment
-via the `VIRTUAL_ENV` environment variable as you didn\'t launch from a
-terminal. You potentially could scan all subdirectories for a
-`pyvenv.cfg`{.interpreted-text role="file"} file to find the virtual
-environment, but that assumes the virtual environment is kept locally
-with the project and that there is only one of them and not several to
-ambiguously choose from. What are tools like code editors which need
-access to the virtual environment being used to provide functionality
-like auto-complete to do when there is currently no standardized way to
-tell anyone where the virtual environment is? Currently, tools like
-editors have to hard-code a search algorithm for every tool that they
-choose to support. As well, they can document any conventions they
-support, but that assumes you or the tool you use to manage your virtual
-environments follow those conventions.
+matter) supposed to know where the environments for your project are?
+There\'s no possible detection of an activated virtual environment via
+the `VIRTUAL_ENV` environment variable because you didn\'t launch it
+from a terminal. You potentially could scan all subdirectories for a
+`pyvenv.cfg`{.interpreted-text role="file"} file to find a virtual
+environment, but that assumes the virtual environments are kept locally
+with the project and that there is only one of them, rather than several
+from which to choose. As well, not all projects use virtual environments
+and may use a different project isolation mechanism like conda
+environments.
+
+What are tools like code editors, which need access to the environments
+being used to provide functionality like auto-complete, to do when there
+is currently no standardized way to tell anyone where any environments
+are? Currently, tools like editors have to hard-code a search algorithm
+for every tool that they choose to support. As well, they can document
+any conventions they support, but that assumes you or the tool you use
+to manage your environments follow those conventions, which, being
+conventions, are not written down anywhere.
 
 And this is not a hypothetical issue. The author of this PEP was the dev
 manager for Python support in VS Code for 7 years and saw firsthand the
-user struggles and constant feature requests involving trying to find
-one\'s preferred/default virtual environment for a project.
+user struggles and constant feature requests for finding one\'s
+environments for a project.
 
 This issue is also not restricted to code editors. Other tools have a
-need to access the virtual environment to know what is installed. One
+need to access a project\'s environment to know what is installed. One
 example is type checkers which need access to the packages that are
 installed to appropriately gather type annotations for 3rd-party code in
 order to type check the user\'s code.
 
 The goal of this PEP is to provide a specification for tools which
-create/manage virtual environments a way to tell other tools where the
-(default) virtual environment for a project is. In the case of a project
-which has multiple virtual environments, this PEP is meant to allow for
-specifying the default or \"active\" virtual environment so users are
-not forced to make a choice of virtual environment to use if one does
-not want to make such a decision (e.g. at first launch of their code
-editor). Please note this PEP neither condones nor discourages having
-multiple virtual environments for a single project; it is neutral as to
-whether having a single virtual environment or multiple ones is good or
-bad.
+create/manage environments a way to tell other tools where the
+environments for a project are. And in the case of a project which has
+multiple environments, this PEP is meant to allow for specifying the
+default environment to use so users are not forced to make a choice of
+environment if they do not want to make such a decision (e.g. at first
+launch of their code editor).
+
+Please note this PEP neither condones nor discourages having multiple
+environments for a single project; it is neutral as to whether having a
+single environment or multiple ones is good or bad. It also does not
+condone one environment type over another.
 
 # Specification
 
 This PEP does not define what the \"root of a project\" means, but the
-assumption is it is the directory one would open in their code editor to
-work on a project\'s code. This could be the directory where the
-project\'s `pyproject.toml`{.interpreted-text role="file"} lives, or
+assumption is that it is the directory one would open in their code
+editor to work on a project\'s code. This could be the directory where
+the project\'s `pyproject.toml`{.interpreted-text role="file"} lives, or
 potentially the top directory of a monorepo.
 
-The virtual environment for a project MAY be in a directory named
+The virtual environment for a project MAY be a path named
 `.venv`{.interpreted-text role="file"} (i.e.
-`.venv/pyvenv.cfg`{.interpreted-text role="file"} will exist which can
+`.venv/pyvenv.cfg`{.interpreted-text role="file"} will exist, which can
 be used to detect the existence of a virtual environment) in the root of
-the project.
+the project. This PEP makes no judgment whether
+`.venv`{.interpreted-text role="file"} is a physical or logical path to
+a directory containing a virtual environment, nor whether logical paths
+should be resolved to their physical equivalent before use.
 
-In all other situations where placing a virtual environment at the
-project root in a `.venv`{.interpreted-text role="file"} directory is
-not possible or desirable, a `.venv`{.interpreted-text role="file"}
-**file** SHOULD be written in the project root instead. The file MUST
-contain at least a single line recording the path to the directory of
-the virtual environment (i.e. the directory containing
-`pyvenv.cfg`{.interpreted-text role="file"}). The file MUST be encoded
-in UTF-8. If `\r\n` or `\n` are contained in the file then the path is
-considered from the start of the file until the first newline in the
-file with the rest of the file\'s contents ignored but reserved for
-future use cases, otherwise the path is the entire contents of the file.
-There are NO requirements on path formatting (i.e. a POSIX path is not
-required). The path MAY be relative to the `.venv`{.interpreted-text
-role="file"} file. Tools SHOULD verify that the directory the file
-points to exists before using it.
+The root of a project MAY have a `.python-envs`{.interpreted-text
+role="file"} file. This file acts as a listing of all known environments
+for the project (sans `.venv`{.interpreted-text role="file"}; how that
+and `.python-envs`{.interpreted-text role="file"} work together will be
+covered later). The `.python-envs`{.interpreted-text role="file"} MUST
+be encoded using UTF-8. Each line of the file represents an environment
+that is usable by the project and may be separated by `\n` or `\r\n`. A
+trailing newline of either `\n` or `\r\n` is allowed and MUST be
+ignored.
 
-Tools looking for a virtual environment SHOULD look for the
-`.venv`{.interpreted-text role="file"} directory or file and handle them
-appropriately. Tools SHOULD NOT prefer one format over another when
-searching for a virtual environment (e.g. if a tool looks up through
-parent directories for a virtual environment, it shouldn\'t look for a
-directory first and then a file; the first thing found with the
-`.venv`{.interpreted-text role="file"} path name should be chosen).
-Sharing the same path name for both the directory and file means there
-is no precedence issue within the same directory. If the found `.venv`
-is a symlink, it does NOT alter how the resolved file is treated;
-symlinks SHOULD be treated as if they were a regular entry in the file
-system.
+Lines in a `.python-envs`{.interpreted-text role="file"} file MAY be
+paths to an environment. Paths MAY be relative, and if they are, they
+MUST be relative to the `.python-envs`{.interpreted-text role="file"}
+file. IF a path is for a virtual environment, THEN the path MUST be to
+the directory of the virtual environment (i.e. the directory containing
+the `pyvenv.cfg`{.interpreted-text role="file"} file). A line MAY
+represent any type of an environment. Tools reading a
+`.python-envs`{.interpreted-text role="file"} MAY choose what sort of
+environments they support and thus MAY ignore any lines they do not
+understand (although there is a specific restriction in regards to the
+default environment not being supported; covered later). For
+environments a tool understands but are somehow malformed (e.g. a
+virtual environment whose symlinks no longer resolve), it is up to the
+tool to decide how to handle such a situation. There are NO other
+restrictions on how environments are represented or what type of
+environment is in a `.python-envs`{.interpreted-text role="file"} file.
+An empty file has NO special meaning other than representing the lack of
+any environments.
 
-This PEP proposes some changes to the `venv`{.interpreted-text
-role="mod"} module to go along with the above recommendations:
+Duplicate lines MAY be in the file. Listing the same environment
+multiple times does NOT carry any meaning. Any tool MAY remove
+duplicates at any point, but it MUST maintain what environment is
+considered the default during de-duplication.
 
-1.  A `DEFAULT_NAME: str` global that\'s set to `".venv"`.
-2.  Create a
-    `read_redirect_file(project_root: os.PathLike|str) -> pathlib.Path[str]`
-    function for getting the path from a redirect file in
-    `project_root / DEFAULT_NAME`. Raises an exception if the location
-    recorded in the redirect file does not exist.
-3.  `venv.EnvBuilder`{.interpreted-text role="class"} gains
-    `write_redirect_file(project_root: os.PathLike, env_dir: os.PathLike) -> None`
-    and an equivalent `write_redirect_file()` function for the module.
-    The function and method will create a redirect file at
-    `project_root / DEFAULT_NAME` that points to *env_dir*.
-4.  `venv.EnvBuilder.create`{.interpreted-text role="meth"} and
-    `venv.create`{.interpreted-text role="func"} gain a keyword-only
-    `project_root: os.PathLike | None` parameter that will write out a
-    `.venv`{.interpreted-text role="file"} file to that directory via
-    `EnvBuilder.write_redirect_file()`. If the value for *env_dir* ends
-    in `DEFAULT_NAME` and *project_root* points to the parent directory
-    of *env_dir* then `write_redirect_file()` will not be called.
-5.  The *env_dir* parameter for
-    `venv.EnvBuilder.create`{.interpreted-text role="meth"} and
-    `venv.create`{.interpreted-text role="func"} get a default value of
-    `DEFAULT_NAME`.
-6.  The `-m venv` CLI will gain a default value for its *ENV_DIR*
-    argument of `DEFAULT_NAME` (it\'s currently an error not to provide
-    the argument).
-7.  The `-m venv` CLI will gain a `--project-root` option that mirrors
-    the new parameter to `venv.EnvBuilder.create`{.interpreted-text
-    role="meth"}. It will be an error to use the option when multiple
-    *ENV_DIR* arguments are provided.
-8.  A function named
-    `executable(dir: os.PathLike, name: str = DEFAULT_NAME, *, traverse: bool = False) -> pathlib.Path`
-    will be added; it will look for a virtual environment in *dir* at
-    *name* (directory or redirect file; defaults to `DEFAULT_NAME`) and
-    return the path to the `python` executable for the virtual
-    environment, raising an exception if the path to a virtual
-    environment is not found or the virtual environment is somehow
-    corrupted. If *traverse* is true, then traversal through the parent
-    directories of *dir* to look for `DEFAULT_NAME` as a file or
-    directory will be done and will stop at the first `DEFAULT_NAME`
-    found closest to *dir*.
+The last environment listed in a `.python-envs`{.interpreted-text
+role="file"} file MUST be considered the default environment when a
+default environment is desired. IF a tool does not support the last
+environment listed THEN the tool MUST either ask the user which
+environment to use OR error out.
 
-With regard to committing a `.venv`{.interpreted-text role="file"} file
-to version control, it MAY be done when the location of the virtual
-environment is considered static to a project once it is set up. For
-instance, some projects that use [tox](https://tox.wiki/) have a \"dev\"
-environment defined in their configuration that ends up at `.tox/dev`.
-Setting a `.venv`{.interpreted-text role="file"} file to point to that
-virtual environment and checking in the file is reasonable. The same
-goes for a project that is only worked on within a container where the
-location of the virtual environment is controlled and thus static on the
-file system. The guidance of NOT committing your actual virtual
-environment to version control is unchanged by this PEP.
+IF both a virtual environment in a `.venv`{.interpreted-text
+role="file"} directory path and a `.python-envs`{.interpreted-text
+role="file"} file exist side-by-side, THEN the `.venv`{.interpreted-text
+role="file"} path MUST be implicitly considered the last line in the
+`.python-envs`{.interpreted-text role="file"} file. This also means the
+`.venv`{.interpreted-text role="file"} virtual environment is considered
+the default virtual environment.
+
+With regard to committing a `.python-envs`{.interpreted-text
+role="file"} file to version control, it MAY be done when the location
+of the environment(s) is considered static for a project once it is set
+up. For instance, some projects that use [tox](https://tox.wiki/) have a
+\"dev\" environment defined in their configuration that ends up at
+`.tox/dev`. Setting a `.python-envs`{.interpreted-text role="file"} file
+to point to that virtual environment and checking in the file is
+reasonable. The same goes for a project that is only worked on within a
+container where the location of the environment is controlled and thus
+static on the file system. The guidance of NOT committing your actual
+virtual environment to version control is unchanged by this PEP.
+
+Tools MAY use a file system locking mechanism to help guarantee no race
+conditions when reading or writing to a :\`.python-envs\` file.
 
 # Rationale
 
-There are three aspects to where a virtual environment is placed. The
-first is whether the virtual environment is local to the project or
-stored globally with other virtual environments. Keeping the virtual
-environment local means that it is isolated and unique to the project.
-As well, it means that if you delete the project you also delete the
-virtual environment. If you store the virtual environment globally then
-you can share it among multiple projects and delete all virtual
-environments at once by deleting the directory that contains them all.
-Keeping virtual environments global also means it won\'t be backed up
-automatically if a project is stored e.g. in a directory automatically
-backed up to remote storage where you pay based on how much storage you
-use.
-
-Another aspect is the directory name used for the virtual environment
-(although this really only affects local virtual environments). If one
-views virtual environments as more of an implementation detail, a
-directory name starting with `.`{.interpreted-text role="file"}
-seemingly makes sense to mark it hidden or de-emphasized in various
-tools such as shells and code editors. But hiding it can make accessing
-the directory harder via tools that don\'t expose paths starting with a
-`.`.
-
-Lastly, there\'s whether you have one virtual environment at a time or
-many. Having only one can minimize disk space for some tools and keeps
-it simple by not trying to manage multiple virtual environments. Having
-multiple virtual environments, though, means not having to constantly
-recreate virtual environments when e.g. needing to test against multiple
-Python versions.
-
-This PEP takes a two-pronged approach to making virtual environments
-easily discoverable while supporting all aspects mentioned above. First,
-this PEP suggests putting the virtual environment in the
-`.venv`{.interpreted-text role="file"} directory of the project (this
-can be a hardlink, symlink, etc.). This name has been chosen due to
-preexisting tool support:
+Explicitly supporting `.venv`{.interpreted-text role="file"} is to
+codify what\'s already a convention:
 
 - [Poetry](https://python-poetry.org/docs/configuration#virtualenvsin-project)
   will detect a virtual environment in such a location,
@@ -243,48 +199,58 @@ preexisting tool support:
   has a default `.gitignore`{.interpreted-text role="file"} which
   ignores `.venv`{.interpreted-text role="file"}
 
-But for various reasons (from personal preference to preexisting tool
-defaults), the `.venv`{.interpreted-text role="file"} directory in the
-project root may not work. In those cases, a `.venv`{.interpreted-text
-role="file"} **file** which points to the virtual environment by default
-should be provided in the project\'s root directory (i.e. the same
-location as specified above for the `.venv`{.interpreted-text
-role="file"} directory). This file should point to the virtual
-environment to use by default; there can be other virtual environments
-for the project, but the `.venv`{.interpreted-text role="file"} file
-should point to the virtual environment to be used if no preference is
-specified. While a symlink for `.venv`{.interpreted-text role="file"}
-could serve the same purpose, not all file systems support symlinks. As
-well, situations like automatic backup of a directory to a cloud backup
-solution require a level of indirection so that backup tools don\'t
-implicitly follow into a virtual environment and back it up.
+But not every person or tool wants to keep an environment in the project
+or even use the `.venv`{.interpreted-text role="file"} name. In those
+situations, you need [some]{#some}\_ way to tell other tools where to
+find the environments. That\'s the purpose of the
+`.python-envs`{.interpreted-text role="file"} file. The file itself is
+hidden as it isn\'t a critical aspect of the project (environments
+themselves can be viewed as implementation details). The file name was
+chosen to make sure it didn\'t clash with any other tool using the same
+name while still being self-descriptive.
 
-The `.venv`{.interpreted-text role="file"} file is meant to represent
-the virtual environment a workflow tool is expected to use that is
-external to the one that wrote the `.venv`{.interpreted-text
-role="file"} file (e.g. Hatch wrote the file and VS Code is going to
-read it). This means that a workflow tool shouldn\'t update the
-`.venv`{.interpreted-text role="file"} file when running a test suite
-through multiple versions of Python. But if the workflow tool has a
-command to control what virtual environment is used when running Python,
-then the file should be updated as necessary to match what environment
-the workflow tool would use (e.g. `.venv`{.interpreted-text role="file"}
-should always match what virtual environment [\'hatch
-run\'](https://hatch.pypa.io/latest/cli/reference/#hatch-run) would
-use). This is not expected to cause a \"noisy neighbour\" problem as
-it\'s not expected to change that rapidly.
+The `.python-envs`{.interpreted-text role="file"} file is specifically
+agnostic when it comes to what type of environment can be represented.
+This helps future-proof the file for unforeseen, future environments. As
+well, leaving the representation as loose as what a single line of a
+file can represent helps with allowing alternative environments that a
+tool may or may not support (which can include alternative
+representations for virtual environments, e.g. connecting over SSH). It
+does mean, though, that tools SHOULD check the line for appropriate use.
 
-The format for the `.venv`{.interpreted-text role="file"} redirect file
-is for ease of use. Allowing newlines in the file makes it easy to
-create or edit the file in a code editor that automatically adds
-newlines to the end of a file. Only reading up to the first newline, if
-one exists, also allows for adding more data to the file in the future.
-It also allows for easy shell scripting to read the file, e.g.
-`head -n 1 .venv | tr -d '\n'` or `Get-Content .venv -TotalCount 1`.
+The file format is simple to allow for easy manipulation. Having a
+line-delimited file format makes it easy to append a line to a
+`.python-envs`{.interpreted-text role="file"} file via the terminal,
+e.g.:
 
-Having tools check for the existence of the path before using it is to
-prevent tools from being tricked into e.g. blindly passing the file
-contents into `subprocess.run(..., shell=True)`.
+- `echo "<path>" >> .python-envs`
+- `Add-Content .python-envs "<path>"`
+- `python3 -c "import sys; p=sys.argv[1]; open('.python-envs', 'a').write(p)" "<path>"`
+
+To make appending as simple a process as possible, duplicate lines are
+allowed to occur in `.python-envs`{.interpreted-text role="file"}. This
+alleviates having to check the file before appending. This is also why a
+trailing newline is allowed in the file.
+
+The file format is also simple to avoid duplicating information that the
+environment already contains. For instance, it has been suggested to
+record a name for environments, but e.g. virtual environments have the
+prompt recorded in `pyvenv.cfg`{.interpreted-text role="file"}, so it
+does not need to be listed separately from the environment where it may
+become stale.
+
+This is also why the last line is the default environment: the
+expectation is people will be adding the environment they want to use
+and not simply recording an available environment. This all tries to
+make what is expected to be the most common action the easiest action.
+
+Having `.venv`{.interpreted-text role="file"} represent the last, and
+thus default, environment in a `.python-envs`{.interpreted-text
+role="file"} file is for practical reasons. Tools that predate this PEP
+may use the `.venv`{.interpreted-text role="file"} location, and so this
+is a backwards-compatibility consideration. And if a user is using such
+a tool that uses `.venv`{.interpreted-text role="file"}, then they
+likely already considered that virtual environment the default.
 
 # Project Support for this PEP
 
@@ -300,97 +266,170 @@ information privately, but with permission to state publicly.
 ::::
 
 - Supports
-  1.  PDM (Frost Ming)
-  2.  Poetry (Randy Döring)
-  3.  venv (Vinay Sajip)
-  4.  Virtualenv (Bernát Gábor)
-  5.  Tox (Bernát Gábor)
-  6.  Hatch (Cary Hawkins)
-  7.  [PyCharm](https://chaos.social/@judy2k/116420754676036974) (Mark
-      Smith)
-  8.  [library-skills](https://discuss.python.org/t/106998/34)
-      (Sebastián Ramírez)
-- Lukewarm
-  1.  uv (Zanie Blue)
-- Opposes
-  1.  Hatch (Ofek Lev)
+  1.  VS Code
 
 # Backwards Compatibility
 
-For the virtual environment location aspect of this PEP, the backwards
-compatibility concern would be over some alternative use of
-`.venv`{.interpreted-text role="file"}. But due to the current usage
-already in the community, the likelihood of an alternative usage is
-probably small. This will likely lead to tools showing an error message
-when a `.venv` file is used, though. While the error message would
-likely be around `.venv` being a file and thus not explaining *why*
-there\'s a file, it just prevents any tool from overlooking the `.venv`
-file and blindly creating another virtual environment.
+For the virtual environment location aspect of this PEP, there is no
+backwards compatibility concern as `.venv`{.interpreted-text
+role="file"} is in this PEP specifically for backwards compatibility.
 
-The other possible backwards compatibility concern is the new default
-value for the `-m venv` CLI. But since it\'s currently an error not to
-specify the directory, the impact should be minimal.
+As for `.python-envs`{.interpreted-text role="file"}, that file name is
+not known to be in use. The biggest backwards compatibility concern is
+that a tool produces it and it is not used as expected. After that is
+the file not being ignored by version control upfront.
 
 # Security Implications
 
 Not checking the contents of a potentially malicious
-`.venv`{.interpreted-text role="file"} file and passing it to a shell
-process (e.g. `subprocess.run(..., shell=True)`) would be a serious
-security concern. This is why this PEP says tools MUST make sure the
-path is valid before using it.
-
-Setting a `.venv`{.interpreted-text role="file"} file to a path that
-isn\'t a virtual environment is only a concern if the arguments the user
-provided to the executable were also a concern. That would require the
-user to craft appropriate arguments on top of using the malicious
-`.venv`{.interpreted-text role="file"} file.
+`.python-envs`{.interpreted-text role="file"} file and passing it to a
+shell process (e.g. `subprocess.run(..., shell=True)`) would be a
+serious security concern.
 
 # How to Teach This
 
-For new users, they can be told that `python -m venv` creates a virtual
-environment in `.venv`{.interpreted-text role="file"}, and that any
-other tool that creates a virtual environment on their behalf can do the
-same.
+For new users, they can be told that `python -m venv .venv` creates a
+virtual environment in `.venv`{.interpreted-text role="file"}, and that
+any other tool that creates a virtual environment on their behalf can do
+the same.
 
-For experienced users, they should be taught the default location for a
-project\'s virtual environment is at the root of the project in
-`.venv`{.interpreted-text role="file"}. If the currently active virtual
-environment lives elsewhere, a `.venv`{.interpreted-text role="file"}
-file will be there to tell them where to find the virtual environment.
+For experienced users, they should be taught that tools may create a
+virtual environment at `.venv`{.interpreted-text role="file"}. They
+should also be told there may be a `.python-envs`{.interpreted-text
+role="file"} file which records the location of other environments with
+the last environment listed considered the default. As well, they should
+be taught that if both `.venv`{.interpreted-text role="file"} and
+`.python-envs`{.interpreted-text role="file"} exist in the same
+directory then `.venv`{.interpreted-text role="file"} is implicitly the
+last, and thus default, environment in `.python-envs`{.interpreted-text
+role="file"}.
 
 # Reference Implementation
 
-The proposed code changes to `venv`{.interpreted-text role="mod"} can be
-found at
-<https://github.com/brettcannon/cpython/tree/venv-location-pep>. A diff
-showing the changes can be seen at
-<https://github.com/brettcannon/cpython/compare/main>\...brettcannon:cpython:venv-location-pep.
+As this PEP proposes no code changes, there is no reference
+implementation to speak of.
 
 # Rejected Ideas
 
-## Use a name other than `.venv`
+## `.venv`
+
+### Use a name other than `.venv`
 
 Some people either don\'t like that `.venv` is hidden by some tools by
 default thanks to the leading `.`, or don\'t like `venv` as an
 abbreviation. Since there doesn\'t seem to be a clear consensus on an
 alternative, a different name doesn\'t fundamentally change any
-semantics, existing tools seem to already support `.venv`, one can still
-use a different name for an environment thanks to redirect file support
-as proposed by this PEP, and the author of this PEP prefers the name,
-`.venv` was chosen. Discussing alternative names was viewed as
-bikeshedding.
+semantics, existing tools seem to already support `.venv`, and one can
+still use a different name for an environment thanks to
+`.python-envs`{.interpreted-text role="file"} as proposed by this PEP.
+Because the author of this PEP prefers the name, `.venv` was chosen.
+Discussing alternative names was viewed as bikeshedding.
 
-# Open Issues
+## `.python-envs`
 
-## List all known virtual environments in the redirect file
+### A `.venv` redirect file
 
-While the redirect file format is designed for future usage, this PEP
-could choose to just use that space now instead of in some future PEP.
-The extra data in the file could record other virtual environments that
-the project has. Optionally, the path could be separated from a labelled
-name by a `\t`. The default virtual environment would be allowed to be
-listed in the labelled section if an explicit label was desired. Another
-option would to record such data in a JSON/JSONL trailer in the file.
+An earlier version of this PEP allowed for `.venv`{.interpreted-text
+role="file"} to act as a redirect file to where the virtual environment
+is located. This was found to be too restrictive compared to
+`.python-envs`{.interpreted-text role="file"} for a couple of reasons:
+
+- It supported only a single environment
+- It was restricted to only a virtual environment
+
+### Recording what tool manages an environment
+
+It was suggested to have `.python-envs`{.interpreted-text role="file"}
+record what tool provided an environment. The thinking was that there
+was the potential for orphaned environments that still existed but were
+no longer valid for the project after the user moved away from a tool or
+changed a configuration that wasn\'t obvious to the user.
+
+The decision was made, though, that this was outside of the scope of
+this PEP and not worth complicating `.python-envs`{.interpreted-text
+role="file"} for. If a tool wanted to keep track of what environments
+they created, that would be up to them to do in their own way. As for
+orphaned environments that continued to exist, that would only be a
+concern for the default environment as the user would need to choose any
+other environment.
+
+### Using a more structured format
+
+Using a more structured data format such as JSON for
+`.python-envs`{.interpreted-text role="file"} was suggested. Typically
+it was in order to record details about the environment directly in
+`.python-envs`{.interpreted-text role="file"}. But since that would be
+redundant data which could be gathered from the environment itself, it
+was deemed not a reason to make the file format more complicated. And
+the simplicity of the file format has helped to keep the goal of the
+file specific and not have feature creep.
+
+### Storing the locations in pyproject.toml
+
+It was suggested to store the locations of the environment in
+`pyproject.toml`{.interpreted-text role="file"}, but that was rejected
+as too rigid. Typically an environment location is either a personal
+choice or a tool-specific one, not a project one. As such, specifying
+the location statically didn\'t seem to make enough sense to put into
+the PEP, especially as a project could include its own
+`.python-envs`{.interpreted-text role="file"} file.
+
+### Using the first entry in .python-envs as the default environment
+
+It\'s a subjective choice to have the default environment be at the end
+of a `.python-envs`{.interpreted-text role="file"} file instead of at
+the start. The decision came down to whether reading or writing should
+be preferred. The PEP chose the latter, as its author believes that it
+is more important to make writing to a `.python-envs`{.interpreted-text
+role="file"} file easier, as a person is more likely to do that than to
+read it (the corollary is that, since a tool is more likely to read a
+`.python-envs`{.interpreted-text role="file"} file via code, reading
+does not need to be optimized for a person).
+
+As well, the expectation is that reading even a
+`.python-envs`{.interpreted-text role="file"} file with hundreds of
+locations will not visibly hurt performance in any way.
+
+### Leave .python-envs out of the PEP
+
+Some have suggested leaving `.python-envs`{.interpreted-text
+role="file"} out of the PEP (or not having this PEP at all). But during
+discussions around this PEP, the desire to have a way to list the
+location of multiple environments no matter where they live seemed
+strong enough to keep `.python-envs`{.interpreted-text role="file"}
+included.
+
+### Support a file name suffix for .python-envs
+
+There was a suggestion to allow for multiple
+`.python-envs`{.interpreted-text role="file"}-like files, differing by a
+file suffix. The idea was to organize what an environment was named/for.
+The idea could also be extended to have the files only contain a single
+environment.
+
+In the end it didn\'t seem worth the complexity. Environments would have
+their own way to name themselves, giving some clue as to their contents.
+As well, the person choosing which environment to use would not
+necessarily need such labels. Finally, it could lead to so many files as
+to be annoying.
+
+# Deferred Ideas
+
+During the discussions for this PEP, it was suggested to be more bold
+and try to come up with a way to standardize how workflow tools could
+communicate with other tools. This would not only let workflow tools
+tell other tools where an environment is, but also create environments,
+run commands in an environment, etc. Conversations went far enough to
+[vote on communication
+protocols](https://discuss.python.org/t/pep-832-virtual-environment-discovery/106998/117)
+and [continue that
+discussion](https://discuss.python.org/t/various-ways-of-defining-how-to-call-a-workflow-tool-for-wsp/108033).
+
+In the end, though, it was decided this PEP could stand on its own
+without such a tool-to-tool protocol which would be a massive endeavour.
+But the name of \"workflow service protocol\" \-- aka \"WSP\", which
+also means \"whitespace\" in many parsing grammars \-- was at least
+determined and generally liked.
 
 # Acknowledgements
 
@@ -402,10 +441,14 @@ on the initial draft of this PEP.
 
 # Change History
 
+- 31-Jul-2026
+  - Changed from `.venv`{.interpreted-text role="file"} redirect files
+    to `.python-envs`{.interpreted-text role="file"}
+  - Dropped all proposed changes to `venv`{.interpreted-text role="mod"}
 - 23-Apr-2026
   - Add PyCharm and library-skills support
   - Have redirect files read up to the first newline
-  - Clarify there is no opinion to having multiple virtual environments
+  - Clarify there is no opinion on having multiple virtual environments
   - Explicitly use the code editor example for the motivation
   - Have `venv.executable()` be configurable for the virtual environment
     name
