@@ -14,13 +14,14 @@ post_history:
 python_status: Draft
 url: https://peps.python.org/pep-0842/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0842.rst
-source_commit: 9fb923db2da684b58b3973a6b163bb045d7c7770
+source_commit: 4396efa85199bbdbbcf5f3e2ee908a5491bc0f6c
 ---
 
 # Abstract
 
 This PEP proposes an `__export__` variable that modules can define to
-limit visibility and access to variables from outside the module.
+express intent about the visibility of variables from outside the
+module.
 
 For example:
 
@@ -37,40 +38,54 @@ class Private:
 
 ``` pycon
 >>> import spam
+>>> 'Public' in dir(spam)
+True
+>>> 'Private' in dir(spam)
+False
 >>> spam.Public
 <class 'spam.Public'>
 >>> spam.Private
-Traceback (most recent call last):
-  File "<python-input-2>", line 1, in <module>
-    spam.Private
-ImportError: 'Private' is not exported by 'spam'
+<python-input-4>:1: RuntimeWarning: 'Private' is not exported by 'spam'
+<class 'spam.Private'>
 ```
+
+This is **not** intended to be an access modifier for Python; see
+`pep-842-not-an-access-modifier`{.interpreted-text role="ref"}.
 
 # Motivation
 
-## Private names can be difficult to disambiguate on their own
+## Module-level names need privacy
 
-Imagine that a developer wants to define a private class in their
-module. Their first instinct might be to simply define their class as
-such:
+A developer is writing a Python module. The module is intended to have
+one \"public\" class \-- a class that is intended for users of the
+module \-- called `PublicAPI`. As part of implementing `PublicAPI`, the
+developer wants to create another class, called `Helper`. However,
+`Helper` is not meant to be public in the same way that `PublicAPI` is
+public. `Helper` is supposed to only be used by the developer of the
+module \-- a \"private\" API.
+
+Nonetheless, the developer declares the two classes as such:
 
 ``` python
 # spam.py
 class Helper:
    ...
+
+class PublicAPI:
+   ...
 ```
 
-However, this comes with no indication that `Helper` is supposed to be
-internal to the module, so users may accidentally begin using and
-relying on it. In fact, Python\'s interactive `help`{.interpreted-text
-role="func"} function will even include `Helper` in its output next to
-everything else in the module.
+The problem with this is that `Helper` comes with no indication that
+it\'s not a public API. It shows up in autocomplete by language servers,
+the `dir`{.interpreted-text role="func"} function, Python\'s interactive
+`help`{.interpreted-text role="func"} function, and every other API
+meant for introspection. How are users supposed to know that they
+aren\'t supposed to use this?
 
-## Prefixed names are less maintainable
+## Prefixed names aren\'t necessarily a great solution
 
-When developing a Python module, it is common to prefix a name with `_`
-to denote that it is private. So, as a solution to the above problem,
-the developer prefixes the name with `_`:
+In Python, the convention for declaring private names is to prefix it
+with `_`. So, the developer changes `Helper` into `_Helper`:
 
 ``` python
 # spam.py
@@ -78,13 +93,29 @@ class _Helper:
    ...
 ```
 
-Now, it\'s clear to users that the name is internal, at the expense of
-the name being (subjectively) less readable and requiring more
-keystrokes by the maintainer.
+This is generally the standard for Python libraries today, but it\'s not
+clear that this is the best long term solution. This works (with some
+caveats; see the sections below), but this is (subjectively) less
+readable, and does require more keystrokes by the maintainer. Ideally,
+users shouldn\'t be tempted to reach for private names from modules in
+the first place.
 
-In addition, it can be difficult to remember where names need to be
-prefixed. To put this issue into perspective, imagine that a developer
-wants to import some other modules in their code:
+However, it is acknowledged that this idea is going against 30 years of
+convention; even if this PEP is accepted, it\'s expected that
+\"underscored\" names (names prefixed with a leading `_`) will remain a
+staple of Python for years to come. The purpose of this PEP is not to
+eliminate the need for `_` in module-level names, but instead to clear
+up corner cases where a private name is ambiguous or tempting. In other
+words, this PEP is intended to improve expressiveness and clarity with
+private APIs, *not* to add brand new functionality.
+
+### It\'s not always clear where names need prefixing
+
+Python defines names through many different constructs, some of which
+are not always clear or intuitive to the developer. As a result, it can
+be difficult to remember where names need to be prefixed. To put this
+issue into perspective, imagine that a developer wants to import some
+other modules in their code:
 
 ``` python
 # spam.py
@@ -114,12 +145,94 @@ import asyncio as _asyncio
 import tabnanny as _tabnanny
 ```
 
-This brings us back to the original problem: this sprinkles the code
-with extra underscores, and puts mental overhead on the developer by
-requiring them to remember to prefix their imports with `_`.
+But, again, this sprinkles the code with even more underscored names.
 
-Ideally, users shouldn\'t be tempted to reach for private names from
-modules in the first place.
+### Prefixed names are not a universal rule {#pep-842-prefixed-public}
+
+As modules evolve, some underscored names are made public, either
+because users did not clearly understand that an underscore indicated
+instability, or because users found useful functionality in a module\'s
+private API, and nothing was discouraging them from using it.
+
+In the standard library, a prime example of this is the
+`ctypes`{.interpreted-text role="mod"} module. `ctypes` is full of
+public APIs that are subject to Python\'s backwards compatibility
+policy, but contain a leading underscore. For example:
+
+1.  `ctypes._CFuncPtr`{.interpreted-text role="class"}
+2.  `ctypes._CData`{.interpreted-text role="class"}
+3.  `ctypes._Pointer`{.interpreted-text role="class"}
+
+This sends the wrong message to consumers of the API. When seeing things
+like this in a codebase, it makes it seem like the code is opting out of
+backwards compatibility, or that an underscored name does not mean
+\"private\" in the module. In both cases, consumers are inclined to
+reach for more private names (because there\'s no apparent consequence
+for doing so), making this problem worse.
+
+## We want to be nice to users, not shrug them away
+
+When a user decides to use a private API, accidentally or not, they will
+inevitably be broken by the library author. In many cases, this results
+in a bug report asking for the API to be fixed or restored to prevent
+downstream breakage. In this case, the library maintainer has to make a
+decision:
+
+1.  Tell the user that they\'re in the wrong for using it, and allow the
+    breakage to take place.
+2.  Commit to maintaining the private API as public, increasing the
+    burden on themselves and encountering some of the problems described
+    in `pep-842-prefixed-public`{.interpreted-text role="ref"}.
+
+This PEP is not intended to solve this problem entirely, but instead is
+meant to mitigate it by making it much clearer that a user is accessing
+a private name; in other words, this PEP wants to decrease (or
+eliminate) the amount of accidental private API usage in practice. By
+accessing a private API, the user must make a conscious decision to do
+so.
+
+### Library consumers use runtime introspection for documentation
+
+A counterargument to the above section is that a library should clearly
+document what is private and what is public. In theory, yes, but in
+practice, users don\'t read the documentation in full.
+
+A common practice when designing APIs is to design for intuition. If an
+API is named and placed well, then a user often won\'t need to reach for
+the documentation. Python is no exception to this.
+
+When prototyping, it\'s typical for someone to use
+`dir`{.interpreted-text role="func"} or `help`{.interpreted-text
+role="func"} in Python\'s interactive `REPL`{.interpreted-text
+role="term"} to look for attributes that are useful to them. In this
+case, if something is intuitive enough for the user, they will simply
+reach for it without checking the documentation first. In a language as
+dynamic as Python, the way people consume APIs is also dynamic.
+
+## `__all__` is only a convention
+
+The fundamental issue here is that Python has no way to express which
+names in a module are \"private\" or \"public\". Prefixing is an option,
+but given the reasons above, it\'s not always a bulletproof solution for
+library authors.
+
+Currently, the other convention for expressing which names are public is
+done through a module\'s `__all__` variable. This has two major
+downsides:
+
+1.  `__all__` often gets out of sync, because as developers add, change,
+    or remove names from their module, there is often nothing pushing
+    them towards changing `__all__`, because again, using it to list
+    public names is only a convention and not enforced by anything.
+2.  `__all__` is not always exhaustive. See the `rejected ideas
+    <pep-842-all-for-exports>`{.interpreted-text role="ref"} for
+    examples on where the items in `__all__` might only be a subset of
+    the \"public\" names in a module. In short, it can be difficult to
+    control namespace pollution and declare all public names in
+    `__all__` simultaneously.
+
+This PEP intends to solve both of these problems with a new `__export__`
+variable.
 
 # Specification
 
@@ -178,8 +291,8 @@ When `__export__` is present in a module\'s globals, all access to
 attributes present on the module object will also check if the attribute
 name is present in `__export__` (via `__contains__` or through
 iteration, as specified previously). If the attribute name is not
-present in `__export__`, then an `ImportError`{.interpreted-text
-role="exc"} is raised. For example:
+present in `__export__`, then a `RuntimeWarning`{.interpreted-text
+role="exc"} is emitted. For example:
 
 ``` python
 # spam.py
@@ -194,11 +307,18 @@ __export__ = ["a"]
 >>> spam.a
 42
 >>> spam.b
-Traceback (most recent call last):
-  File "<python-input-2>", line 1, in <module>
-    spam.b
-ImportError: 'b' is not exported by 'spam'
+<python-input-2>:1: RuntimeWarning: 'b' is not exported by 'spam'
+24
 ```
+
+:::: note
+::: title
+Note
+:::
+
+This also affects `from` imports, because those use the same attribute
+access mechanism.
+::::
 
 ### Dunder names
 
@@ -217,31 +337,6 @@ __export__ = []
 >>> import spam
 >>> spam.__name__
 'spam'
-```
-
-### Lazy imports
-
-`Lazy imports <lazy-imports>`{.interpreted-text role="ref"} that are not
-listed in `__export__` will not be reified upon being accessed outside
-the module. For example:
-
-``` python
-# spam.py
-lazy import json
-
-__export__ = []
-```
-
-``` pycon
->>> import spam, sys
->>> assert 'json' in sys.lazy_modules
->>> spam.json
-Traceback (most recent call last):
-  File "<python-input-2>", line 1, in <module>
-    spam.json
-ImportError: 'json' is not exported by 'spam'
->>> # json is still lazy and has not been resolved
->>> assert 'json' in sys.lazy_modules
 ```
 
 ## Module `__getattr__` functions
@@ -329,17 +424,6 @@ def __dir__():
 [..., 'a', 'b']
 ```
 
-It is worth noting that there are real consequences for including
-unexported names in custom `__dir__` functions. For example,
-`help`{.interpreted-text role="func"} can no longer be used with the
-above module:
-
-``` pycon
->>> import spam
->>> help(spam)
-'b' is not exported by 'spam'
-```
-
 ## Implicit `__all__` definitions {#pep-842-implicit-all}
 
 If a module defines `__export__` but does not define
@@ -396,11 +480,13 @@ For a module, defining `__export__` is roughly equivalent to adding the
 following code:
 
 ``` python
-__all__ = __export__
+if "__all__" not in globals():
+   __all__ = __export__
 
 def _is_dunder_name(name):
     return (len(name) > 4) and name.startswith("__") and name.endswith("__")
 
+# Attributes not in the __dict__ fall back to the normal lookup
 def __getattribute__(name):
     try:
         value = globals()[name]
@@ -411,7 +497,7 @@ def __getattribute__(name):
         return value
 
     if name not in __export__:
-        raise ImportError(f"{name!r} is not exported by {__name__!r}")
+        __import__("warnings").warn(f"{name!r} is not exported by {__name__!r}", RuntimeWarning, stacklevel=1)
 
     return value
 
@@ -429,12 +515,12 @@ def __dir__():
 
 # Rationale
 
-## `__export__` is not a secure access modifier
+## `__export__` is not an access modifier {#pep-842-not-an-access-modifier}
 
-This PEP does not aim to be a secure mechanism for preventing access to
-private attributes in modules. In fact, bypassing `__export__` is
-trivial; simply access `mod.__dict__['attr_name']` instead of
-`mod.attr_name` at runtime.
+This PEP does not aim to be a mechanism for preventing access to private
+attributes in modules. The `RuntimeWarning`{.interpreted-text
+role="exc"} can be filtered away, disabled, or bypassed (such as by
+accessing attributes through the module\'s `__dict__`).
 
 This is by design. Python does not include access modifiers as a
 language feature for a reason. To
@@ -479,9 +565,17 @@ __export__ = __all__ + ["eels"]
 A reference implementation of this PEP can be found
 [here](https://github.com/python/cpython/compare/main...ZeroIntensity:cpython:experiments/module-exports).
 
+## Performance
+
+The reference implementation does not currently implement any
+optimizations to reduce the overhead of the `__export__` lookup or
+iteration, meaning that there is likely some overhead. However, if this
+PEP is accepted, optimizations will be implemented before the feature
+lands in `CPython`{.interpreted-text role="term"}.
+
 # Rejected Ideas
 
-## Reuse `__all__` for exports
+## Reuse `__all__` for exports {#pep-842-all-for-exports}
 
 Instead of adding a new `__export__` variable, an alternative was to
 reuse `__all__` for names.
@@ -522,6 +616,27 @@ take advantage of `__export__` to build APIs that replicate the proposed
 make it much clearer that new syntax is the best choice for Python in
 the long run.
 
+## Raising an exception upon accessing unexported attributes
+
+This PEP initially proposed raising an `ImportError`{.interpreted-text
+role="exc"} upon accessing module attributes that were not listed in
+`__export__`. For example:
+
+``` pycon
+>>> import module
+>>> module.unexported
+Traceback (most recent call last):
+  File "<python-input-1>", line 1, in <module>
+    module.unexported
+ImportError: 'unexported' is not exported by 'module'
+```
+
+This caused a lot of concern, as many were fundamentally uncomfortable
+with the idea of introducing any notion of \"private attributes\" in
+Python. The purpose of this proposal is to improve *expression* of
+private variables, not *security*. As such, this proposal switched to
+emitting warnings when accessing unexported names.
+
 # Open Issues
 
 TBD.
@@ -534,7 +649,11 @@ the idea behind this PEP.
 
 # Change History
 
-TBD.
+- 01-Aug-2026
+  - Accessing an unexported attribute now emits a
+    `RuntimeWarning`{.interpreted-text role="exc"} instead of raising an
+    `ImportError`{.interpreted-text role="exc"}.
+  - Significantly overhauled the motivation section.
 
 # Copyright
 
