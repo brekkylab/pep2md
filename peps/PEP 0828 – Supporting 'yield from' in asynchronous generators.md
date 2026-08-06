@@ -5,17 +5,18 @@ author:
 - Peter Bierma <peter@python.org>
 pep_delegate: Yury Selivanov <yury@vercel.com>
 discussions_to: https://discuss.python.org/t/106459
-status: Draft
+status: Accepted
 type: Standards Track
 created: 07-Mar-2026
 python_version: '3.16'
 post_history:
 - '`07-Mar-2026 <https://discuss.python.org/t/106430>`__'
 - '`09-Mar-2026 <https://discuss.python.org/t/106459>`__'
-python_status: Draft
+resolution: '`03-Aug-2026 <https://discuss.python.org/t/106459/74>`__'
+python_status: Accepted
 url: https://peps.python.org/pep-0828/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0828.rst
-source_commit: 1958f7f58d3a0729e0835ef8fad862902666e9fc
+source_commit: 1b707923110db1966a0cbe9309dc66a85f6074fe
 ---
 
 # Abstract
