@@ -6,7 +6,7 @@ author:
 sponsor: Donald Stufft <donald@stufft.io>
 pep_delegate: Donald Stufft <donald@stufft.io>
 discussions_to: https://discuss.python.org/t/pep-833-freezing-the-html-simple-repository-api/107051
-status: Accepted
+status: Final
 type: Standards Track
 topic: Packaging
 created: 21-Apr-2026
@@ -14,11 +14,15 @@ post_history:
 - '`13-Apr-2026 <https://discuss.python.org/t/106959>`__'
 - '`21-Apr-2026 <https://discuss.python.org/t/107051>`__'
 resolution: '`20-May-2026 <https://discuss.python.org/t/107051/34>`__'
-python_status: Accepted
+python_status: Final
 url: https://peps.python.org/pep-0833/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0833.rst
-source_commit: c5c5ac39aa697ad3f1e70e8ebd83db32a53979dc
+source_commit: 6c32f948cf574ac5cb3038d503a1d6d2798424d1
 ---
+
+::: canonical-pypa-spec
+`packaging:simple-repository-api`{.interpreted-text role="ref"}
+:::
 
 # Abstract
 
