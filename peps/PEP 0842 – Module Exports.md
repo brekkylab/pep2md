@@ -3,7 +3,7 @@ pep: 842
 title: Module Exports
 author:
 - Peter Bierma <peter@python.org>
-discussions_to: https://discuss.python.org/t/108353
+discussions_to: https://discuss.python.org/t/108460
 status: Draft
 type: Standards Track
 created: 25-Jul-2026
@@ -11,10 +11,11 @@ python_version: '3.16'
 post_history:
 - '`24-Jul-2026 <https://discuss.python.org/t/108266/9>`__'
 - '`31-Jul-2026 <https://discuss.python.org/t/108353>`__'
+- '`07-Aug-2026 <https://discuss.python.org/t/108460>`__'
 python_status: Draft
 url: https://peps.python.org/pep-0842/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0842.rst
-source_commit: 6f8c55cfb4ebd5806a62954d2b1c46619b7ba9ff
+source_commit: 927b32a9b4ed161fbffe942482e9e8f24d669efe
 ---
 
 # Abstract

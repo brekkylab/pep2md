@@ -18,7 +18,7 @@ post_history:
 python_status: Active
 url: https://peps.python.org/pep-0001/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0001.rst
-source_commit: 1712bd00dd9d0b98a837d071122e5de73b071bc4
+source_commit: 1c2fbbeeec5efbf3a846634af1198b0c53c4a073
 ---
 
 # What is a PEP?
@@ -801,11 +801,11 @@ and must watch the [PEP repository](https://github.com/python/peps).
 
 Note that developers with write access to the [PEP
 repository](https://github.com/python/peps) may handle the tasks that
-would normally be taken care of by the PEP editors. Alternately, even
+would normally be taken care of by the PEP editors. Alternatively, even
 developers may request assistance from PEP editors by mentioning
 `@python/pep-editors` on GitHub.
 
-For each new PEP that comes in an editor does the following:
+For each new PEP that comes in, an editor does the following:
 
 - Make sure that the PEP is either co-authored by a core developer, has
   a core developer as a sponsor, or has a sponsor specifically approved
@@ -865,13 +865,14 @@ changes, and correct any structure, grammar, spelling, or markup
 mistakes they see.
 
 PEP editors don\'t pass judgment on PEPs. They merely do the
-administrative & editorial part (which is generally a low volume task).
+administrative and editorial part (which is generally a low volume
+task).
 
 Resources:
 
 - [Index of Python Enhancement Proposals](https://peps.python.org/)
 - [Following Python\'s
-  Development](https://devguide.python.org/communication/)
+  Development](https://devguide.python.org/developer-workflow/communication-channels/index.html)
 - [Python Developer\'s Guide](https://devguide.python.org/)
 
 # Footnotes
