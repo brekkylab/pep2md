@@ -12,10 +12,11 @@ post_history:
 - '`15-Apr-2026 <https://discuss.python.org/t/106998>`__'
 - '`23-Apr-2026 <https://discuss.python.org/t/106998/52>`__'
 - '`31-Jul-2026 <https://discuss.python.org/t/106998/148>`__'
+- '`10-Aug-2026 <https://discuss.python.org/t/106998/155>`__'
 python_status: Draft
 url: https://peps.python.org/pep-0832/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0832.rst
-source_commit: c9e735fbdce0091ac7e3b025426d8ccf7e1f7f90
+source_commit: 87eb64bfe6dbe553de919c1600ab4dcef796b5fa
 ---
 
 # Abstract
@@ -106,11 +107,12 @@ ignored.
 
 Lines in a `.python-envs`{.interpreted-text role="file"} file MAY be
 paths to an environment. Paths MAY be relative, and if they are, they
-MUST be relative to the `.python-envs`{.interpreted-text role="file"}
-file. IF a path is for a virtual environment, THEN the path MUST be to
-the directory of the virtual environment (i.e. the directory containing
-the `pyvenv.cfg`{.interpreted-text role="file"} file). A line MAY
-represent any type of an environment. Tools reading a
+MUST be relative to the directory containing the
+`.python-envs`{.interpreted-text role="file"} file. IF a path is for a
+virtual environment, THEN the path MUST be to the directory of the
+virtual environment (i.e. the directory containing the
+`pyvenv.cfg`{.interpreted-text role="file"} file). A line MAY represent
+any type of an environment. Tools reading a
 `.python-envs`{.interpreted-text role="file"} MAY choose what sort of
 environments they support and thus MAY ignore any lines they do not
 understand (although there is a specific restriction in regards to the
@@ -156,6 +158,13 @@ virtual environment to version control is unchanged by this PEP.
 
 Tools MAY use a file system locking mechanism to help guarantee no race
 conditions when reading or writing to a :\`.python-envs\` file.
+
+IF a tool can detect that an environment is already in use (e.g. the
+`VIRTUAL_ENV` environment variable is set), THEN tools SHOULD respect
+the user\'s choice and use the activated/in-use environment over the
+default environment when no previous environment selection has occurred.
+Tools MAY choose to override even a previous environment selection if an
+environment is detected as activated/in use.
 
 # Rationale
 
@@ -209,6 +218,14 @@ themselves can be viewed as implementation details). The file name was
 chosen to make sure it didn\'t clash with any other tool using the same
 name while still being self-descriptive.
 
+Allowing for multiple environments came up multiple times during
+discussions of this PEP as people said they would switch between
+multiple environments during development. Listing all of the
+environments available instead of a single one allows for a better UX by
+allowing tools to present users a list of environments to choose from.
+It also helps avoid constant rewriting of the file recording the single
+environment that should be used.
+
 The `.python-envs`{.interpreted-text role="file"} file is specifically
 agnostic when it comes to what type of environment can be represented.
 This helps future-proof the file for unforeseen, future environments. As
@@ -216,7 +233,8 @@ well, leaving the representation as loose as what a single line of a
 file can represent helps with allowing alternative environments that a
 tool may or may not support (which can include alternative
 representations for virtual environments, e.g. connecting over SSH). It
-does mean, though, that tools SHOULD check the line for appropriate use.
+does mean, though, that tools SHOULD check the line for appropriate use
+to avoid using malicious inputs.
 
 The file format is simple to allow for easy manipulation. Having a
 line-delimited file format makes it easy to append a line to a
@@ -252,6 +270,26 @@ is a backwards-compatibility consideration. And if a user is using such
 a tool that uses `.venv`{.interpreted-text role="file"}, then they
 likely already considered that virtual environment the default.
 
+Suggesting tools respect any activate environment is so that users have
+a way to override any potential project-specific default location for an
+environment (e.g. a project checks in a `.python-envs`{.interpreted-text
+role="file"} file with a relative path while the user very much does not
+want that location used as they want all environments stored in a
+centralized location).
+
+# Example
+
+If the following contents were in a `.python-envs`{.interpreted-text
+role="file"} file in the `/workspace` directory:
+
+    /absolute/path/to/venv
+    /a/path/to/conda-env
+    ssh@example.com:custom-path
+    relative/path/venv
+
+The `relative/path/venv` directory should be resolved to
+`workspace/relative/path/venv`.
+
 # Project Support for this PEP
 
 Speaking to various tool maintainers about this PEP:
@@ -267,6 +305,10 @@ information privately, but with permission to state publicly.
 
 - Supports
   1.  VS Code
+  2.  tox (Bernat Gabor;
+      [PoC](https://github.com/tox-dev/tox/pull/4013))
+  3.  virtualenv (Bernat Gabor;
+      [PoC](https://github.com/pypa/virtualenv/pull/3204))
 
 # Backwards Compatibility
 
@@ -285,6 +327,14 @@ Not checking the contents of a potentially malicious
 `.python-envs`{.interpreted-text role="file"} file and passing it to a
 shell process (e.g. `subprocess.run(..., shell=True)`) would be a
 serious security concern.
+
+If tools blindly overwrite `.venv`{.interpreted-text role="file"}, that
+could be a denial of service attack if a user happened to use that
+directory for something else. The expectation, though, is that would
+occur very rarely due to the convention of `.venv`{.interpreted-text
+role="file"} being used for virtual environments. If tools are concerned
+about this issue then they can prompt the user before creating an
+environment at a location that already exists.
 
 # How to Teach This
 
@@ -441,6 +491,16 @@ on the initial draft of this PEP.
 
 # Change History
 
+- 10-Aug-2026
+  - Clarify that relative paths in `.python-envs`{.interpreted-text
+    role="file"} are against the directory containing the file
+  - Say that tools SHOULD respect any activated environment if the user
+    has not previously selected an environment to use, and allow
+    completely overriding any previous selection
+  - Give a rationale for supporting multiple environments
+  - Provide an example
+  - List tox and virtualenv support
+  - Mention DoS concern
 - 31-Jul-2026
   - Changed from `.venv`{.interpreted-text role="file"} redirect files
     to `.python-envs`{.interpreted-text role="file"}
