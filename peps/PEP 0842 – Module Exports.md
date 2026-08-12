@@ -15,7 +15,7 @@ post_history:
 python_status: Draft
 url: https://peps.python.org/pep-0842/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0842.rst
-source_commit: 927b32a9b4ed161fbffe942482e9e8f24d669efe
+source_commit: fd20b11c44bbef1e8192d28c6ae95cbc6268c687
 ---
 
 # Abstract
@@ -47,8 +47,10 @@ False
 >>> spam.Public
 <class 'spam.Public'>
 >>> spam.Private
-<python-input-4>:1: ExportWarning: 'Private' is not exported by 'spam'
-<class 'spam.Private'>
+Traceback (most recent call last):
+  File "<python-input-4>", line 1, in <module>
+    spam.Private
+ExportError: 'Private' is not exported by 'spam'
 ```
 
 This is **not** intended to be an access modifier for Python; see
@@ -87,7 +89,7 @@ aren\'t supposed to use this?
 
 ## Prefixed names aren\'t necessarily a great solution {#pep-842-why-not-prefixed-names}
 
-In Python, the convention for declaring private names is to prefix it
+In Python, the convention for declaring private names is to prefix them
 with `_`. So, the developer changes `Helper` into `_Helper`:
 
 ``` python
@@ -259,8 +261,8 @@ third-party usage:
 #### scikit-learn
 
 The [scikit-learn](https://scikit-learn.org/stable/) package vendored
-`six` and `joblib`, which downstream packages then used and were broken
-in v0.23:
+`six` and `joblib`. Downstream packages then used those vendored copies
+and broke when they were removed in v0.23:
 
 - [scikit-learn/scikit-learn#12916](https://github.com/scikit-learn/scikit-learn/pull/12916)
 - [scikit-learn-contrib/skope-rules#41](https://github.com/scikit-learn-contrib/skope-rules/issues/41)
@@ -309,7 +311,7 @@ But, because this is only a convention, linters can\'t enforce the
 negative case; if an import is not given the `name as name` treatment, a
 linter can\'t necessarily assume that an import is not a re-export.
 
-## We want to be nice to users, not shrug them away
+## We want to be nice to users, not shrug them off
 
 When a user decides to use a private API, accidentally or not, they will
 inevitably be broken by the library author. In many cases, this results
@@ -366,7 +368,7 @@ downsides:
     public names is only a convention and not enforced by anything.
 2.  `__all__` is not always exhaustive. See the `rejected ideas
     <pep-842-all-for-exports>`{.interpreted-text role="ref"} for
-    examples on where the items in `__all__` might only be a subset of
+    examples of where the items in `__all__` might only be a subset of
     the \"public\" names in a module. In short, it can be difficult to
     control namespace pollution and declare all public names in
     `__all__` simultaneously.
@@ -376,15 +378,14 @@ variable and `export` statement.
 
 # Specification
 
-## The `ExportWarning` type
+## The `ExportError` type
 
-A new warning category, called `ExportWarning`, is added to the
-`builtins`{.interpreted-text role="mod"} module. `ExportWarning`
-inherits from `Warning`{.interpreted-text role="class"} and defines no
-other attributes.
+A new exception type, called `ExportError`, is added to the
+`builtins`{.interpreted-text role="mod"} module. `ExportError` inherits
+from `AttributeError`{.interpreted-text role="class"}.
 
-Though allowed, it is not intended to be emitted by user code; instead,
-it is meant for emission by a
+Though allowed, it is not intended to be raised by user code; instead,
+it is meant to be raised by a
 `module <types.ModuleType>`{.interpreted-text role="class"} object when
 accessing a name that is not in `__export__`; see
 `pep-842-attribute-access`{.interpreted-text role="ref"}.
@@ -399,61 +400,30 @@ Note
 This section is specific to `CPython`{.interpreted-text role="term"}.
 ::::
 
-The `ExportWarning` class will be added to the public C API headers
-under the name `PyExc_ExportWarning`. As with all other global warning
-categories, it will be in the
-`Stable ABI <stable-abi>`{.interpreted-text role="ref"} and will be
-`immortal`{.interpreted-text role="term"} at runtime.
+The `ExportError` class will be added to the public C API headers under
+the name `PyExc_ExportError`. As with all other global exception types,
+it will be in the `Stable ABI <stable-abi>`{.interpreted-text
+role="ref"} and will be `immortal`{.interpreted-text role="term"} at
+runtime.
 
 ## `__export__` variables
 
 ### Requirements {#pep-842-export-requirements}
 
 When defined in a module\'s global scope, `__export__` must be assigned
-to an object that implements `~object.__contains__`{.interpreted-text
-role="meth"} or `~object.__iter__`{.interpreted-text role="meth"} such
-that `str`{.interpreted-text role="class"} objects can be checked for
-containment on it. In other words, the expression
-`str_instance in __export__` should not raise an exception. In practice,
-this means that `__export__` will typically be a
-`tuple`{.interpreted-text role="class"} or a `list`{.interpreted-text
-role="class"} object:
+to an instance of `list`{.interpreted-text role="class"} (or a subclass
+of it) containing `str`{.interpreted-text role="class"} objects:
 
 ``` python
 __export__ = ["name1", "name2", "name3"]
-__export__ = ("name1", "name2", "name3")
-__export__ = {"name1", "name2", "name3"}
 ```
-
-Again, however, the only requirement for `__export__` is that the
-`in`{.interpreted-text role="keyword"} operator is valid on it for
-instances of `str`. For example, some more exotic types are also valid
-assignments for `__export__`:
-
-``` python
-__export__ = {"name": 0}
-# '"name" in __export__' is valid, so this is okay
-```
-
-:::: note
-::: title
-Note
-:::
-
-When using one of the `export` syntax constructs as described later,
-`__export__` must always be a `list`, or otherwise be an object with an
-`append` method that is always valid for `str` objects.
-::::
 
 #### Item requirements
 
-It is not required that the strings inside `__export__` are actually
-names defined in the module (because it is not required for `__export__`
-to be a `~collections.abc.Sequence`{.interpreted-text role="class"} or
-similar, so there is no way to validate all values in `__export__`),
-though there is no practical reason to do so. For example, the following
-is valid (as in, it will not generate an exception at runtime), with one
-caveat:
+The strings inside `__export__` are not required to correspond to names
+defined in the module, though there is no practical reason to include
+undefined names. For example, the following is valid (as in, it will not
+generate an exception at runtime), with one caveat:
 
 ``` python
 __export__ = ["does not exist"]
@@ -470,8 +440,7 @@ When `__export__` is present in a module\'s globals, all access to
 attributes present on the module object will also check if the attribute
 name is present in `__export__` (via `__contains__` or through
 iteration, as specified previously). If the attribute name is not
-present in `__export__`, then an `ExportWarning` is emitted. For
-example:
+present in `__export__`, then an `ExportError` is raised. For example:
 
 ``` python
 # spam.py
@@ -486,8 +455,10 @@ __export__ = ["a"]
 >>> spam.a
 42
 >>> spam.b
-<python-input-2>:1: ExportWarning: 'b' is not exported by 'spam'
-24
+Traceback (most recent call last):
+  File "<python-input-2>", line 1, in <module>
+    spam.b
+ExportError: 'b' is not exported by 'spam'
 ```
 
 :::: note
@@ -636,8 +607,9 @@ NameError: name 'c' is not defined
 This means that the
 `previously specified requirements <pep-842-export-requirements>`{.interpreted-text
 role="ref"} for `__export__` are not exhaustive, as `__export__` in this
-case must also be a valid `__all__`. For example, including a name that
-does not exist in `__export__` will break wildcard imports:
+case must also be a valid `__all__`. For example, including a name in
+`__export__` that does not exist in the module will break wildcard
+imports:
 
 ``` python
 # spam.py
@@ -676,7 +648,7 @@ def __getattribute__(name):
         return value
 
     if name not in __export__:
-        __import__("warnings").warn(f"{name!r} is not exported by {__name__!r}", ExportWarning, stacklevel=1)
+        raise ExportError(f"{name!r} is not exported by {__name__!r}")
 
     return value
 
@@ -778,7 +750,7 @@ export NAME1, NAME2
 assignment statements (`a = b`, `a, b = c, d`, etc), and individual
 assignments that contain a type annotation (`a: type = b`; in contrast,
 a standalone `export a: type` is not valid). For example, each of the
-following are valid:
+following is valid:
 
 ``` python
 export hello = "world"
@@ -805,6 +777,18 @@ export_compound_stmt[stmt_ty]:
 
 compound_stmt[stmt_ty]:
    | &"export" export_compound_stmt
+```
+
+The `export` keyword must be the first token in a `class` or `def`
+statement; it cannot be put after `def` or `class`. For example, the
+following is not valid:
+
+``` python
+def export name():  # NOT VALID
+   ...
+
+class export Name:  # NOT VALID
+   ...
 ```
 
 ### Behavior
@@ -894,17 +878,15 @@ The existing rules for lazy imports apply here as well.
 ## This is not an access modifier {#pep-842-not-an-access-modifier}
 
 This PEP does not aim to be a mechanism for preventing access to private
-attributes in modules. The `ExportWarning` can be filtered away,
-disabled, or bypassed (such as by accessing attributes through the
-module\'s `__dict__`).
+attributes in modules. The `ExportError` can be bypassed (such as by
+accessing attributes through the module\'s `__dict__`).
 
 This is by design. Python does not include access modifiers as a
 language feature for a reason. To
 [quote](https://discuss.python.org/t/104994/2) Eric Smith: \"Access to
 internals of other classes is a feature when you need it\". This PEP
 does not intend to change this convention, nor should it be interpreted
-as an indication that Python is tending toward the direction of true
-access modifiers.
+as an indication that Python is moving toward true access modifiers.
 
 Instead, the intention of this PEP is to improve clarity when inspecting
 modules at runtime, which should, in turn, improve the maintainer
@@ -934,14 +916,6 @@ role="ref"} users from doing this in the first place.
 *not* break backwards compatibility, meaning that existing code using
 \"`export`\" as a variable name will continue to work.
 
-## Relation to `-W error`
-
-While this PEP does not break any existing applications, it may break
-tests for downstream users of packages who choose to adopt this PEP, as
-many popular testing frameworks, such as
-[pytest](https://docs.pytest.org/en/stable/), run with
-warnings-as-errors enabled by default.
-
 # Security Implications
 
 This PEP has no known security implications.
@@ -969,6 +943,15 @@ Or, if the package\'s `__all__` is equivalent to `__export__`:
 ``` python
 __export__ = __all__
 ```
+
+## Comparison to JavaScript\'s `export` keyword {#pep-842-javascript-export}
+
+In JavaScript, names are private by default, so the `export` keyword
+means \"make this name public\". This idea does not apply well to
+Python, because in Python, names are public (as in, importable) by
+default, *except* when `__export__` is present in a module\'s namespace.
+So, a clearer definition for `export` in Python is \"make everything
+else private except for this name\".
 
 # Reference Implementation
 
@@ -1002,31 +985,20 @@ In addition, it\'s not clear that there\'s any good spelling for this
 behavior that covers all cases. The \"obvious\" solution is to add a new
 `future statement <python:future>`{.interpreted-text role="ref"} that
 makes `__all__` more strict, but that isn\'t backwards compatible;
-codebases wanting to opt-in to the behavior described by this PEP must
+codebases wanting to opt in to the behavior described by this PEP must
 use a spelling that works on all supported Python versions in order to
 keep their code working on older versions, so any solutions that add
 special functionality to `__all__` generally will not work.
 
-## Raising an exception upon accessing unexported attributes
+## Emitting a warning upon accessing unexported attributes
 
 This PEP initially proposed raising an `ImportError`{.interpreted-text
 role="exc"} upon accessing module attributes that were not listed in
-`__export__`. For example:
-
-``` pycon
->>> import module
->>> module.unexported
-Traceback (most recent call last):
-  File "<python-input-1>", line 1, in <module>
-    module.unexported
-ImportError: 'unexported' is not exported by 'module'
-```
-
-This caused a lot of concern, as many were fundamentally uncomfortable
-with the idea of introducing any notion of \"private attributes\" in
-Python. The purpose of this proposal is to improve *expression* of
-private variables, not *security*. As such, this proposal switched to
-emitting warnings when accessing unexported names.
+`__export__`. This was not well received, as the PEP did not clearly
+describe the intentions behind the proposal, and as such, many rejected
+the notion of \"private attributes\" as a knee-jerk reaction. Following
+that feedback, the `ImportError` turned into a warning, which was
+eventually determined to be a bad compromise.
 
 ## Introduce `__export__` on its own
 
@@ -1053,12 +1025,16 @@ To [quote](https://discuss.python.org/t/108353/46) Guido van Rossum:
 ## Add a `private` keyword for class bodies
 
 During discussion of this proposal, it was suggested to add a `private`
-keyword for use in classes. For example:
+keyword for use in classes (or to allow `export` in class bodies). For
+example:
 
 ``` python
 class Something:
    private def hello(self):
       print("Hello, world!")
+
+   export def goodbye(self):
+      print("Goodbye, world!")
 ```
 
 This was rejected primarily because it does not have a clear benefit
@@ -1070,7 +1046,7 @@ problems described in the motivation of this PEP.
 Additionally, this is much more difficult to implement. The author\'s
 reference implementation involved new access protocols, disabling
 optimizations, and overall much more complexity when compared to the
-simple modification to the default `module.__getattr__` behavior
+simple modification to the default `module.__getattribute__` behavior
 required by `__export__`.
 
 ## Add `public` and `private` decorators as builtins
@@ -1100,9 +1076,71 @@ it does come with some caveats. In particular, there\'s no easy way to
 export simple variables without duplicating the name, which many dislike
 due to the violation of the DRY principle.
 
+Nonetheless, this is specified in a competing proposal:
+`844`{.interpreted-text role="pep"}.
+
+## Make module names public by default
+
+Many have argued that the current behavior of this proposal is
+counterintuitive, because in Python, names are public by default. This
+means the semantics of `export` break down when compared to other
+languages (see `how JavaScript handles
+this <pep-842-javascript-export>`{.interpreted-text role="ref"}). As a
+solution, it was proposed to keep names public by default and add a
+`private` keyword (along with a `__private__` list) to describe which
+names are private. For example:
+
+``` python
+def public_name():
+   ...
+
+private def private_name():
+   ...
+```
+
+This was rejected because it makes the intended goal of this proposal
+(making it clearer which names in a module are public) much harder to
+achieve in practice.
+
+The purpose of this proposal is to avoid leaking private names into the
+public namespace, but with the proposed `__private__` feature, the
+developer has to know and think about every possible name that can be
+defined. `export` does not have this problem; the developer thinks about
+the few names that need to be public, and then never has to think about
+privacy again. It is expected that if `__private__` were used instead of
+`__export__`, then module authors would often forget to mark a name as
+`private`, and thus users would be led to believe that a private name is
+public.
+
+It is also mechanically more difficult for developers, as large modules
+tend to have many more private names than public names, through imports,
+helper functions, and similar.
+
+Finally, it is not believed that `export` is difficult to understand. As
+previously mentioned, `export` in Python doesn\'t match the definition
+for `export` in JavaScript, but beyond that, understanding what `export`
+does, and why, seems fairly comprehensible for Python users.
+
 # Open Issues
 
-TBD.
+## How should packages have access to their own private members?
+
+Imagine that a package has two modules:
+
+1.  `library/_utils.py`, which is meant to contain utilities that are
+    only for the developer of `library`.
+2.  `library/main.py`, which holds public APIs that are usable to the
+    users of `library`.
+
+The names in `_utils.py` are not exported, because the module is not
+intended to be accessed by users of `library`. But, `main.py` should
+have access to these names; the current proposal would result in
+`main.py` getting an `ExportError` upon importing private names from
+`_utils.py`.
+
+How should this be resolved? Is this necessary at all \-- as in, should
+`_utils.py` mark its utilities as exported, and ask that users don\'t
+import anything from it?
 
 # Acknowledgements
 
@@ -1116,6 +1154,14 @@ Guido van Rossum, Paul Moore, Steve Dower, and Barry Warsaw.
 
 # Change History
 
+- 11-Aug-2026
+  - Required `__export__` to always be a `list`{.interpreted-text
+    role="class"} object.
+  - Clarified some parts of the PEP based on questions from the
+    discussion thread.
+  - Added the `ExportError` builtin type (removing `ExportWarning`), and
+    switched back to raising an exception upon accessing unexported
+    names.
 - 05-Aug-2026
   - Added an `export` statement.
   - Added the `ExportWarning` builtin type, which is now emitted instead
