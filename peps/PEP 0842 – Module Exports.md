@@ -15,7 +15,7 @@ post_history:
 python_status: Draft
 url: https://peps.python.org/pep-0842/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0842.rst
-source_commit: fd20b11c44bbef1e8192d28c6ae95cbc6268c687
+source_commit: 5549f4121f861f92ffe3400a7fb41ca11700c501
 ---
 
 # Abstract
@@ -55,7 +55,8 @@ ExportError: 'Private' is not exported by 'spam'
 
 This is **not** intended to be an access modifier for Python; see
 `the rationale <pep-842-not-an-access-modifier>`{.interpreted-text
-role="ref"}.
+role="ref"}. The mechanisms specified by this PEP are easy to work
+around if necessary.
 
 # Motivation
 
@@ -205,7 +206,8 @@ that module. So, not only are users not prevented from accessing
 seemingly-public imports, they may be *encouraged* to do so by their
 language server! (This problem applies to any name that is meant to be
 private; it\'s just that imports are a particularly common case for this
-to occur.)
+to occur. For other examples, see `below
+<pep-842-accidental-private-access>`{.interpreted-text role="ref"})
 
 ### Real-world cases
 
@@ -234,11 +236,25 @@ a lot of breakage:
 - [Red Hat Bug
   1583196](https://bugzilla.redhat.com/show_bug.cgi?id=1583196)
 
+#### `requests.packages`
+
+The [requests](https://requests.readthedocs.io/en/latest/) package had
+an internal vendoring namespace that users treated as an API, so after
+unvendoring packages, `requests` kept `requests.packages` as an alias,
+which led to its own subtle breakage:
+
+- [psf/requests#3985](https://github.com/psf/requests/issues/3985)
+- [psf/requests#4102](https://github.com/psf/requests/issues/4102)
+- [psf/requests#4104](https://github.com/psf/requests/issues/4104)
+- [psf/requests#5327](https://github.com/psf/requests/issues/5327)
+- [psf/requests#5561](https://github.com/psf/requests/issues/5561)
+- [urllib3/urllib3#1518](https://github.com/urllib3/urllib3/issues/1518)
+
 #### `botocore.vendored`
 
-The [botocore](https://github.com/boto/botocore) package had vendored
-dependencies under the `botocore.vendored` namespace, which ended up
-being [relied upon by
+The [botocore](https://github.com/boto/botocore) package also had
+vendored dependencies under the `botocore.vendored` namespace, which
+ended up being [relied upon by
 users](https://github.com/search?q=%22botocore.vendored.requests.packages%22&type=code):
 
 - [boto/botocore#1466](https://github.com/boto/botocore/pull/1466)
@@ -269,6 +285,77 @@ and broke when they were removed in v0.23:
 - [shubhomoydas/ad_examples#8](https://github.com/shubhomoydas/ad_examples/issues/8)
 - [Kaggle Product
   Feedback](https://www.kaggle.com/discussions/product-feedback/158412)
+
+### Other examples {#pep-842-accidental-private-access}
+
+Beyond imports, there are several examples where users accidentally
+accessed internal APIs, which resulted in breakage.
+
+#### `logging._acquireLock` / `logging._releaseLock`
+
+The documentation for the `logging`{.interpreted-text role="mod"} module
+included a private API in an example. This example was then copy-pasted
+to several downstream projects, and was broken when the private APIs
+were removed in Python 3.13:
+
+- [sqlmapproject/sqlmap#5731](https://github.com/sqlmapproject/sqlmap/issues/5731)
+- [sqlmapproject/sqlmap#5796](https://github.com/sqlmapproject/sqlmap/issues/5796)
+- [conda/conda#14439](https://github.com/conda/conda/issues/14439)
+- [madphysicist/haggis#2](https://gitlab.com/madphysicist/haggis/-/work_items/2)
+- [Debian
+  Bug#1088763](https://www.mail-archive.com/debian-bugs-dist@lists.debian.org/msg2003691.html)
+
+#### `matplotlib.cbook._check_in_list` / `matplotlib.cbook._rename_parameter`
+
+[matplotlib](https://matplotlib.org/) left some utility functions in a
+module-level namespace. These functions were prefixed with a leading
+underscore, but users disregarded this, leading to breakage when they
+were removed:
+
+- [matplotlib/matplotlib#18494](https://github.com/matplotlib/matplotlib/pull/18494)
+- [dougcahl/eddy_identification_winding#1](https://github.com/dougcahl/eddy_identification_winding/issues/1)
+- [guchengxi1994/mask2json#58](https://github.com/guchengxi1994/mask2json/issues/58)
+
+#### `concurrent.futures.thread._threads_queues`
+
+In Python 3.8, a recipe to make
+`~concurrent.futures.ThreadPoolExecutor`{.interpreted-text role="class"}
+be killed by CTRL+C was spread around. This recipe used the internal
+API, and was missed by many users (or potentially seen, but ignored, due
+to the issues described
+`above <pep-842-prefixed-public>`{.interpreted-text role="ref"}),
+leading to breakage in Python 3.9 when worker threads stopped being
+daemon:
+
+- [clchiou/non_graceful_shutdown.py](https://gist.github.com/clchiou/f2608cbe54403edb0b13)
+- [python/cpython#83993](https://github.com/python/cpython/issues/83993)
+- [cognitedata/cognite-sdk-python#1122](https://github.com/cognitedata/cognite-sdk-python/pull/1122)
+- [Opentrons/opentrons#12970](https://github.com/Opentrons/opentrons/pull/12970)
+
+#### `re._pattern_type`
+
+Before the existence of `re.Pattern`{.interpreted-text role="class"},
+the type of objects returned by `re.compile`{.interpreted-text
+role="func"} was private. Many users found it easier to access the
+internal type rather than do `type(re.compile(''))`, which led to
+breakage in 3.7 when it was removed:
+
+- [beetbox/beets#2986](https://github.com/beetbox/beets/issues/2986)
+- [django-precise-bbcode#25](https://github.com/ellmetha/django-precise-bbcode/issues/25)
+- [python/cpython#1646](https://github.com/python/cpython/pull/1646)
+
+#### `asyncio.staggered_race`
+
+The [aiohappyeyeballs](https://aiohappyeyeballs.aio-libs.org/) package
+(which is internally used by [aiohttp](https://docs.aiohttp.org/)) used
+the internal `staggered_race` API from the `asyncio`{.interpreted-text
+role="mod"} module. This broke when the implementation was updated to no
+longer have a `loop` parameter:
+
+- [aio-libs/aiohttp#8599](https://github.com/aio-libs/aiohttp/issues/8599)
+- [python/cpython#124639](https://github.com/python/cpython/issues/124639)
+- [python/cpython#124390](https://github.com/python/cpython/pull/124390)
+- [python/cpython#124700](https://github.com/python/cpython/pull/124700)
 
 ### Linters cannot fight against imports
 
@@ -681,8 +768,9 @@ simple_stmt[stmt_ty] (memo):
    | &"export" export_stmt
 ```
 
-Note that augmented assignments (`x += y`) are disallowed through a PEG
-action at compile time.
+Note that augmented assignments (`x += y`), subscripts (`x[y] = z`), and
+attributes (`x.y = z`) are disallowed through a PEG action at compile
+time.
 
 ### Standalone exports
 
@@ -765,6 +853,8 @@ export hello: str
 export my: str, hovercraft: str = "full of", "eels"
 export name := "walrus"
 export hello += "world"
+export trees[0] = "the larch"
+export something.name = "python"
 ```
 
 ## Exporting functions and classes
@@ -784,7 +874,7 @@ statement; it cannot be put after `def` or `class`. For example, the
 following is not valid:
 
 ``` python
-def export name():  # NOT VALID
+async def export name():  # NOT VALID
    ...
 
 class export Name:  # NOT VALID
@@ -878,8 +968,8 @@ The existing rules for lazy imports apply here as well.
 ## This is not an access modifier {#pep-842-not-an-access-modifier}
 
 This PEP does not aim to be a mechanism for preventing access to private
-attributes in modules. The `ExportError` can be bypassed (such as by
-accessing attributes through the module\'s `__dict__`).
+attributes in modules. The `ExportError` can be bypassed and avoided;
+see `below <pep-842-bypassing-export>`{.interpreted-text role="ref"}.
 
 This is by design. Python does not include access modifiers as a
 language feature for a reason. To
@@ -953,6 +1043,40 @@ default, *except* when `__export__` is present in a module\'s namespace.
 So, a clearer definition for `export` in Python is \"make everything
 else private except for this name\".
 
+## Bypassing `__export__` {#pep-842-bypassing-export}
+
+As mentioned previously, this proposal is not meant to be an ironclad
+shield around private variables.
+
+For prototyping, the simplest way to get around `__export__` is to
+simply delete it:
+
+``` python
+import module
+
+del module.__export__
+# All private variables in 'module' are now available
+```
+
+Or, for a more granular workaround, append specific private names to
+`__export__`:
+
+``` python
+import module
+
+module.__export__.append("name_you_want")
+```
+
+However, this approach modifies the `__export__` list globally, meaning
+that enforcement inside other packages will also be disabled. To avoid
+this, access private variables through the module\'s `__dict__`:
+
+``` python
+import module
+
+name_you_want = module.__dict__["name_you_want"]
+```
+
 # Reference Implementation
 
 A reference implementation of this PEP can be found
@@ -995,10 +1119,11 @@ special functionality to `__all__` generally will not work.
 This PEP initially proposed raising an `ImportError`{.interpreted-text
 role="exc"} upon accessing module attributes that were not listed in
 `__export__`. This was not well received, as the PEP did not clearly
-describe the intentions behind the proposal, and as such, many rejected
-the notion of \"private attributes\" as a knee-jerk reaction. Following
-that feedback, the `ImportError` turned into a warning, which was
-eventually determined to be a bad compromise.
+describe the intentions behind the proposal. Following that feedback,
+the `ImportError` turned into a warning, which was eventually determined
+to be a bad compromise, as the ergonomics of warnings are much worse
+than exceptions, and because many testing frameworks (such as `pytest`)
+turn warnings into exceptions during testing.
 
 ## Introduce `__export__` on its own
 
@@ -1037,17 +1162,8 @@ class Something:
       print("Goodbye, world!")
 ```
 
-This was rejected primarily because it does not have a clear benefit
-over the existing
-`name mangling behavior <private-name-mangling>`{.interpreted-text
-role="ref"} (using the `__` prefix), which also solves many of the
-problems described in the motivation of this PEP.
-
-Additionally, this is much more difficult to implement. The author\'s
-reference implementation involved new access protocols, disabling
-optimizations, and overall much more complexity when compared to the
-simple modification to the default `module.__getattribute__` behavior
-required by `__export__`.
+This is considered out of scope for this PEP, and may be revisited by a
+future proposal.
 
 ## Add `public` and `private` decorators as builtins
 
@@ -1127,20 +1243,38 @@ does, and why, seems fairly comprehensible for Python users.
 
 Imagine that a package has two modules:
 
-1.  `library/_utils.py`, which is meant to contain utilities that are
+1.  `library/utils.py`, which is meant to contain utilities that are
     only for the developer of `library`.
 2.  `library/main.py`, which holds public APIs that are usable to the
     users of `library`.
 
-The names in `_utils.py` are not exported, because the module is not
+The names in `utils.py` are not exported, because the module is not
 intended to be accessed by users of `library`. But, `main.py` should
 have access to these names; the current proposal would result in
 `main.py` getting an `ExportError` upon importing private names from
-`_utils.py`.
+`utils.py`.
 
 How should this be resolved? Is this necessary at all \-- as in, should
-`_utils.py` mark its utilities as exported, and ask that users don\'t
+`utils.py` mark its utilities as exported, and ask that users don\'t
 import anything from it?
+
+## Does `export` need a top-level marker?
+
+Usage of `export` affects the runtime behavior of all other names
+defined in a module, so it has been argued that this can make
+maintenance more difficult in some cases. For example, if a developer is
+unsure whether a module already uses `export`, they would have to search
+the module for it in order to know whether it is safe to declare a
+public API as `export` without affecting the rest of the code.
+
+As a solution, it was proposed to require `export` syntax to have some
+sort of marker at the top of the module (such as an `__export__ = []`
+declaration or a `__future__` import). This has not been decided upon
+yet, because it is unclear whether the problem described above will
+actually turn out to be an issue in practice; it is expected that many
+libraries will be consistent about their usage of `export`/`__export__`
+internally, and thus it should not be very difficult for a developer to
+know what kind of module they are working in.
 
 # Acknowledgements
 
@@ -1154,6 +1288,14 @@ Guido van Rossum, Paul Moore, Steve Dower, and Barry Warsaw.
 
 # Change History
 
+- 12-Aug-2026
+  - Clarified whether the `export` statement works with subscripts and
+    attribute assignments.
+  - Added an open issue on whether `export` syntax should be necessary
+    at the top of the file.
+  - Added more examples for real-world cases.
+  - Added a section in \"How To Teach This\" about how to bypass
+    `__export__`.
 - 11-Aug-2026
   - Required `__export__` to always be a `list`{.interpreted-text
     role="class"} object.
