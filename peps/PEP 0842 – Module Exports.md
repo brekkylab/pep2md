@@ -4,7 +4,7 @@ title: Module Exports
 author:
 - Peter Bierma <peter@python.org>
 discussions_to: https://discuss.python.org/t/108460
-status: Draft
+status: Withdrawn
 type: Standards Track
 created: 25-Jul-2026
 python_version: '3.16'
@@ -12,11 +12,21 @@ post_history:
 - '`24-Jul-2026 <https://discuss.python.org/t/108266/9>`__'
 - '`31-Jul-2026 <https://discuss.python.org/t/108353>`__'
 - '`07-Aug-2026 <https://discuss.python.org/t/108460>`__'
-python_status: Draft
+python_status: Withdrawn
 url: https://peps.python.org/pep-0842/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0842.rst
-source_commit: 5549f4121f861f92ffe3400a7fb41ca11700c501
+source_commit: cdf00cf90add4387c74f8910315472b0d5f7596f
 ---
+
+:::: note
+::: title
+Note
+:::
+
+This PEP has been withdrawn. The author\'s motivation for this proposal
+was to improve standard library maintenance, but the solution described
+in this PEP did not align with the needs of third-party packages.
+::::
 
 # Abstract
 
@@ -1288,6 +1298,8 @@ Guido van Rossum, Paul Moore, Steve Dower, and Barry Warsaw.
 
 # Change History
 
+- 15-Aug-2026
+  - Withdrew the PEP.
 - 12-Aug-2026
   - Clarified whether the `export` statement works with subscripts and
     attribute assignments.
