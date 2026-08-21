@@ -2,7 +2,7 @@
   "source": "github-http",
   "repo_url": "https://github.com/python/peps.git",
   "branch": "main",
-  "head_commit": "d94899e4a97f5768af14a330da24ec113664a4bd",
+  "head_commit": "58c5ad3ff64a09827256eac9d6bc72b3847c0645",
   "pep_sha": {
     "1": "1c2fbbeeec5efbf3a846634af1198b0c53c4a073",
     "2": "92649bd6d046664f6b4cab4e912f1b3398166fbb",
