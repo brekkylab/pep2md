@@ -15,7 +15,7 @@ post_history:
 python_status: Draft
 url: https://peps.python.org/pep-0843/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0843.rst
-source_commit: f5bd9d81101f31a37eeb1ec60ecff477f949960f
+source_commit: 741f7e15be8f7033fdf7902dbb8426880b495077
 ---
 
 # Abstract
@@ -27,7 +27,9 @@ layout today means choosing between two imperfect options.
 
 The first is writing every exported name twice: once in an import
 statement, again as a string in `__all__`. The two lists must be kept in
-sync by hand every time the public layout changes.
+sync by hand every time the public layout changes, violating *DRY*
+(Don\'t Repeat Yourself): \"Every piece of knowledge must have a single,
+unambiguous, authoritative representation within a system.\"[^1]
 
 The second is the reflexive-alias idiom, `from x import y as y`. This is
 part of the type system: type checkers treat it as a signal that the
@@ -112,9 +114,8 @@ Something has to do the flattening. Today that something is a
 hand-maintained, doubly-written list: the export list (in `__all__`) and
 the import list (of `import` statements) say the same thing twice. Any
 rename, addition, or removal has to be made in two places by hand, and
-the two can silently drift apart. That\'s the DRY violation this PEP
-removes by folding both into one `from <module> export <name>`
-statement.
+the two can silently drift apart. This PEP removes that duplication by
+folding both into one `from <module> export <name>` statement.
 
 The alternative, `import x as x`, is a workaround for the language\'s
 missing export concept, and it still trips up some auto-formatters,
@@ -172,9 +173,20 @@ from numpy.typing export NDArray
 
 A `from <module> export <name> [as <alias>]` statement does what
 `from <module> import <name> [as <alias>]` does: it binds `<name>`, or
-`<alias>` if given, in the current namespace, and also appends that name
-to the module\'s `__all__`, creating `__all__` if it doesn\'t already
-exist.
+`<alias>` if given, in the current namespace, and appends that name to
+`__all__`:
+
+``` python
+from <module> import <name> as <alias>
+exported_names = globals().setdefault("__all__", [])
+if not isinstance(exported_names, list):
+    exported_names = list(exported_names)
+    __all__ = exported_names
+exported_names.append("<alias>")
+```
+
+Every other statement form in this PEP normalizes `__all__` the same way
+before appending or extending it.
 
 Because it desugars to an ordinary import plus an append to `__all__`,
 `export` composes with control flow exactly as `import` does:
@@ -189,6 +201,26 @@ else:
 Each branch runs its own import and its own `__all__` append, so the
 name that ends up exported depends on which branch ran, with no separate
 `__all__` bookkeeping required.
+
+Unlike `import`, `export` is restricted to module level: it\'s a
+`SyntaxError` inside a `def` or `class` body, though it may still appear
+inside `if`, `try`, `for`, `while`, or `with` blocks, as in the platform
+example above, since those don\'t introduce a new scope. The restriction
+exists because a name bound inside a function or class body was never
+part of the module\'s namespace to begin with, so there\'s nothing there
+for `export` to add to `__all__`: the whole point of `export` is
+populating the *module\'s* public API, and only names bound at module
+level qualify.
+
+In particular, using `export` in a module-level
+`if typing.TYPE_CHECKING:` guard lets stub-only packages such as
+`_typeshed` export a name that exists in the stub but has no runtime
+counterpart.
+
+``` python
+if typing.TYPE_CHECKING:
+    from ._internal.types export InternalOnly
+```
 
 `<module>` may be relative (`from .core export Thing`,
 `from ..sub.core export Thing`) or absolute
@@ -236,12 +268,17 @@ This supports a common two-tier layout: an internal module curates its
 own `__all__` as it\'s written, and the hub re-exports that whole list
 in one statement, instead of naming each item again.
 
-The wildcard form is equivalent to:
+`export *` matches `import *`\'s fallback when `<module>` defines no
+`__all__` of its own. It exports every top-level name that doesn\'t
+start with an underscore.
+
+The wildcard form is equivalent to, normalizing `__all__` as in
+[Specification](#specification):
 
 ``` python
 # from ._internal.core export *
 from ._internal.core import *
-__all__ = list(globals().get("__all__", [])) + _names_bound_by_star_import
+__all__.extend(_names_bound_by_star_import)
 ```
 
 where `_names_bound_by_star_import` is the list of names
@@ -270,12 +307,13 @@ import half is lazy. For a hub module with hundreds of re-exports, this
 gives users a complete, accurate `__all__` and `dir()` at import time,
 without paying the cost of loading every internal module up front.
 
-The statement is equivalent to:
+The statement is equivalent to, normalizing `__all__` as in
+[Specification](#specification):
 
 ``` python
 # lazy from ._internal.core export PublicAPI
 lazy from ._internal.core import PublicAPI
-__all__ = list(globals().get("__all__", [])) + ["PublicAPI"]
+__all__.append("PublicAPI")
 ```
 
 `lazy from <module> export *` is not allowed, for two independent
@@ -352,11 +390,28 @@ module ([How to Teach This](#how-to-teach-this)) already takes.
 
 A module may freely mix `from ... export ...` statements with a manually
 maintained `__all__`, or with `__all__ +=` / `__all__.append` calls
-elsewhere in the file. Each `export` statement simply appends to
-whatever `__all__` already exists in the module\'s namespace, creating
-an empty list first if necessary. Duplicate names are allowed: `__all__`
-was never required to be free of duplicates, and this PEP doesn\'t
-change that.
+elsewhere in the file. Each `export` statement looks at whatever is
+currently bound to `__all__` in the module\'s namespace before appending
+the new name(s):
+
+- If `__all__` doesn\'t exist yet, `export` creates it, as an empty
+  list.
+- If `__all__` exists but isn\'t already a list, `export` copies it into
+  a list, preserving its existing contents.
+- Otherwise `__all__` is already a list, and is used as is.
+
+The new name is then appended. So an `export` statement always leaves
+`__all__` as an ordinary, mutable list, one that later code in the same
+module can keep extending with plain list operations:
+
+``` python
+from .foo export Foo
+
+__all__ += ["Baz"]
+```
+
+Duplicate names are allowed: `__all__` was never required to be free of
+duplicates, and this PEP doesn\'t change that.
 
 `from ... export ...` affects only the contents of `__all__`, which in
 turn affects `from module import *` and any tool that already reads
@@ -376,24 +431,18 @@ hiding is a [non-goal](#non-goals) of this PEP.
 
 ## Semantic implementation
 
-Each `from <module> export <name> as <alias>` statement is equivalent
-to:
-
-``` python
-from <module> import <name> as <alias>
-__all__ = list(globals().get("__all__", [])) + ["<alias>"]
-```
-
-For example:
+Each `from <module> export <name> as <alias>` statement desugars exactly
+as shown in [Specification](#specification): import the name, normalize
+`__all__`, then append. For example:
 
 ``` python
 # from ._internal.core export PublicAPI
 from ._internal.core import PublicAPI
-__all__ = list(globals().get("__all__", [])) + ["PublicAPI"]
+__all__.append("PublicAPI")
 
 # from ._internal.widgets export Widget as PublicWidget
 from ._internal.widgets import Widget as PublicWidget
-__all__ = list(globals().get("__all__", [])) + ["PublicWidget"]
+__all__.append("PublicWidget")
 ```
 
 The wildcard form\'s equivalent is given in [Wildcard
@@ -411,16 +460,18 @@ A `@public`-style decorator, as in the third-party `atpublic` package,
 works neatly for individually defined functions and classes, but it
 doesn\'t compose with `import` statements: there\'s no object to
 decorate when the \"definition\" is just a name entering the module
-through an import. `atpublic` works around this with a function-call
-form, `public(some_imported_name)`, but that reintroduces the
-double-write this PEP removes: the name is written once in the import
-and again as an argument to `public()`. It also doesn\'t compose with
-aliases: the function-call form only takes keyword arguments,
-`public(alias=name)`, which both adds `alias` to `__all__` and binds it,
-so publishing an alias means spelling out the mapping in the call
-instead of using `from x import y as z`. A statement-level `export`
-keyword avoids both problems, because it\'s part of the import statement
-itself; it adds nothing beyond the import that would exist anyway.
+through an import.
+
+`atpublic` works around this with a function-call form,
+`public(some_imported_name)`, but that reintroduces the double-write
+this PEP removes: the name is written once in the import and again as an
+argument to `public()`. It also doesn\'t compose with aliases: the
+function-call form only takes keyword arguments, `public(alias=name)`,
+which both adds `alias` to `__all__` and binds it, so publishing an
+alias means spelling out the mapping in the call instead of using
+`from x import y as z`. A statement-level `export` keyword avoids both
+problems, because it\'s part of the import statement itself; it adds
+nothing beyond the import that would exist anyway.
 
 ## Why only re-exports
 
@@ -584,25 +635,18 @@ This PEP considered two other spellings for the re-export statement:
 
 # Open Issues
 
-## Should `export *` require the source module to define `__all__`?
+## Should `export` warn on a non-list `__all__`?
 
-The two-tier layout that motivates the wildcard form (see
-[Specification](#specification)) depends on the internal module having
-deliberately curated its own `__all__`: that curated list is the reason
-the hub\'s `export *` is safe to write without naming each item.
+[Specification](#specification) silently converts a non-list `__all__`
+into a list before appending to it. Guido van Rossum\'s parallel
+proposal for PEP 844\'s `@public` decorator instead raises a visible
+`DeprecationWarning` when it finds a non-list `__all__`, while still
+supporting the value indefinitely
+([comment](https://discuss.python.org/t/pep-844-public-and-private-builtins/108515/113)).
 
-But `from <module> export *` behaves exactly like
-`from <module> import *`, which falls back, when `<module>` defines no
-`__all__`, to binding every top-level name that doesn\'t start with an
-underscore. If a hub author writes `export *` against an internal module
-with no `__all__`, that fallback silently re-exports whatever happens to
-lack a leading underscore, names that may not have been curated as
-carefully as an explicit `__all__` would require, and exactly the kind
-of accidental export this PEP eliminates elsewhere.
-
-The open question: should `export *` follow `import *`\'s fallback as
-is, or require `<module>` to define its own `__all__` and raise an error
-if it doesn\'t?
+The open question: should `export` do the same and warn when it has to
+convert a non-list `__all__`, or stay silent and leave that to linters,
+such as ruff\'s `PLE0605`?
 
 # Acknowledgements
 
@@ -612,8 +656,28 @@ Rossum, Barry Warsaw, and Hugo van Kemenade, who supplied the real-world
 examples of re-export breakage that ground this proposal in concrete
 libraries rather than hypotheticals.
 
+# Footnotes
+
 # Change History
 
+- 23-Aug-2026
+  - Consolidated the `__all__`-normalization pseudocode into a single
+    copy in [Specification](#specification), instead of repeating it
+    three times.
+  - Added an Open Issues section asking whether `export` should raise a
+    `DeprecationWarning` on a non-list `__all__`.
+  - Cited the canonical definition of DRY.
+  - Restricted `export` to module level.
+- 22-Aug-2026
+  - Resolved the wildcard-form open question in favor of matching
+    `import *` exactly, including its no-`__all__` fallback; removed the
+    now-resolved Open Issues section.
+  - Made the `__all__`-creation rules in \"Interaction with `__all__`\"
+    explicit, and added an example showing `__all__ +=` after an
+    `export` statement.
+  - Noted that `export` is usable anywhere `import` is, with no
+    restriction of its own, and called out `if typing.TYPE_CHECKING:`
+    re-exports as an intended use case for stub-only packages.
 - 13-Aug-2026
   - Reworded the public/implementation layout description in the
     Abstract, since \"flat tree\" was self-contradictory.
@@ -624,3 +688,6 @@ libraries rather than hypotheticals.
 
 This document is placed in the public domain or under the
 CC0-1.0-Universal license, whichever is more permissive.
+
+[^1]: Andrew Hunt and David Thomas, *The Pragmatic Programmer*
+    (Addison-Wesley, 1999).

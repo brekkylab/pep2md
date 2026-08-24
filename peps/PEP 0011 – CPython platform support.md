@@ -16,7 +16,7 @@ post_history:
 python_status: Active
 url: https://peps.python.org/pep-0011/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0011.rst
-source_commit: ea007234fa600d43a183dbb3242c1395779ba196
+source_commit: 6edbbc7362dfdcab0c2c88babfe4b277bd4389ef
 ---
 
 # Abstract
@@ -133,6 +133,12 @@ first release candidate, it will be listed as unsupported in this PEP.
 | powerpc64le-unknown-linux-gnu  | glibc, clang         | Victor Stinner       |
 |                                |                      |                      |
 |                                | glibc, gcc           | Victor Stinner       |
++--------------------------------+----------------------+----------------------+
+| riscv64-unknown-linux-gnu      | glibc, clang         | Stan Ulbrych, Emma   |
+|                                |                      | Smith                |
+|                                | glibc, gcc           |                      |
+|                                |                      | Stan Ulbrych, Emma   |
+|                                |                      | Smith                |
 +--------------------------------+----------------------+----------------------+
 | s390x-unknown-linux-gnu        | glibc, gcc           | Victor Stinner       |
 +--------------------------------+----------------------+----------------------+
