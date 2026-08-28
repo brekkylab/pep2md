@@ -12,7 +12,7 @@ python_version: '3.16'
 python_status: Draft
 url: https://peps.python.org/pep-0805/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0805.rst
-source_commit: 9b56dd1c1b7ace74e77a1336998e3ebc36824a65
+source_commit: 3f183a66d86210394c3bf0152bca1642b1a2a9af
 ---
 
 # Abstract
@@ -280,7 +280,7 @@ iterators of *immutable* objects will be *local* when created.
 
 All other objects that are not inherently immutable (like tuples or
 strings) will be created as *local*. These *local* objects can later be
-made *immutable* or *protected*.
+made *immutable* or can be *protected*.
 
 Three new classes will be added, `SynchronizedList`, `SynchronizedDict`
 and `SynchronizedSet`. These are *synchronized* versions of `list`,
@@ -341,8 +341,11 @@ allowing code to execute safely and in parallel.
 
 Mutable Python objects can be either *local* or *protected*. To be
 shareable between ThreadGroups, a mutable Python object must be
-*protected*. Any *local* object can be *protected*, by passing a unique
-reference to it to the `protect` method of a `Lock` or `RLock`.
+*protected*. A *protected* object can be made from any *local* object,
+by calling the `protect` method of a `Lock` or `RLock`:
+
+    def protect(self: Lock | RLock, obj: T) -> Protected[T]
+
 *Protected* objects cannot be accessed outside of a `with` statement, or
 function called from within a `with` statement, where the context
 manager is the protecting mutex.
@@ -363,9 +366,6 @@ Used as context managers, locks provide race-free, serialized, access to
     with m:
         l.append(0)
     l.append(1) # Raises an exception as mutex is not held.
-
-The reference passed to `protect` must be the sole reference to a
-*local* object, or a `ValueError` is raised.
 
 In addition, locks can be added to form compound locks. Addition is
 commutative, so that:
@@ -392,16 +392,16 @@ This PEP proposes adding the following:
   the object making it immutable (extension classes may implement
   `__freeze__()`, but are not obliged to)
 - A builtin `freeze(obj)` function, which calls `obj.__freeze__()`
-- A `protect(obj)` method, added to `Lock` and `RLock`, to mark the lock
-  as protecting `obj`
+- A `protect(obj)` method, added to `Lock` and `RLock`, which returns a
+  *protected* copy of `obj`.
 - The `SynchronizedList`, `SynchronizedDict` and `SynchronizedSet`
   classes
 - A `synchronize()` method, added to `list`, `set` and `dict`, which
   returns the *synchronized* version of that object and clears the
   original object.
 - A `__shareable__` read-only attribute for all objects
-- The `Channel` and `TransferBox` classes for passing mutable objects
-  from one `ThreadGroup` to another
+- The `Channel` and `TransferBox` classes for passing objects from one
+  `ThreadGroup` to another
 - The `ThreadGroup` class
 - The `group` parameter used when creating `Thread`s now has meaning and
   can be set to a `ThreadGroup`
@@ -505,31 +505,34 @@ is only available for some builtin and extension objects.
 Two classes are provided to pass *local* objects between ThreadGroups.
 
 The `TransferBox` class provides a *synchronized* container for moving
-*local* objects from one ThreadGroup to another:
+objects from one ThreadGroup to another.
+
+When creating a `TransferBox` from a *local* object, the object is
+copied before boxing. The new *local* object is not attached to any
+ThreadGroup.
+
+When claiming the object from the box, the current ThreadGroup becomes
+the owner of the object, if the box\'s `sink` is `None` or the current
+ThreadGroup.
+
+*Immutable*, *protected* and *synchronized* objects are passed uncopied:
+
+    EMPTY = sentinel('EMPTY')
 
     class TransferBox[T]:
 
         def __new__(cls, obj: T, sink: ThreadGroup | None=None):
-            if refcnt(obj) > 1:
-                raise ValueError(...)
             self.sink = sink
-            self._obj = obj
+            self._obj = copy(obj) if obj.__state__ == LOCAL else obj
 
         def claim(self) -> T:
-            if self._obj is NULL:
+            if self._obj is EMPTY:
                 raise ValueError(...)
             if self.sink is not None and self.sink != current_ThreadGroup:
                 raise ValueError(...)
             result = self._obj
-            self._obj = NULL
+            self._obj = EMPTY
             return result
-
-When creating a `TransferBox` from a *local* object, `TransferBox(obj)`
-detaches the object `obj` from the current ThreadGroup. When claiming
-the object from the box, the current ThreadGroup becomes the owner of
-the object, if the box\'s `sink` is `None` or the current ThreadGroup.
-
-Non-*local* objects are passed through the box unchanged.
 
 The `Channel` class provides a higher level API for passing objects from
 one ThreadGroup to another. Channel is equivalent to this Python class:
@@ -609,17 +612,6 @@ environment variable:
 2.  If supported for that class.
 3.  The argument must be the sole reference to the object.
 
-### State transformations
-
-+------------------+-----------+-------------+----------+-------------+----------------+
-| > Transformation | Immutable | > Local =   | Local ≠  | > Protected | > Synchronized |
-|                  |           | > thread    | thread   |             |                |
-+==================+===========+=============+==========+=============+================+
-| > `freeze(obj)`  | Immutable | > Immutable | > \-\--  | > \-\--     | > Immutable    |
-+------------------+-----------+-------------+----------+-------------+----------------+
-| > `protect(obj)` | > \-\--   | > Protected | > \-\--  | > \-\--     | > \-\--        |
-+------------------+-----------+-------------+----------+-------------+----------------+
-
 ## ABI breakage
 
 This PEP will require a one time ABI breakage, much like
@@ -680,7 +672,7 @@ The following operators will not allow a context switch:
 ## Introspection and Debuggers
 
 In general, *local* objects cannot be accessed by threads belonging to a
-different ThreadGroup, nor can protected objects be accessed without
+different ThreadGroup, nor can *protected* objects be accessed without
 holding the relevant lock. However, this would prevent debuggers and
 similar tools from being able to introspect multiple threads of
 execution.
@@ -771,7 +763,7 @@ The most obvious change is that sharing of mutable objects will raise an
 `IllegalThreadAccessException` instead of allowing data races.
 
 This can be resolved on a case-by-case basis. If mutable shared objects
-are already protected by locks, explicitly mark them as *protected*. See
+are already protected by locks, then make them *protected*. See
 `pep805-locks-and-protection`{.interpreted-text role="ref"}. (This will
 also help ensure the thread-safety of such applications.) Turn mutable
 shared lists and dictionaries into their synchronized versions, by using
@@ -1019,18 +1011,22 @@ The lead author feels that \"synchronized\" is a better term 😊
 
 ## Make `del` an expression
 
-Certain functions, `protect`, `Channel.put` and creating a `TransferBox`
-require that the argument passed is the sole reference to an object.
-This is tricky if the object is referenced by a variable, as that
-variable is an additional reference.
+The functions `protect`, `Channel.put` and creating a `TransferBox`
+create a copy of the object passed as an argument.
 
-One possible solution to make this more manageable is to make `del` an
-expression, instead of a statement. That way, an object referenced by
-local variable `x` could be passed to a channel like this:
+By making `del` an expression, it can be made clearer that the current
+thread has done with the object.
+
+Using `del x` as the argument clears `x` making it clear that the
+current thread has done with the object. For example:
 
     channel.put(del x)
 
-The current way to do it is rather clunky:
+Doing this will also boost performance, as the copy can be avoided if
+the VM can determine, either by static analysis or reference counting,
+that the reference passed is unique.
+
+The current way to do this is rather clunky:
 
     channel.put((x, x:=None)[0])
 
