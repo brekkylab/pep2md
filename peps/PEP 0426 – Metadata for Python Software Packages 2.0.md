@@ -30,7 +30,7 @@ superseded_by: '566'
 python_status: Withdrawn
 url: https://peps.python.org/pep-0426/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0426.rst
-source_commit: 0acb6883cf47bd0129fdb0e9164a3aea300701a8
+source_commit: 255ce2d7e5cdd95fbc2e2734ae0d2a342e4fcbb0
 ---
 
 ::: canonical-pypa-spec
@@ -646,7 +646,7 @@ permitted characters:
 
 Source labels MUST start and end with an ASCII letter or digit.
 
-A regular expression to rnforce these constraints (when run with
+A regular expression to enforce these constraints (when run with
 `re.IGNORECASE`) is:
 
     ^([A-Z0-9]|[A-Z0-9][A-Z0-9._-+]*[A-Z0-9])$
