@@ -24,7 +24,7 @@ post_history:
 python_status: Draft
 url: https://peps.python.org/pep-0825/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0825.rst
-source_commit: 8ab8e115c6ac36746643c56b643a902d8280bb28
+source_commit: 565e11246522192e7977fda491729bd695454753
 ---
 
 # Abstract
@@ -247,7 +247,8 @@ include updated versions of the schema. The schema is available in
 
 The `default-priorities` dictionary defines the ordering of namespaces
 which is used in variant ordering. The exact algorithm is described in
-the [Variant ordering](#variant-ordering) section.
+the [Variant ordering and selection](#variant-ordering-and-selection)
+section.
 
 The following key is REQUIRED:
 
@@ -401,7 +402,7 @@ like:
 }
 ```
 
-## Metadata consistency
+## Metadata consistency {#pep825-metadata-consistency-requirements}
 
 The [variant metadata](#variant-metadata) carried by the individual
 variant wheels of a package version, and the [index-level
@@ -440,10 +441,98 @@ multiple sources
 (non-normative)](#installing-wheels-from-multiple-sources-non-normative)
 discusses what they can reasonably do instead.
 
-## Variant ordering
+The reasoning behind these requirements, what they cost and what they
+deliberately leave open, is summarized in [variant metadata
+consistency](#variant-metadata-consistency) and set out in full in
+`pep825-metadata-consistency`{.interpreted-text role="ref"}.
 
-This specification defines an ordering between different wheels based on
-the presence of variant metadata.
+## Variant ordering and selection
+
+### High-level overview
+
+This specification defines an ordering of wheels based on their variant
+metadata, from the most preferable to the least preferable.
+
+The ordering of wheels by platform compatibility tags is not currently
+defined by the specification, beyond a guideline that more specific
+wheels should be preferred. This has not been a big problem, as usually
+there is only one wheel that is compatible with the system, and where
+there are more, the ordering is either clear or insignificant.
+
+With wheel variants, there can be several compatible wheels per project
+version. We define a total ordering to give package authors and users
+control over wheel preference and to ensure that all tools select the
+same variant without ambiguity. Tools may allow users to override this
+ordering.
+
+Every variant property is a `namespace :: feature :: value` triple whose
+components are ranked in that order: by namespace first, then by feature
+within the namespace, then by value within the feature. Only properties
+compatible with the target system take part, and only the highest
+ranking compatible value for each feature. The ranking for namespaces
+comes from the package\'s variant metadata. The ranking for their
+features and the ranking of values within features will be defined in a
+subsequent PEP.
+
+Variant wheels sort as Python sorts lists of tuples, each wheel being
+the list of its property triples ordered best first. Where one wheel\'s
+triples run out, the longer list therefore wins. The intuition is that
+this selects the wheel that makes the best use of the target hardware.
+
+Spelled out: compare two wheels by their best-ranked property triple; if
+those are equal, use the next lower-ranked property as a tiebreaker,
+repeatedly until an ordering is established. Comparing all compatible
+wheels this way yields the most preferred wheel.
+
+As an example, take four variant wheels of a package that ranks the
+`nvidia` namespace above `x86_64`:
+
+``` python
+# Rankings, most preferred first. The namespace ranking comes from
+# the package's variant metadata; the feature and value rankings
+# will be defined in a subsequent PEP.
+namespaces = ["nvidia", "x86_64"]
+features = {"nvidia": ["cuda_version_lower_bound"], "x86_64": ["level"]}
+values = {
+    "nvidia": {"cuda_version_lower_bound": ["13.0", "12.0"]},
+    "x86_64": {"level": ["v4", "v3", "v2"]},
+}
+
+# Each variant label maps to its properties, with only the best
+# compatible value kept for every feature.
+variant_wheels = {
+    "gpu": [("nvidia", "cuda_version_lower_bound", "13.0")],
+    "gpu_cpuv2": [("nvidia", "cuda_version_lower_bound", "13.0"),
+                  ("x86_64", "level", "v2")],
+    "gpu_cpuv4": [("nvidia", "cuda_version_lower_bound", "13.0"),
+                  ("x86_64", "level", "v4")],
+    "cpuv4": [("x86_64", "level", "v4")],
+}
+
+def rank(prop):
+    """Rank a triple. The ranking lists put the best first, so negate
+    the positions to make a bigger rank mean a better property."""
+    namespace, feature, value = prop
+    return (-namespaces.index(namespace),
+            -features[namespace].index(feature),
+            -values[namespace][feature].index(value))
+
+def sort_key(label):
+    """Rank a wheel: its property ranks, best first."""
+    return sorted(map(rank, variant_wheels[label]), reverse=True)
+
+sorted(variant_wheels, key=sort_key, reverse=True)
+# ['gpu_cpuv4', 'gpu_cpuv2', 'gpu', 'cpuv4']
+```
+
+The `gpu*` wheels sort ahead of `cpuv4` because their best triple is in
+the higher-ranked `nvidia` namespace. `gpu_cpuv4` beats `gpu_cpuv2` on
+their second triple, since `v4` outranks `v2`. Both beat `gpu`, whose
+triples run out first, as the wheel with more properties wins.
+
+The ordering for non-variant wheels remains unchanged.
+
+### Ordering algorithm
 
 For the purpose of ordering, the combined variant metadata for all
 candidate variant wheels MUST be obtained. It can be sourced either from
@@ -459,12 +548,12 @@ features, and features into namespaces. For every namespace, the tool
 MUST obtain a list of compatible features, and for every feature, a list
 of compatible values. The method of obtaining these lists will be
 defined in a subsequent PEP. The items in these lists will be provided
-in specific order that will impact variant wheel ordering.
+ordered from the most preferable to the least preferable.
 
 The compatible wheels corresponding to a particular combination of
-package name, version and build number MUST be grouped by their variant
-label, and a separate group of non-variant wheels MUST be formed. The
-groups of variant wheels MUST then be ordered according to the following
+package name and version MUST be grouped by their variant label, and a
+separate group of non-variant wheels MUST be formed. The groups of
+variant wheels MUST then be ordered according to the following
 algorithm:
 
 1.  Construct the ordered list of namespaces by copying the value of the
@@ -477,7 +566,7 @@ algorithm:
 4.  For every group, determine the most preferred value corresponding to
     every variant feature present in the variant properties
     corresponding to the group. This is done by finding among the values
-    the one that has the lowest position in the ordered property value
+    the one that has the lowest index in the ordered property value
     list. After this step, a list of features along with their best
     values is available for every variant. This is done in the
     `VariantWheel.best_value_properties()` method in the example.
@@ -487,7 +576,9 @@ algorithm:
     ordered lists. This is done by the `property_key()` function in the
     example.
 6.  For every group, sort the list constructed in step 4 using the sort
-    keys constructed in step 5, in ascending order. This is done by the
+    keys constructed in step 5, in ascending order. The resulting list
+    will be ordered from the most preferable feature to the least
+    preferable feature. This is done by the
     `VariantWheel.sorted_properties()` method in the example.
 7.  To order groups, compare their sorted lists from step 6. If the sort
     keys at the first position are different, the group with the lower
@@ -496,17 +587,20 @@ algorithm:
     the list in one of the groups is exhausted. In the latter case, the
     group with more keys is sorted earlier. As a fallback, if both
     groups have the same number of keys, they are ordered lexically by
-    the variant label, ascending. This is done by the ultimate step of
-    the example algorithm, with the comparison function being
-    implemented as `VariantWheel.__lt__()`.
+    the variant label, ascending. The resulting list of groups will be
+    sorted from the most preferable to the least preferable. This is
+    done by the ultimate step of the example algorithm, with the
+    comparison function being implemented as `VariantWheel.__lt__()`.
 
 The algorithm sorts the group of null variant wheels last, as they
 feature no variant properties. The group of non-variant wheels MUST be
 placed after all the other groups.
 
 Within every group, the wheels MUST then be ordered according to their
-platform compatibility tags. After this process, the variant wheels are
-sorted from the most preferred to the least preferred.
+remaining properties, such as platform compatibility tags and build
+numbers. This specification does not alter this ordering; it remains the
+same as before. After completing this process, the wheels are sorted
+from the most preferred to the least preferred.
 
 The tools MAY provide options to override the default ordering, for
 example by specifying a preference for specific namespaces, features or
@@ -666,7 +760,8 @@ The variant markers MUST only be used in dependency specifiers and MUST
 NOT take part in selecting a wheel. These markers gate the individual
 dependency specifiers of a wheel that has already been selected. They
 MUST be evaluated only once variant wheel selection, as described in
-[variant ordering](#variant-ordering), has taken place.
+[variant ordering and selection](#variant-ordering-and-selection), has
+taken place.
 
 Their values MUST be determined as follows:
 
@@ -841,9 +936,9 @@ behavior would be to:
 7.  Obtain the ordered lists of compatible variant properties. The
     mechanism for this will be specified in a subsequent PEP.
 8.  Filter and order variants based on the lists of compatible
-    properties, per [variant ordering](#variant-ordering), and select
-    the most preferred variant. If no variant wheel matched, use the
-    non-variant wheels by their rules.
+    properties and select the most preferred variant, per [variant
+    ordering and selection](#variant-ordering-and-selection). If no
+    variant wheel matched, use the non-variant wheels by their rules.
 9.  If multiple wheels for a given version share the same variant label,
     order them by Platform compatibility tags and build number, and
     select the best wheel.
@@ -986,8 +1081,9 @@ When a package manager is requested to install `torch`, in order:
     the list.
 
 5.  If variant wheels with multiple different labels remain on the list,
-    the results are sorted per the algorithm in [variant
-    ordering](#variant-ordering). The most preferred label is selected.
+    the results are sorted per the algorithm in [variant ordering and
+    selection](#variant-ordering-and-selection). The most preferred
+    label is selected.
 
     For example, in this case the `cuda*` wheels are ordered by their
     properties, using the lists obtained in step 4. The wheels for CUDA
@@ -1052,10 +1148,10 @@ sources.
 
 A tool that searches sources in priority order (for example, the \"index
 priority\" in `766`{.interpreted-text role="pep"}) can order variants
-from one source at a time using the [variant
-ordering](#variant-ordering) algorithm, and proceed to the next source
-only if the current one has no viable candidates. No cross-source
-metadata merge is necessary.
+from one source at a time using the [variant ordering and
+selection](#variant-ordering-and-selection) algorithm, and proceed to
+the next source only if the current one has no viable candidates. No
+cross-source metadata merge is necessary.
 
 A tool that collates candidates from all sources before selecting among
 them (for example, \"version priority\" in `766`{.interpreted-text
@@ -1196,7 +1292,50 @@ that could cause problems if the file changed on the index, either due
 to the variant metadata being updated or being generated in a way that
 does not guarantee stable bytewise output.
 
-## Variant environment markers
+## Variant metadata consistency
+
+The [metadata consistency](#metadata-consistency) requirements constrain
+two keys, and require that their values be combinable without conflict
+rather than identical. Nothing else is constrained. In particular, this
+PEP places no consistency requirement on dependency metadata:
+`packaging:specifications/core-metadata`{.interpreted-text role="doc"}
+permits `Requires-Dist` to differ between the wheels of one release when
+declared `Dynamic`, and a publisher of variant wheels may still take
+that route.
+
+The requirement is what makes several of the mechanisms defined here
+work at all. If the wheels of one release disagreed about namespace
+order, there would be no total order over the variants, so [variant
+ordering and selection](#variant-ordering-and-selection) would have no
+defined output and two conforming installers could select different
+wheels from the same inputs. `pylock.toml` inlines combined variant
+metadata, so non-deterministic combination would mean that two lock runs
+over one release can produce different lock files. And the [index-level
+metadata](#index-level-metadata) file could neither be generated from
+the uploaded wheels alone, nor be relied upon once generated, since a
+resolver would then have to fetch every candidate wheel to discover the
+true combined picture.
+
+The cost is correspondingly small. The data originates from a single
+source per project and is copied into each wheel at build time, so
+consistency holds by construction unless the wheels of one release are
+built from different inputs. Non-variant wheels and existing tools are
+untouched, and since nobody publishes variant wheels yet there is no
+installed base to migrate. The asymmetry runs one way: omitting the
+requirement would foreclose it permanently, because once divergent
+publishers exist it could not be introduced.
+
+Divergent variant metadata is also not something anyone has asked for. A
+variant label is a release-scoped identifier for a property set, so two
+wheels of one release disagreeing about what a label maps to are not
+expressing anything about the target platform; the identifier is simply
+broken. `pep825-metadata-consistency`{.interpreted-text role="ref"} sets
+the argument out in full, including the survey evidence on divergent
+dependency metadata, the trade-offs of the alternative, and the
+reasoning behind the [variant environment
+markers](#variant-environment-markers).
+
+## Variant environment markers {#pep825-variant-environment-markers}
 
 Variant properties take part in installing a variant wheel at two
 distinct points, and only the second of them concerns markers. An
@@ -1221,8 +1360,8 @@ from `80_real` to `120_real` may depend on a library that supports only
 `120_real`, much as a dependency that supports a single CPU architecture
 is gated on `platform_machine`. Where a dependency does exist for every
 value of a feature, it can instead be published as a variant package and
-depended upon unconditionally, leaving the choice to [variant
-ordering](#variant-ordering).
+depended upon unconditionally, leaving the choice to [variant ordering
+and selection](#variant-ordering-and-selection).
 
 Because of this filtering, the variant markers do not depart from the
 established meaning of an environment marker. Every property in
@@ -1247,10 +1386,10 @@ Three consequences of this design are worth noting:
   properties](#variant-properties)). `variant_features` and
   `variant_namespaces` therefore always list every feature and namespace
   the wheel was built for. This is why the overrides permitted in
-  [variant ordering](#variant-ordering) may not reach past the
-  compatibility filter: a wheel selected in spite of being unsupported
-  could have its properties filtered away, and the dependencies gated on
-  them would silently disappear.
+  [variant ordering and selection](#variant-ordering-and-selection) may
+  not reach past the compatibility filter: a wheel selected in spite of
+  being unsupported could have its properties filtered away, and the
+  dependencies gated on them would silently disappear.
 - For the null variant, `variant_label` is `"null"` and the three
   set-valued markers are empty sets, as the null variant has zero
   properties. `variant_label` is consequently the only marker that
@@ -1261,6 +1400,22 @@ Three consequences of this design are worth noting:
   resolved at build time, which is what makes the partial evaluation
   described in [Backwards Compatibility](#backwards-compatibility)
   possible.
+
+The same per-variant differentiation could instead be obtained by
+declaring dependencies `Dynamic` and publishing divergent dependency
+metadata for each variant wheel, and whether markers were the right
+mechanism was [discussed at length and resolved in favour of
+markers](https://discuss.python.org/t/pep-825-wheel-variants-package-format-split-from-pep-817/106196/186).
+Markers were chosen because the two routes deliver the same result while
+differing in what they cost every consumer downstream: with markers the
+`Requires-Dist` lines stay textually identical across the wheels of a
+release, so a resolver reading one wheel\'s `METADATA` per release
+remains correct, whereas divergence would oblige every resolver to fetch
+`METADATA` per candidate wheel on every resolution. The alternative is
+also considerably less available than it appears, being reachable today
+only through setuptools with a `setup.py`. The evidence and the
+trade-offs are set out in
+`pep825-metadata-consistency`{.interpreted-text role="ref"}.
 
 # Backwards Compatibility
 
@@ -1453,20 +1608,6 @@ The following problems are deferred to subsequent PEPs in the series:
 - overriding the compatibility detection using static data
 - building variant wheels
 
-# Open Issues
-
-These questions must be resolved before this PEP can be accepted.
-
-## Use of variant environment markers
-
-The design of the variant [environment markers](#environment-markers) is
-not yet settled. The same effect can be achieved through Dynamic
-dependencies; the open question is whether markers are the right
-mechanism for obtaining it while keeping dependency metadata static
-across a release. This is under discussion in [this
-thread](https://discuss.python.org/t/pep-825-wheel-variants-package-format-split-from-pep-817/106196/169).
-The specification reflects the current design.
-
 # Acknowledgements
 
 This work would not have been possible without the contributions and
@@ -1482,6 +1623,24 @@ Zanie Blue.
 
 # Change History
 
+- 01-Sep-2026
+  - Added `pep825-metadata-consistency`{.interpreted-text role="ref"} as
+    an appendix, setting out why the [metadata
+    consistency](#metadata-consistency) requirements are justified and
+    what they cost. Summarized the metadata consistency argument in the
+    Rationale.
+  - Closed the open issue on the use of variant environment markers. The
+    investigation in the appendix settles the question in favour of
+    markers, so the Open Issues section has been removed and the
+    reasoning recorded in the Rationale instead.
+  - Removed grouping by build numbers, instead relegating them to
+    tie-breaking along with other wheel properties. This reverts a
+    potential change in behavior for non-variant wheels.
+  - Added a high-level overview to [variant ordering and
+    selection](#variant-ordering-and-selection), clarified that the
+    ordering of the lists used in the algorithm is from the most
+    preferable to the least preferable and that the ordering by platform
+    compatibility tags is not changed.
 - 19-Aug-2026
   - Strengthened the index rules to require that the irrelevant optional
     attributes are not published by the index, and that they are ignored
@@ -1539,6 +1698,7 @@ Zanie Blue.
 # Appendices
 
 - `pep825-variant-json-schema`{.interpreted-text role="ref"}
+- `pep825-metadata-consistency`{.interpreted-text role="ref"}
 
 # Copyright
 
