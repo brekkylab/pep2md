@@ -16,7 +16,7 @@ resolution: '`03-Aug-2026 <https://discuss.python.org/t/106459/74>`__'
 python_status: Accepted
 url: https://peps.python.org/pep-0828/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0828.rst
-source_commit: 1b707923110db1966a0cbe9309dc66a85f6074fe
+source_commit: 25e97601c6149a13b5043d01d789827982e98e23
 ---
 
 # Abstract
@@ -339,7 +339,7 @@ It\'s trivial for anyone who needs to delegate to a subgenerator to
 write the wrapper class to upgrade a synchronous
 `~collections.abc.Iterable`{.interpreted-text role="class"} or
 `~collections.abc.Generator`{.interpreted-text role="class"} to an async
-one before calling `async yield from`.
+one before calling `yield from`.
 
 ``` python
 class AsAsyncIterator:
