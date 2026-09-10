@@ -15,17 +15,25 @@ author:
 - Andy R. Terrel <andy.terrel@gmail.com>
 pep_delegate: Paul Moore <p.f.moore@gmail.com>
 discussions_to: https://discuss.python.org/t/pep-825-wheel-variants-package-format-split-from-pep-817/106196
-status: Draft
+status: Provisional
 type: Standards Track
 topic: Packaging
 created: 17-Feb-2026
 post_history:
 - '`17-Feb-2026 <https://discuss.python.org/t/pep-825-wheel-variants-package-format-split-from-pep-817/106196>`__'
-python_status: Draft
+resolution: https://discuss.python.org/t/pep-825-wheel-variants-package-format-split-from-pep-817/106196/232
+python_status: Provisional
 url: https://peps.python.org/pep-0825/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0825.rst
-source_commit: 565e11246522192e7977fda491729bd695454753
+source_commit: f76ce7f52fae33a3a9956c211bbd99c9ea026f06
 ---
+
+# Provisional Acceptance
+
+This PEP has been **provisionally accepted**. This PEP is part of an
+extended series of PEPs covering the whole wheel variant feature. Once
+the full suite of PEPs has been accepted, the acceptance will become
+final.
 
 # Abstract
 
