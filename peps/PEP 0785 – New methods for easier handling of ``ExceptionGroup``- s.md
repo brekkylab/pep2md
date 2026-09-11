@@ -14,7 +14,7 @@ post_history:
 python_status: Draft
 url: https://peps.python.org/pep-0785/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0785.rst
-source_commit: 3e4052ab94c756f21d7e53f476ef58db6e5d48f8
+source_commit: ad29d18c6327d2bd9f00dc9bc019d256add5a3a7
 ---
 
 # Abstract
@@ -202,7 +202,7 @@ from types import TracebackType
 
 
 def leaf_exceptions(
-    self: BaseExceptionGroup, *, fix_traceback: bool = True
+    self: BaseExceptionGroup, *, fix_tracebacks: bool = True
 ) -> list[BaseException]:
     """
     Return a flat list of all 'leaf' exceptions.
