@@ -7,17 +7,18 @@ author:
 - Zsolt Dollenstein <zsol.zsol@gmail.com>
 sponsor: Donald Stufft <donald@stufft.io>
 pep_delegate: Donald Stufft <donald@stufft.io>
-discussions_to: https://discuss.python.org/t/pre-pep-discussion-rfc-9457-error-responses-for-package-registries/105453
+discussions_to: https://discuss.python.org/t/pep-847-problem-details-for-the-simple-repository-api/108996
 status: Draft
 type: Standards Track
 topic: Packaging
 created: 06-Aug-2026
 post_history:
 - '`29-Dec-2025 <https://discuss.python.org/t/pre-pep-discussion-rfc-9457-error-responses-for-package-registries/105453>`__'
+- '`10-Sep-2026 <https://discuss.python.org/t/pep-847-problem-details-for-the-simple-repository-api/108996>`__'
 python_status: Draft
 url: https://peps.python.org/pep-0847/
 source_path: https://github.com/python/peps/blob/main/peps/pep-0847.rst
-source_commit: 0e8931306c48fd03d8dedea684fb6fdf0b2de276
+source_commit: 4fe70fbbaede57bf4e0dcfd956ac3594a643462f
 ---
 
 # Abstract
